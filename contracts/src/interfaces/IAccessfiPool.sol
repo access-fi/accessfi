@@ -10,13 +10,6 @@ contract IAccessfiPool {
         HACKERHOUSE_INVITATION   // HackerHouse invitation
     }
 
-    struct ProofRequirement {
-        string name;
-        string description;
-        ProofType proofType;
-        bool isRequired;
-    }
-
     struct VerifiedData {
         string encryptedCID;        // encrypted data ID
         bytes32 encryptedDataHash; // encrypted data hash
@@ -29,7 +22,7 @@ contract IAccessfiPool {
         string name;
         string description;
         string dataType;
-        ProofRequirement[] proofRequirements;
+        ProofType[] proofRequirements;  // Array of required proof types
         uint256 pricePerData;
         uint256 totalBudget;
         uint256 remainingBudget;
@@ -42,13 +35,13 @@ contract IAccessfiPool {
     event PoolCreated(string name, string dataType, uint256 pricePerData, uint256 totalBudget);
     event SellerJoined(address indexed seller);
     event DataPurchased(address indexed buyer, uint256 amount, uint256 dataCount);
-    event ProofSubmitted(address indexed seller, string proofName, bool verified);
+    event ProofSubmitted(address indexed seller, ProofType proofType, bool verified);
     event SellerFullyVerified(address indexed seller);
     event DataEncrypted(address indexed seller, string encryptedCID);
     event AccessTransferred(address indexed buyer, address indexed seller, string encryptedCID);
 
     function joinPoolAsSeller(address _seller) external {}
-    function submitProofAsSeller(address _seller, string memory _proofName, bytes32 _proofHash) external {}
+    function submitProofAsSeller(address _seller, ProofType _proofType, bytes32 _proofHash) external {}
     function verifySeller(address _seller, bool _verified, bytes32) external {}
     function storeEncryptedData(string memory _encryptedCID, bytes32 _encryptedDataHash) external {}
     function transferAccessToBuyer() external {}
