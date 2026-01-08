@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -47,72 +46,94 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Brutalist/Cyberpunk Design System - AccessFi */
+  --radius: 0rem; /* Sharp corners for brutalist aesthetic */
+
+  /* Light mode (minimal use - default to dark) */
+  --background: oklch(0.97 0 0);
+  --foreground: oklch(0.15 0 0);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.15 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --popover-foreground: oklch(0.15 0 0);
+  --primary: oklch(0.2 0 0);
+  --primary-foreground: oklch(0.95 0 0);
+  --secondary: oklch(0.9 0 0);
+  --secondary-foreground: oklch(0.2 0 0);
+  --muted: oklch(0.9 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --accent: oklch(0.88 0.15 145); /* Neon green accent */
+  --accent-foreground: oklch(0.1 0 0);
+  --destructive: oklch(0.6 0.22 20);
+  --border: oklch(0.85 0 0);
+  --input: oklch(0.85 0 0);
+  --ring: oklch(0.88 0.15 145);
+  --chart-1: oklch(0.88 0.15 145);
+  --chart-2: oklch(0.75 0.25 180);
+  --chart-3: oklch(0.65 0.22 300);
+  --chart-4: oklch(0.8 0.2 60);
+  --chart-5: oklch(0.7 0.25 330);
+  --sidebar: oklch(0.98 0 0);
+  --sidebar-foreground: oklch(0.15 0 0);
+  --sidebar-primary: oklch(0.2 0 0);
+  --sidebar-primary-foreground: oklch(0.95 0 0);
+  --sidebar-accent: oklch(0.9 0 0);
+  --sidebar-accent-foreground: oklch(0.2 0 0);
+  --sidebar-border: oklch(0.85 0 0);
+  --sidebar-ring: oklch(0.88 0.15 145);
+
+  /* Custom Cyberpunk colors */
+  --neon-cyan: oklch(0.85 0.18 200); /* #00FFFF territory */
+  --neon-magenta: oklch(0.7 0.28 330); /* #FF00FF territory */
+  --neon-green: oklch(0.88 0.15 145); /* Matrix green */
+  --neon-lime: oklch(0.9 0.2 130);
+  --terminal-bg: oklch(0.1 0 0);
+  --terminal-fg: oklch(0.88 0.15 145);
+  --grid-line: oklch(1 0 0 / 5%);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
+  /* Dark mode - Primary theme for AccessFi */
+  --background: oklch(0.1 0 0); /* Near black but not pure #000 */
+  --foreground: oklch(0.88 0 0); /* Soft white, not pure #FFF */
+  --card: oklch(0.12 0 0);
+  --card-foreground: oklch(0.88 0 0);
+  --popover: oklch(0.12 0 0);
+  --popover-foreground: oklch(0.88 0 0);
+  --primary: oklch(0.88 0.15 145); /* Neon green - primary CTA */
+  --primary-foreground: oklch(0.1 0 0);
+  --secondary: oklch(0.2 0 0);
+  --secondary-foreground: oklch(0.88 0 0);
+  --muted: oklch(0.18 0 0);
+  --muted-foreground: oklch(0.6 0 0);
+  --accent: oklch(0.85 0.18 200); /* Neon cyan - secondary accent */
+  --accent-foreground: oklch(0.1 0 0);
+  --destructive: oklch(0.65 0.25 15);
+  --border: oklch(1 0 0 / 10%); /* Subtle borders */
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.88 0.15 145);
+  --chart-1: oklch(0.88 0.15 145); /* Neon green */
+  --chart-2: oklch(0.85 0.18 200); /* Neon cyan */
+  --chart-3: oklch(0.7 0.28 330); /* Neon magenta */
+  --chart-4: oklch(0.9 0.2 130); /* Neon lime */
+  --chart-5: oklch(0.75 0.22 50); /* Yellow */
+  --sidebar: oklch(0.12 0 0);
+  --sidebar-foreground: oklch(0.88 0 0);
+  --sidebar-primary: oklch(0.88 0.15 145);
+  --sidebar-primary-foreground: oklch(0.1 0 0);
+  --sidebar-accent: oklch(0.18 0 0);
+  --sidebar-accent-foreground: oklch(0.88 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.88 0.15 145);
+
+  /* Custom Cyberpunk colors */
+  --neon-cyan: oklch(0.85 0.18 200);
+  --neon-magenta: oklch(0.7 0.28 330);
+  --neon-green: oklch(0.88 0.15 145);
+  --neon-lime: oklch(0.9 0.2 130);
+  --terminal-bg: oklch(0.08 0 0);
+  --terminal-fg: oklch(0.88 0.15 145);
+  --grid-line: oklch(1 0 0 / 3%);
 }
 
 @layer base {
@@ -121,5 +142,112 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Monospace for terminal aesthetic */
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+}
+
+@layer utilities {
+  /* Neon glow effects */
+  .neon-glow-green {
+    text-shadow: 0 0 10px oklch(0.88 0.15 145 / 0.8),
+                 0 0 20px oklch(0.88 0.15 145 / 0.6),
+                 0 0 30px oklch(0.88 0.15 145 / 0.4);
+  }
+
+  .neon-glow-cyan {
+    text-shadow: 0 0 10px oklch(0.85 0.18 200 / 0.8),
+                 0 0 20px oklch(0.85 0.18 200 / 0.6),
+                 0 0 30px oklch(0.85 0.18 200 / 0.4);
+  }
+
+  .neon-border-green {
+    border-color: oklch(0.88 0.15 145);
+    box-shadow: 0 0 10px oklch(0.88 0.15 145 / 0.5),
+                inset 0 0 10px oklch(0.88 0.15 145 / 0.2);
+  }
+
+  .neon-border-cyan {
+    border-color: oklch(0.85 0.18 200);
+    box-shadow: 0 0 10px oklch(0.85 0.18 200 / 0.5),
+                inset 0 0 10px oklch(0.85 0.18 200 / 0.2);
+  }
+
+  /* Terminal-style background */
+  .terminal-bg {
+    background: var(--terminal-bg);
+    color: var(--terminal-fg);
+  }
+
+  /* Grid pattern background */
+  .grid-pattern {
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Scanline effect */
+  .scanlines {
+    background: linear-gradient(
+      to bottom,
+      transparent 50%,
+      oklch(1 0 0 / 0.02) 50%
+    );
+    background-size: 100% 4px;
+    pointer-events: none;
+  }
+
+  /* Brutalist sharp shadows */
+  .brutal-shadow {
+    box-shadow: 4px 4px 0px oklch(0.88 0.15 145);
+  }
+
+  .brutal-shadow-cyan {
+    box-shadow: 4px 4px 0px oklch(0.85 0.18 200);
+  }
+
+  /* GPU-accelerated animations only */
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.02);
+    }
+  }
+
+  /* Terminal cursor blink */
+  .terminal-cursor {
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 50% {
+      opacity: 1;
+    }
+    51%, 100% {
+      opacity: 0;
+    }
+  }
+
+  /* Smooth transform animations (GPU accelerated) */
+  .smooth-transform {
+    will-change: transform;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .smooth-opacity {
+    will-change: opacity;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
