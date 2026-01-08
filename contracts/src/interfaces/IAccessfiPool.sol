@@ -1,36 +1,57 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-contract IAccessfiPool {
-    
+interface IAccessfiPool {
+
+    // ==============================================================
+    //                            ENUMS
+    // ==============================================================
+
     enum ProofType {
-        AGE_VERIFICATION,    // >18 years old
-        NATIONALITY,          // Indian citizen
-        EMAIL_VERIFICATION,       // Netflix subscription via .eml file
-        HACKERHOUSE_INVITATION   // HackerHouse invitation
+        AGE_VERIFICATION,          // >18 years old
+        NATIONALITY,               // Citizenship verification
+        EMAIL_VERIFICATION,        // Email-based service subscription
+        HACKERHOUSE_INVITATION     // HackerHouse invitation proof
     }
 
+    // ==============================================================
+    //                            STRUCTS
+    // ==============================================================
+
     struct VerifiedData {
-        string encryptedCID;        // encrypted data ID
-        bytes32 encryptedDataHash; // encrypted data hash
-        bool isEncrypted;          // Whether data is encrypted and stored
-        bool isAccessTransferred;   // Whether access was given to buyer
-        uint256 timestamp;         // Data storage timestamp
+        string encryptedCID;          // Encrypted data CID (IPFS/Lighthouse)
+        bytes32 encryptedDataHash;    // Hash of encrypted data
+        bool isEncrypted;             // Whether data is encrypted
+        bool isAccessTransferred;     // Whether access transferred to buyer
+        uint256 timestamp;            // When data was stored
     }
 
     struct PoolInfo {
-        string name;
-        string description;
-        string dataType;
-        ProofType[] proofRequirements;  // Array of required proof types
-        uint256 pricePerData;
-        uint256 totalBudget;
-        uint256 remainingBudget;
-        address creator;
-        bool isActive;
-        uint256 createdAt;
-        uint256 deadline;
+        string name;                  // Pool name
+        string description;           // Pool description
+        string dataType;              // Type of data being collected
+        ProofType[] proofRequirements;// Array of required proof types
+        uint256 pricePerData;         // Price per verified data submission
+        uint256 totalBudget;          // Total pool budget (after platform fee)
+        uint256 remainingBudget;      // Remaining budget
+        address creator;              // Pool creator (buyer)
+        bool isActive;                // Whether pool is active
+        uint256 createdAt;            // Creation timestamp
+        uint256 deadline;             // Pool expiration timestamp
     }
+
+    struct VerificationParams {
+        uint256 aggregationId;        // zkVerify aggregation ID
+        uint256 domainId;             // zkVerify domain ID
+        bytes32[] merklePath;         // Merkle proof path
+        bytes32 leaf;                 // Proof leaf hash
+        uint256 leafCount;            // Number of leaves
+        uint256 index;                // Leaf index in tree
+    }
+
+    // ==============================================================
+    //                            EVENTS
+    // ==============================================================
 
     event PoolCreated(string name, string dataType, uint256 pricePerData, uint256 totalBudget);
     event SellerJoined(address indexed seller);
@@ -39,11 +60,31 @@ contract IAccessfiPool {
     event SellerFullyVerified(address indexed seller);
     event DataEncrypted(address indexed seller, string encryptedCID);
     event AccessTransferred(address indexed buyer, address indexed seller, string encryptedCID);
+    event DataTokenMinted(address indexed seller, uint256 indexed tokenId);
+    event DataTokenTransferred(uint256 indexed tokenId, address indexed buyer);
+    event PoolStopped(uint256 remainingBudget);
+    event PoolAutoStopped();
 
-    function joinPoolAsSeller(address _seller) external {}
-    function submitProofAsSeller(address _seller, ProofType _proofType, bytes32 _proofHash) external {}
-    function verifySeller(address _seller, bool _verified, bytes32) external {}
-    function storeEncryptedData(string memory _encryptedCID, bytes32 _encryptedDataHash) external {}
-    function transferAccessToBuyer() external {}
+    // ==============================================================
+    //                        EXTERNAL FUNCTIONS
+    // ==============================================================
 
+    function joinPoolAsSeller() external;
+
+    function submitProofAsSeller(
+        ProofType _proofType,
+        bytes32 _proofHash,
+        string calldata encryptedCID,
+        bytes32 dataHash,
+        VerificationParams calldata zkParams
+    ) external;
+
+    function stopPool() external;
+
+    function getBudgetStatus() external view returns (
+        uint256 remaining,
+        uint256 spent,
+        uint256 dataCollected,
+        bool active
+    );
 }
