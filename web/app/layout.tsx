@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Inter } from "next/font/google";
 import "./globals.css";
+import { Providers } from "@/components/providers";
 
 // Monospace font for terminal/code aesthetic
 const jetbrainsMono = JetBrains_Mono({
@@ -32,7 +33,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
