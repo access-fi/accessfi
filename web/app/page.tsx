@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import Link from "next/link";
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
@@ -27,12 +28,12 @@ export default function Home() {
             <span className="text-primary">●</span> ACCESSFI
           </div>
           <div className="flex items-center gap-12 font-mono text-sm uppercase">
-            <button className="text-muted-foreground transition-colors hover:text-foreground">
-              DOCS
-            </button>
-            <button className="text-muted-foreground transition-colors hover:text-foreground">
+            <Link href="/dashboard" className="text-muted-foreground transition-colors hover:text-foreground">
+              DASHBOARD
+            </Link>
+            <Link href="/pools" className="text-muted-foreground transition-colors hover:text-foreground">
               POOLS
-            </button>
+            </Link>
             <ConnectButton.Custom>
               {({
                 account,
@@ -195,7 +196,7 @@ export default function Home() {
                 transition={{ duration: 0.4, delay: 0.5 }}
                 className="flex flex-wrap gap-4"
               >
-                <button className="brutal-shadow group flex items-center gap-2 border-2 border-foreground bg-foreground px-8 py-4 font-mono text-base font-bold uppercase text-background transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none">
+                <Link href="/pools" className="brutal-shadow group flex items-center gap-2 border-2 border-foreground bg-foreground px-8 py-4 font-mono text-base font-bold uppercase text-background transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none">
                   BROWSE POOLS
                   <svg
                     className="h-4 w-4 transition-transform group-hover:translate-x-1"
@@ -210,9 +211,9 @@ export default function Home() {
                       d="M13 7l5 5m0 0l-5 5m5-5H6"
                     />
                   </svg>
-                </button>
+                </Link>
 
-                <button className="group flex items-center gap-2 border-2 border-border bg-background px-8 py-4 font-mono text-base font-bold uppercase transition-all hover:border-foreground hover:bg-foreground hover:text-background">
+                <Link href="/pools/create" className="group flex items-center gap-2 border-2 border-border bg-background px-8 py-4 font-mono text-base font-bold uppercase transition-all hover:border-foreground hover:bg-foreground hover:text-background">
                   CREATE POOL
                   <svg
                     className="h-4 w-4 transition-transform group-hover:translate-x-1"
@@ -227,7 +228,7 @@ export default function Home() {
                       d="M12 4v16m8-8H4"
                     />
                   </svg>
-                </button>
+                </Link>
               </motion.div>
             </div>
 
