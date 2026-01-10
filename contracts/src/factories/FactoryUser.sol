@@ -24,6 +24,10 @@ contract FactoryUser {
     function createUser() external {
         require(users[msg.sender] == address(0), "User exists");
 
+        // CRITICAL: Ensure caller is EOA (not a contract)
+        // This prevents re-entrancy attacks and ensures immutable ownership
+        require(msg.sender == tx.origin, "Only EOAs can create User contracts");
+
         User newUser = new User(msg.sender, poolFactory, dataToken);
         users[msg.sender] = address(newUser);
         allUsers.push(address(newUser));

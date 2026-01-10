@@ -64,6 +64,8 @@ interface IAccessfiPool {
     event DataTokenTransferred(uint256 indexed tokenId, address indexed buyer);
     event PoolStopped(uint256 remainingBudget);
     event PoolAutoStopped();
+    event SellerPaid(address indexed seller, uint256 amount);
+    event PoolFunded(address indexed funder, uint256 totalAmount, uint256 netAmount, uint256 platformFee, uint256 newBudget);
 
     // ==============================================================
     //                        EXTERNAL FUNCTIONS

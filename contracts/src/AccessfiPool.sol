@@ -4,6 +4,8 @@ pragma solidity ^0.8.13;
 import {IAccessfiPool} from "./interfaces/IAccessfiPool.sol";
 import {AccessFiDataToken} from "./AccessFiDataToken.sol";
 import {verifyProof} from "./VerifyProof.sol";
+import {User} from "./User.sol";
+import {FactoryUser} from "./factories/FactoryUser.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
@@ -39,6 +41,9 @@ contract AccessFiPool is
 
     AccessFiDataToken public dataToken;
     verifyProof public zkVerifier;
+    address public factoryUser;  // FactoryUser contract for verification
+    address public platformWallet;  // Platform fee recipient
+    uint256 public platformFeePercent;  // Platform fee percentage
 
     mapping(address => bool) public isSellerJoined;
     mapping(address => bool) public isSellerVerified;
@@ -54,8 +59,11 @@ contract AccessFiPool is
     mapping(address => bool) public hasClaimedToken;
     bool public isStopped;
 
+    // Gas optimization: map required proof types for O(1) lookup
+    mapping(IAccessfiPool.ProofType => bool) public requiredProofs;
+
     // Storage gap for future upgrades
-    uint256[40] private __gap;
+    uint256[36] private __gap;
 
     // ==============================================================
     //                            ERRORS
@@ -78,6 +86,8 @@ contract AccessFiPool is
     error PaymentFailed();
     error WithdrawalFailed();
     error AlreadyStopped();
+    error InvalidUserContract();
+    error TooManyProofRequirements();
 
     // ==============================================================
     //                            EVENTS
@@ -103,12 +113,18 @@ contract AccessFiPool is
      * @param _poolInfo Pool configuration
      * @param _dataToken Global data token contract
      * @param _zkVerifier ZK proof verifier contract
+     * @param _factoryUser FactoryUser contract for User verification
+     * @param _platformWallet Platform fee recipient
+     * @param _platformFeePercent Platform fee percentage
      * @param admin Address receiving admin roles
      */
     function initialize(
         IAccessfiPool.PoolInfo memory _poolInfo,
         address _dataToken,
         address _zkVerifier,
+        address _factoryUser,
+        address _platformWallet,
+        uint256 _platformFeePercent,
         address admin
     ) public initializer {
         __ReentrancyGuard_init();
@@ -116,10 +132,33 @@ contract AccessFiPool is
         __AccessControl_init();
 
         require(_poolInfo.remainingBudget == _poolInfo.totalBudget, "Budget mismatch");
+        require(_factoryUser != address(0), "Invalid factory user");
+        require(_platformWallet != address(0), "Invalid platform wallet");
 
         poolInfo = _poolInfo;
         dataToken = AccessFiDataToken(_dataToken);
         zkVerifier = verifyProof(_zkVerifier);
+        factoryUser = _factoryUser;
+        platformWallet = _platformWallet;
+        platformFeePercent = _platformFeePercent;
+
+        // Populate requiredProofs mapping for O(1) lookup
+        uint256 reqLength = _poolInfo.proofRequirements.length;
+
+        // PROTECTION: Limit proof requirements to prevent DoS attacks
+        if (reqLength > 10) revert TooManyProofRequirements();
+        if (reqLength == 0) revert InvalidProofType();
+
+        for (uint256 i = 0; i < reqLength;) {
+            IAccessfiPool.ProofType proofType = _poolInfo.proofRequirements[i];
+
+            // GAS OPTIMIZATION: Skip if already set (prevents duplicate writes)
+            if (!requiredProofs[proofType]) {
+                requiredProofs[proofType] = true;
+            }
+
+            unchecked { ++i; }
+        }
 
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(UPGRADER_ROLE, admin);
@@ -156,20 +195,25 @@ contract AccessFiPool is
     // ==============================================================
 
     /**
-     * @notice Join pool as a seller (SECURITY FIX: uses msg.sender)
+     * @notice Join pool as a seller (MANDATORY: must call via User contract)
+     * @dev Verifies caller is valid User contract and extracts EOA owner
      */
     function joinPoolAsSeller() external poolActive notExpired {
-        if (msg.sender == poolInfo.creator) revert CreatorCannotBeSeller();
-        if (isSellerJoined[msg.sender]) revert AlreadyJoined();
+        // Verify caller is a valid User contract and get EOA owner
+        address eoa = _verifyUserContract(msg.sender);
 
-        isSellerJoined[msg.sender] = true;
-        joinedSellers.push(msg.sender);
+        if (eoa == poolInfo.creator) revert CreatorCannotBeSeller();
+        if (isSellerJoined[eoa]) revert AlreadyJoined();
 
-        emit SellerJoined(msg.sender);
+        isSellerJoined[eoa] = true;
+        joinedSellers.push(eoa);
+
+        emit SellerJoined(eoa);
     }
 
     /**
      * @notice Submit proof for verification (CRITICAL: automatic minting on completion)
+     * @dev MANDATORY: must call via User contract
      * @param _proofType Type of proof being submitted
      * @param _proofHash Hash of the proof
      * @param encryptedCID IPFS CID of encrypted data
@@ -183,9 +227,12 @@ contract AccessFiPool is
         bytes32 dataHash,
         IAccessfiPool.VerificationParams calldata zkParams
     ) external poolActive notExpired nonReentrant {
-        if (!isSellerJoined[msg.sender]) revert NotJoined();
-        if (isSellerFullyVerified[msg.sender]) revert AlreadyVerified();
-        if (sellerProofs[msg.sender][_proofType]) revert ProofAlreadySubmitted();
+        // Verify caller is valid User contract and get EOA owner
+        address eoa = _verifyUserContract(msg.sender);
+
+        if (!isSellerJoined[eoa]) revert NotJoined();
+        if (isSellerFullyVerified[eoa]) revert AlreadyVerified();
+        if (sellerProofs[eoa][_proofType]) revert ProofAlreadySubmitted();
         if (!_isValidProofType(_proofType)) revert InvalidProofType();
 
         // CRITICAL: Verify ZK proof via zkVerify
@@ -203,18 +250,18 @@ contract AccessFiPool is
 
         // Store unique proof hash to prevent reuse
         bytes32 uniqueProofHash = keccak256(
-            abi.encodePacked(msg.sender, uint8(_proofType), _proofHash, address(this))
+            abi.encode(eoa, _proofType, _proofHash, address(this))
         );
         if (globalProofHashes[uniqueProofHash]) revert ProofReused();
 
-        sellerProofs[msg.sender][_proofType] = true;
-        sellerProofHashes[msg.sender][_proofType] = uniqueProofHash;
+        sellerProofs[eoa][_proofType] = true;
+        sellerProofHashes[eoa][_proofType] = uniqueProofHash;
         globalProofHashes[uniqueProofHash] = true;
 
-        emit ProofSubmitted(msg.sender, _proofType, true);
+        emit ProofSubmitted(eoa, _proofType, true);
 
         // Check if all proofs submitted → trigger automatic token minting
-        _checkFullVerificationAndMint(msg.sender, encryptedCID, dataHash);
+        _checkFullVerificationAndMint(eoa, encryptedCID, dataHash);
     }
 
     // ==============================================================
@@ -223,9 +270,21 @@ contract AccessFiPool is
 
     /**
      * @notice Stop pool early and withdraw remaining budget
+     * @dev Accepts calls from creator's User contract OR directly from creator EOA
      */
-    function stopPool() external onlyCreator nonReentrant {
-        if (!poolInfo.isActive && isStopped) revert AlreadyStopped();
+    function stopPool() external nonReentrant {
+        if (isStopped) revert AlreadyStopped();
+
+        // Verify caller is creator's User contract OR creator EOA
+        address eoa;
+        try User(payable(msg.sender)).owner() returns (address _owner) {
+            eoa = _owner;  // msg.sender is User contract, extract EOA
+        } catch {
+            eoa = msg.sender;  // msg.sender is EOA (direct call allowed)
+        }
+
+        // Only creator can stop the pool
+        if (eoa != poolInfo.creator) revert NotCreator();
 
         isStopped = true;
         poolInfo.isActive = false;
@@ -267,17 +326,38 @@ contract AccessFiPool is
     // ==============================================================
 
     /**
-     * @notice Check if proof type is required by pool
+     * @notice Verify caller is valid User contract and return EOA owner
+     * @param userContract Address claiming to be User contract
+     * @return eoa The EOA owner of the User contract
+     */
+    function _verifyUserContract(address userContract) internal view returns (address eoa) {
+        // Safety checks
+        if (userContract == address(0)) revert InvalidUserContract();
+
+        // Try to get owner from User contract (protects against malicious contracts)
+        try User(payable(userContract)).owner() returns (address _owner) {
+            eoa = _owner;
+        } catch {
+            revert InvalidUserContract();
+        }
+
+        // Additional safety check
+        if (eoa == address(0)) revert InvalidUserContract();
+
+        // CRITICAL: Verify FactoryUser recognizes this User contract
+        // This prevents impersonation attacks
+        if (FactoryUser(factoryUser).getUser(eoa) != userContract) {
+            revert InvalidUserContract();
+        }
+
+        return eoa;
+    }
+
+    /**
+     * @notice Check if proof type is required by pool (O(1) lookup)
      */
     function _isValidProofType(IAccessfiPool.ProofType _proofType) internal view returns (bool) {
-        uint256 reqLength = poolInfo.proofRequirements.length;
-        for (uint256 i = 0; i < reqLength;) {
-            if (poolInfo.proofRequirements[i] == _proofType) {
-                return true;
-            }
-            unchecked { ++i; }
-        }
-        return false;
+        return requiredProofs[_proofType];
     }
 
     /**
@@ -300,10 +380,9 @@ contract AccessFiPool is
         // All proofs verified - mark as fully verified
         if (!isSellerFullyVerified[seller]) {
             isSellerFullyVerified[seller] = true;
-            if (!isSellerVerified[seller]) {
-                isSellerVerified[seller] = true;
-                verifiedSellers.push(seller);
-            }
+            isSellerVerified[seller] = true;
+            verifiedSellers.push(seller);
+
             emit SellerFullyVerified(seller);
 
             // AUTOMATIC: Mint token and process payment
@@ -324,18 +403,20 @@ contract AccessFiPool is
         if (hasClaimedToken[seller]) revert TokenAlreadyClaimed();
         // encryptedCID is optional (can be empty for proof-only pools)
 
+        // Cache storage variables for gas efficiency
+        uint256 remaining = poolInfo.remainingBudget;
+        uint256 price = poolInfo.pricePerData;
+
         // Check if pool should auto-stop (budget exhausted)
-        if (poolInfo.remainingBudget < poolInfo.pricePerData) {
+        if (remaining < price) {
             poolInfo.isActive = false;
             emit PoolAutoStopped();
             return;
         }
 
-        if (poolInfo.remainingBudget < poolInfo.pricePerData) revert InsufficientBudget();
-
         // EFFECTS
         hasClaimedToken[seller] = true;
-        poolInfo.remainingBudget -= poolInfo.pricePerData;
+        poolInfo.remainingBudget = remaining - price;
         totalDataCollected += 1;
 
         // Store verified data reference
@@ -347,23 +428,34 @@ contract AccessFiPool is
             timestamp: block.timestamp
         });
 
-        // INTERACTIONS (safe order with CEI pattern)
+        // INTERACTIONS (CEI pattern - payment LAST to prevent re-entrancy)
 
         // 1. Mint token to seller
         uint256 tokenId = dataToken.mintToSeller(seller, encryptedCID, dataHash);
         sellerToTokenId[seller] = tokenId;
         emit DataTokenMinted(seller, tokenId);
 
-        // 2. Pay seller
-        (bool paymentSuccess, ) = payable(seller).call{value: poolInfo.pricePerData}("");
+        // 2. Transfer token to buyer (pool creator)
+        address creator = poolInfo.creator;
+        dataToken.transferToBuyer(tokenId, creator);
+        emit DataTokenTransferred(tokenId, creator);
+
+        emit DataPurchased(creator, price, 1);
+        emit AccessTransferred(creator, seller, encryptedCID);
+
+        // 3. Pay seller LAST (prevents re-entrancy attacks)
+        (bool paymentSuccess, ) = payable(seller).call{value: price}("");
         if (!paymentSuccess) revert PaymentFailed();
 
-        // 3. Transfer token to buyer (pool creator)
-        dataToken.transferToBuyer(tokenId, poolInfo.creator);
-        emit DataTokenTransferred(tokenId, poolInfo.creator);
+        emit SellerPaid(seller, price);
 
-        emit DataPurchased(poolInfo.creator, poolInfo.pricePerData, 1);
-        emit AccessTransferred(poolInfo.creator, seller, encryptedCID);
+        // 4. Notify seller's User contract of earnings (if exists)
+        address sellerUserContract = FactoryUser(factoryUser).getUser(seller);
+        if (sellerUserContract != address(0)) {
+            try User(payable(sellerUserContract)).notifyEarning(price) {} catch {
+                // Ignore if notification fails (doesn't block payment)
+            }
+        }
     }
 
     // ==============================================================
@@ -409,7 +501,36 @@ contract AccessFiPool is
     // ==============================================================
 
     /**
-     * @notice Accept ETH deposits (for funding pool)
+     * @notice Accept ETH deposits (for funding pool) - only creator can add funds
+     * @dev Deducts 5% platform fee on every funding
+     * @dev Accepts calls from creator's User contract OR directly from creator EOA
      */
-    receive() external payable {}
+    receive() external payable {
+        require(msg.value > 0, "Cannot fund with zero");
+
+        // Verify caller is creator's User contract OR creator EOA
+        address eoa;
+        try User(payable(msg.sender)).owner() returns (address _owner) {
+            eoa = _owner;  // msg.sender is User contract, extract EOA
+        } catch {
+            eoa = msg.sender;  // msg.sender is EOA (direct funding allowed)
+        }
+
+        // Only creator can fund the pool
+        if (eoa != poolInfo.creator) revert NotCreator();
+
+        // Calculate platform fee (5% of funding amount)
+        uint256 platformFee = (msg.value * platformFeePercent) / 100;
+        uint256 netFunding = msg.value - platformFee;
+
+        // Update pool budget with net amount (after fee)
+        poolInfo.remainingBudget += netFunding;
+        poolInfo.totalBudget += netFunding;
+
+        // Transfer platform fee
+        (bool feeSuccess, ) = payable(platformWallet).call{value: platformFee}("");
+        require(feeSuccess, "Platform fee transfer failed");
+
+        emit PoolFunded(msg.sender, msg.value, netFunding, platformFee, poolInfo.remainingBudget);
+    }
 }

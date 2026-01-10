@@ -47,8 +47,11 @@ contract AccessFiDataToken is
     mapping(address => uint256[]) public buyerTokens;
     mapping(bytes32 => bool) public usedDataHashes;
 
+    // Duplicate tracking for buyer tokens
+    mapping(uint256 => mapping(address => bool)) private _buyerHasToken;
+
     // Storage gap for future upgrades
-    uint256[44] private __gap;
+    uint256[43] private __gap;
 
     // ==============================================================
     //                            EVENTS
@@ -192,7 +195,12 @@ contract AccessFiDataToken is
             tokenMetadata[tokenId].transferred = true;
         }
 
-        buyerTokens[buyer].push(tokenId);
+        // PROTECTION: Only add if not already in buyer's list
+        if (!_buyerHasToken[tokenId][buyer]) {
+            buyerTokens[buyer].push(tokenId);
+            _buyerHasToken[tokenId][buyer] = true;
+        }
+
         emit TokenTransferred(tokenId, currentOwner, buyer);
     }
 
