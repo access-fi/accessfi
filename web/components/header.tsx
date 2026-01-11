@@ -91,7 +91,7 @@ export function Header() {
                         <button
                           onClick={openConnectModal}
                           type="button"
-                          className="brutal-shadow border-2 border-primary bg-primary px-6 py-3 font-mono text-sm font-bold uppercase text-primary-foreground transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+                          className="border-2 border-primary bg-primary px-6 py-3 font-mono text-sm font-bold uppercase text-primary-foreground transition-all hover:bg-primary/90"
                         >
                           CONNECT
                         </button>
@@ -103,7 +103,7 @@ export function Header() {
                         <button
                           onClick={openChainModal}
                           type="button"
-                          className="brutal-shadow border-2 border-destructive bg-destructive px-6 py-3 font-mono text-sm font-bold uppercase text-destructive-foreground transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+                          className="border-2 border-destructive bg-destructive px-6 py-3 font-mono text-sm font-bold uppercase text-destructive-foreground transition-all hover:bg-destructive/90"
                         >
                           WRONG NETWORK
                         </button>
@@ -115,7 +115,7 @@ export function Header() {
                         <button
                           onClick={openChainModal}
                           type="button"
-                          className="brutal-shadow border border-border bg-background px-4 py-3 font-mono text-xs font-bold uppercase transition-all hover:border-primary"
+                          className="border border-border bg-background px-4 py-3 font-mono text-xs font-bold uppercase transition-all hover:border-primary hover:bg-primary/5"
                         >
                           {chain.hasIcon && (
                             <div
@@ -147,7 +147,7 @@ export function Header() {
                             <DropdownMenuTrigger asChild>
                               <button
                                 type="button"
-                                className="brutal-shadow flex items-center gap-2 border-2 border-primary bg-primary px-6 py-3 font-mono text-sm font-bold uppercase text-primary-foreground transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+                                className="flex items-center gap-2 border-2 border-primary bg-primary px-6 py-3 font-mono text-sm font-bold uppercase text-primary-foreground transition-all hover:bg-primary/90"
                               >
                                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-foreground text-primary">
                                   {profile.fullName.charAt(0).toUpperCase()}
@@ -157,7 +157,7 @@ export function Header() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
                               align="end"
-                              className="brutal-shadow w-80 border-2 border-border bg-background font-mono"
+                              className="w-80 border-2 border-border bg-background font-mono shadow-lg"
                               sideOffset={8}
                             >
                               <div className="border-b-2 border-border bg-card p-4">
@@ -216,7 +216,7 @@ export function Header() {
                           <button
                             onClick={openAccountModal}
                             type="button"
-                            className="brutal-shadow border-2 border-primary bg-primary px-6 py-3 font-mono text-sm font-bold uppercase text-primary-foreground transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+                            className="border-2 border-primary bg-primary px-6 py-3 font-mono text-sm font-bold uppercase text-primary-foreground transition-all hover:bg-primary/90"
                           >
                             {account.displayName}
                             {account.displayBalance ? ` (${account.displayBalance})` : ''}

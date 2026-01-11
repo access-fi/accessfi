@@ -17,9 +17,6 @@ export default function Home() {
       {/* Animated grid background */}
       <div className="grid-pattern fixed inset-0 opacity-30" />
 
-      {/* Noise texture overlay */}
-      <div className="fixed inset-0 bg-[url('/noise.png')] opacity-5 mix-blend-overlay" />
-
       {/* Main content */}
       <div className="relative z-10">
         {/* Top nav bar */}
@@ -41,7 +38,7 @@ export default function Home() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
                 </span>
-                  COMING SOON...
+                COMING SOON...
               </motion.div>
 
               {/* Main heading */}
@@ -51,30 +48,38 @@ export default function Home() {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="mb-6 font-mono text-5xl font-black uppercase leading-[0.9] tracking-tight md:text-7xl lg:text-8xl"
               >
-                <span className="block text-foreground">BUY & SELL</span>
-                <span className="block text-foreground">PRIVATE DATA</span>
-                <span className="relative inline-block">
+                <motion.span
+                  initial={{ x: -50, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="block text-foreground"
+                >
+                  BUY & SELL
+                </motion.span>
+                <motion.span
+                  initial={{ x: -50, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  className="block text-foreground"
+                >
+                  PRIVATE DATA
+                </motion.span>
+                <motion.span
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.5 }}
+                  className="relative inline-block mt-2"
+                >
                   <span className="block border-4 border-primary bg-primary px-4 py-2 text-background">
                     ON-CHAIN
                   </span>
-                  {/* Glitch effect */}
-                  {mounted && (
-                    <>
-                      <span className="absolute left-0 top-0 -translate-x-1 border-4 border-accent bg-accent px-4 py-2 text-background opacity-30">
-                        ON-CHAIN
-                      </span>
-                      <span className="absolute left-0 top-0 translate-x-1 border-4 border-primary bg-primary px-4 py-2 text-background opacity-30">
-                        ON-CHAIN
-                      </span>
-                    </>
-                  )}
-                </span>
+                </motion.span>
               </motion.h1>
 
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
                 className="mb-8 max-w-xl text-lg text-muted-foreground md:text-xl"
               >
                 A decentralized marketplace for verified data powered by
@@ -86,42 +91,52 @@ export default function Home() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.5 }}
+                transition={{ duration: 0.4, delay: 0.7 }}
                 className="flex flex-wrap gap-4"
               >
-                <Link href="/pools" className="brutal-shadow group flex items-center gap-2 border-2 border-foreground bg-foreground px-8 py-4 font-mono text-base font-bold uppercase text-background transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none">
-                  BROWSE POOLS
-                  <svg
-                    className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Link
+                    href="/pools"
+                    className="group flex items-center gap-2 border-2 border-foreground bg-foreground px-8 py-4 font-mono text-base font-bold uppercase text-background transition-all hover:border-primary hover:bg-primary"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 7l5 5m0 0l-5 5m5-5H6"
-                    />
-                  </svg>
-                </Link>
+                    BROWSE POOLS
+                    <svg
+                      className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
+                    </svg>
+                  </Link>
+                </motion.div>
 
-                <Link href="/pools/create" className="group flex items-center gap-2 border-2 border-border bg-background px-8 py-4 font-mono text-base font-bold uppercase transition-all hover:border-foreground hover:bg-foreground hover:text-background">
-                  CREATE POOL
-                  <svg
-                    className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Link
+                    href="/pools/create"
+                    className="group flex items-center gap-2 border-2 border-border bg-background px-8 py-4 font-mono text-base font-bold uppercase transition-all hover:border-foreground hover:bg-card"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                </Link>
+                    CREATE POOL
+                    <svg
+                      className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                  </Link>
+                </motion.div>
               </motion.div>
             </div>
 
@@ -135,50 +150,38 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.7 }}
-            className="grid grid-cols-1 gap-px border border-border bg-border md:grid-cols-3 my-12"
+            transition={{ duration: 0.6, delay: 0.9 }}
+            className="my-12 grid grid-cols-1 gap-px border border-border bg-border md:grid-cols-3"
           >
-            <StatBox
-              number="127"
-              label="ACTIVE POOLS"
-              trend="+12.5%"
-              trendUp={true}
-            />
-            <StatBox
-              number="$2.4M"
-              label="TOTAL VOLUME"
-              trend="+24.8%"
-              trendUp={true}
-            />
-            <StatBox
-              number="1,284"
-              label="DATA VERIFIED"
-              trend="+8.2%"
-              trendUp={true}
-            />
+            <StatBox number="127" label="ACTIVE POOLS" trend="+12.5%" trendUp={true} delay={0} />
+            <StatBox number="$2.4M" label="TOTAL VOLUME" trend="+24.8%" trendUp={true} delay={0.1} />
+            <StatBox number="1,284" label="DATA VERIFIED" trend="+8.2%" trendUp={true} delay={0.2} />
           </motion.div>
 
           {/* Features grid */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.9 }}
+            transition={{ duration: 0.6, delay: 1.1 }}
             className="mt-24 grid gap-6 md:grid-cols-3"
           >
             <FeatureCard
               icon="🔒"
               title="ZERO-KNOWLEDGE"
               description="All data verified through cryptographic proofs without revealing content"
+              delay={0}
             />
             <FeatureCard
               icon="⚡"
               title="INSTANT SETTLEMENT"
               description="Automatic payments and token transfers upon proof verification"
+              delay={0.1}
             />
             <FeatureCard
               icon="🌐"
               title="FULLY ON-CHAIN"
               description="No intermediaries. All transactions settled on Ethereum blockchain"
+              delay={0.2}
             />
           </motion.div>
 
@@ -186,16 +189,14 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 1.1 }}
+            transition={{ duration: 0.6, delay: 1.3 }}
             className="mt-24"
           >
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="font-mono text-2xl font-bold uppercase">
-                TRENDING POOLS
-              </h2>
-              <button className="font-mono text-sm text-primary hover:underline">
+              <h2 className="font-mono text-2xl font-bold uppercase">TRENDING POOLS</h2>
+              <Link href="/pools" className="font-mono text-sm text-primary transition-colors hover:text-primary/80">
                 VIEW ALL →
-              </button>
+              </Link>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -205,6 +206,7 @@ export default function Home() {
                 progress={65}
                 sellers="12/20"
                 status="active"
+                delay={0}
               />
               <PoolCard
                 name="LOCATION DATA #B7E9"
@@ -212,6 +214,7 @@ export default function Home() {
                 progress={40}
                 sellers="8/15"
                 status="active"
+                delay={0.1}
               />
               <PoolCard
                 name="SURVEY RESPONSES #C1D4"
@@ -219,6 +222,7 @@ export default function Home() {
                 progress={90}
                 sellers="18/20"
                 status="ending"
+                delay={0.2}
               />
             </div>
           </motion.div>
@@ -227,88 +231,80 @@ export default function Home() {
           <motion.footer
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 1.3 }}
-            className="mt-32 border-t border-border pt-12 pb-12"
+            transition={{ duration: 0.6, delay: 1.5 }}
+            className="mt-32 border-t border-border pb-12 pt-12"
           >
             <div className="grid gap-8 md:grid-cols-4">
               <div>
-                <h3 className="mb-4 font-mono text-sm font-bold uppercase">
-                  PROTOCOL
-                </h3>
+                <h3 className="mb-4 font-mono text-sm font-bold uppercase">PROTOCOL</h3>
                 <ul className="space-y-2 font-mono text-xs text-muted-foreground">
                   <li>
-                    <a href="#" className="hover:text-foreground">
+                    <a href="#" className="transition-colors hover:text-foreground">
                       Documentation
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-foreground">
+                    <a href="#" className="transition-colors hover:text-foreground">
                       Whitepaper
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-foreground">
+                    <a href="#" className="transition-colors hover:text-foreground">
                       Smart Contracts
                     </a>
                   </li>
                 </ul>
               </div>
               <div>
-                <h3 className="mb-4 font-mono text-sm font-bold uppercase">
-                  COMMUNITY
-                </h3>
+                <h3 className="mb-4 font-mono text-sm font-bold uppercase">COMMUNITY</h3>
                 <ul className="space-y-2 font-mono text-xs text-muted-foreground">
                   <li>
-                    <a href="#" className="hover:text-foreground">
+                    <a href="#" className="transition-colors hover:text-foreground">
                       Discord
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-foreground">
+                    <a href="#" className="transition-colors hover:text-foreground">
                       Twitter
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-foreground">
+                    <a href="#" className="transition-colors hover:text-foreground">
                       GitHub
                     </a>
                   </li>
                 </ul>
               </div>
               <div>
-                <h3 className="mb-4 font-mono text-sm font-bold uppercase">
-                  RESOURCES
-                </h3>
+                <h3 className="mb-4 font-mono text-sm font-bold uppercase">RESOURCES</h3>
                 <ul className="space-y-2 font-mono text-xs text-muted-foreground">
                   <li>
-                    <a href="#" className="hover:text-foreground">
+                    <a href="#" className="transition-colors hover:text-foreground">
                       Help Center
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-foreground">
+                    <a href="#" className="transition-colors hover:text-foreground">
                       Blog
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-foreground">
+                    <a href="#" className="transition-colors hover:text-foreground">
                       Status
                     </a>
                   </li>
                 </ul>
               </div>
               <div>
-                <h3 className="mb-4 font-mono text-sm font-bold uppercase">
-                  LEGAL
-                </h3>
+                <h3 className="mb-4 font-mono text-sm font-bold uppercase">LEGAL</h3>
                 <ul className="space-y-2 font-mono text-xs text-muted-foreground">
                   <li>
-                    <a href="#" className="hover:text-foreground">
+                    <a href="#" className="transition-colors hover:text-foreground">
                       Terms of Service
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-foreground">
+                    <a href="#" className="transition-colors hover:text-foreground">
                       Privacy Policy
                     </a>
                   </li>
@@ -331,26 +327,28 @@ function StatBox({
   label,
   trend,
   trendUp,
+  delay,
 }: {
   number: string;
   label: string;
   trend: string;
   trendUp: boolean;
+  delay: number;
 }) {
   return (
-    <div className="bg-background p-8">
-      <div className="mb-2 font-mono text-4xl font-black text-foreground">
-        {number}
-      </div>
-      <div className="mb-2 font-mono text-xs text-muted-foreground">
-        {label}
-      </div>
-      <div
-        className={`font-mono text-xs ${trendUp ? "text-primary" : "text-destructive"}`}
-      >
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.4 }}
+      whileHover={{ scale: 1.02 }}
+      className="bg-background p-8 transition-all"
+    >
+      <div className="mb-2 font-mono text-4xl font-black text-foreground">{number}</div>
+      <div className="mb-2 font-mono text-xs text-muted-foreground">{label}</div>
+      <div className={`font-mono text-xs ${trendUp ? "text-primary" : "text-destructive"}`}>
         {trend}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -359,17 +357,31 @@ function FeatureCard({
   icon,
   title,
   description,
+  delay,
 }: {
   icon: string;
   title: string;
   description: string;
+  delay: number;
 }) {
   return (
-    <div className="group border border-border bg-card p-8 transition-all hover:border-primary hover:bg-primary/5">
-      <div className="mb-4 text-4xl">{icon}</div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.4 }}
+      whileHover={{ scale: 1.02, borderColor: "var(--color-primary)" }}
+      className="group border border-border bg-card p-8 transition-all hover:bg-primary/5"
+    >
+      <motion.div
+        whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }}
+        transition={{ duration: 0.5 }}
+        className="mb-4 text-4xl"
+      >
+        {icon}
+      </motion.div>
       <h3 className="mb-3 font-mono text-lg font-bold uppercase">{title}</h3>
       <p className="text-sm text-muted-foreground">{description}</p>
-    </div>
+    </motion.div>
   );
 }
 
@@ -380,15 +392,23 @@ function PoolCard({
   progress,
   sellers,
   status,
+  delay,
 }: {
   name: string;
   budget: string;
   progress: number;
   sellers: string;
   status: string;
+  delay: number;
 }) {
   return (
-    <div className="group cursor-pointer border border-border bg-card p-6 transition-all hover:border-primary hover:bg-primary/5">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.4 }}
+      whileHover={{ scale: 1.02, borderColor: "var(--color-primary)" }}
+      className="group cursor-pointer border border-border bg-card p-6 transition-all hover:bg-primary/5"
+    >
       <div className="mb-4 flex items-start justify-between">
         <h3 className="font-mono text-sm font-bold uppercase">{name}</h3>
         <span
@@ -409,10 +429,12 @@ function PoolCard({
           <span>BUDGET</span>
           <span className="text-foreground">{budget}</span>
         </div>
-        <div className="h-1 w-full bg-muted">
-          <div
-            className="h-full bg-primary transition-all duration-300"
-            style={{ width: `${progress}%` }}
+        <div className="h-1 w-full overflow-hidden bg-muted">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 1, ease: "easeOut", delay: delay + 0.3 }}
+            className="h-full bg-primary"
           />
         </div>
       </div>
@@ -421,7 +443,7 @@ function PoolCard({
         <span className="text-muted-foreground">SELLERS</span>
         <span className="text-foreground">{sellers}</span>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -446,70 +468,14 @@ function FloatingCubes() {
 
           {/* Center content */}
           <div className="flex h-80 w-80 flex-col items-center justify-center border-2 border-border bg-background/50 p-8 backdrop-blur-sm">
-            {/* Main icon/symbol */}
-            {/* <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
+            {/* Placeholder for future content */}
+            <motion.div
+              animate={{ opacity: [0.3, 1, 0.3] }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="mb-6 text-6xl"
+              className="font-mono text-sm text-muted-foreground"
             >
-              🔒
-            </motion.div> */}
-
-            {/* Stats */}
-            <div className="space-y-4 text-center">
-              {/* <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <div className="font-mono text-4xl font-bold text-primary">
-                  127
-                </div>
-                <div className="font-mono text-xs text-muted-foreground">
-                  ACTIVE POOLS
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="h-px w-full bg-border"
-              />
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-              >
-                <div className="font-mono text-4xl font-bold text-accent">
-                  1,284
-                </div>
-                <div className="font-mono text-xs text-muted-foreground">
-                  DATA VERIFIED
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 }}
-                className="h-px w-full bg-border"
-              />
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1 }}
-              >
-                <div className="font-mono text-4xl font-bold text-foreground">
-                  99.7%
-                </div>
-                <div className="font-mono text-xs text-muted-foreground">
-                  SUCCESS RATE
-                </div>
-              </motion.div> */}
-            </div>
+              DECENTRALIZED
+            </motion.div>
           </div>
 
           {/* Corner accents */}
@@ -533,7 +499,7 @@ function FloatingCubes() {
           animate={{
             y: [0, -30, 0],
             x: [0, Math.random() * 20 - 10, 0],
-            opacity: [0, 1, 0],
+            opacity: [0, 0.6, 0],
           }}
           transition={{
             duration: 3 + Math.random() * 2,
