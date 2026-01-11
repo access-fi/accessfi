@@ -70,8 +70,29 @@ export default function Home() {
                   transition={{ duration: 0.6, delay: 0.5 }}
                   className="relative inline-block mt-2"
                 >
-                  <span className="block border-4 border-primary bg-primary px-4 py-2 text-background">
-                    ON-CHAIN
+                  <span className="relative block border-4 border-primary bg-primary px-4 py-2 text-background">
+                    <span className="relative z-10">ON-CHAIN</span>
+                    {/* Constant glitch layers */}
+                    <span
+                      className="absolute left-0 top-0 px-4 py-2 opacity-70"
+                      style={{
+                        color: '#00C2FF',
+                        transform: 'translate(-2px, 0)',
+                        mixBlendMode: 'screen'
+                      }}
+                    >
+                      ON-CHAIN
+                    </span>
+                    <span
+                      className="absolute left-0 top-0 px-4 py-2 opacity-70"
+                      style={{
+                        color: '#FF0080',
+                        transform: 'translate(2px, 0)',
+                        mixBlendMode: 'screen'
+                      }}
+                    >
+                      ON-CHAIN
+                    </span>
                   </span>
                 </motion.span>
               </motion.h1>
@@ -98,6 +119,9 @@ export default function Home() {
                   <Link
                     href="/pools"
                     className="group flex items-center gap-2 border-2 border-foreground bg-foreground px-8 py-4 font-mono text-base font-bold uppercase text-background transition-all hover:border-primary hover:bg-primary"
+                    style={{
+                      boxShadow: '6px 6px 0px rgba(0, 255, 133, 0.4)'
+                    }}
                   >
                     BROWSE POOLS
                     <svg
@@ -451,6 +475,32 @@ function PoolCard({
 function FloatingCubes() {
   return (
     <div className="relative h-[500px] w-full">
+      {/* Decorative corner brackets - Top Left */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute left-0 top-0 z-10"
+      >
+        {/* Horizontal line */}
+        <div className="h-0.5 w-20 bg-gradient-to-r from-accent to-transparent" />
+        {/* Vertical line */}
+        <div className="h-20 w-0.5 bg-gradient-to-b from-accent to-transparent" />
+      </motion.div>
+
+      {/* Decorative corner brackets - Bottom Right */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        className="absolute bottom-0 right-0 z-10"
+      >
+        {/* Horizontal line */}
+        <div className="h-0.5 w-20 bg-gradient-to-l from-primary to-transparent" />
+        {/* Vertical line */}
+        <div className="absolute bottom-0 right-0 h-20 w-0.5 bg-gradient-to-t from-primary to-transparent" />
+      </motion.div>
+
       {/* Large animated square in center */}
       <div className="flex h-full items-center justify-center">
         <div className="relative">

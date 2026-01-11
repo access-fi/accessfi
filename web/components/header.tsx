@@ -92,6 +92,9 @@ export function Header() {
                           onClick={openConnectModal}
                           type="button"
                           className="border-2 border-primary bg-primary px-6 py-3 font-mono text-sm font-bold uppercase text-primary-foreground transition-all hover:bg-primary/90"
+                          style={{
+                            boxShadow: '6px 6px 0px rgba(0, 255, 133, 0.4)'
+                          }}
                         >
                           CONNECT
                         </button>

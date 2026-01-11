@@ -95,7 +95,7 @@ export function OnboardingModal({ open, onClose, onSuccess }: OnboardingModalPro
         const result = await refetchUserContract();
 
         if (result.data && result.data !== '0x0000000000000000000000000000000000000000') {
-          const contractAddress = result.data;
+          const contractAddress = result.data as string;
 
           setStep('saving');
           const response = await fetch('/api/user', {
