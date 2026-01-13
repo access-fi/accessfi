@@ -4,10 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/header";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { Copy, ExternalLink } from "lucide-react";
+import { Copy, ExternalLink, X, Menu } from "lucide-react";
 import { CreatePoolModal } from "@/components/create-pool-modal";
 import { useUserCreatedPools } from "@/hooks/usePools";
 import { PoolCard as PoolCardComponent } from "@/components/pool-card";
@@ -15,9 +15,22 @@ import { PoolCard as PoolCardComponent } from "@/components/pool-card";
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const { profile, loading, needsOnboarding } = useUserProfile();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [createPoolOpen, setCreatePoolOpen] = useState(false);
+
+  // Open sidebar on desktop by default
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768 && !sidebarOpen) {
+        setSidebarOpen(true);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Loading state
   if (loading) {
@@ -179,35 +192,47 @@ export default function DashboardPage() {
       <Header />
 
       <div className="relative z-10 flex">
+        {/* Sidebar Overlay for Mobile */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-30 md:hidden top-16"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* Sidebar */}
-        <motion.aside
-          initial={{ x: -300 }}
-          animate={{ x: 0 }}
-          className={`fixed left-0 top-16 h-[calc(100vh-4rem)] border-r-2 border-border bg-background/95 backdrop-blur-sm transition-all duration-300 ${
-            sidebarOpen ? "w-64" : "w-20"
+        <aside
+          className={`fixed left-0 top-16 h-[calc(100vh-4rem)] border-r-2 border-border bg-background transition-all duration-300 z-40 md:relative md:top-0 md:h-[calc(100vh-4rem)] overflow-y-auto ${
+            sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 md:w-20'
           }`}
         >
-          {/* Sidebar header */}
-          <div className="border-b-2 border-border p-6">
-            <div className="mb-4 flex items-center justify-between">
-              {sidebarOpen && (
-                <div className="font-mono text-xs text-muted-foreground">
-                  NAVIGATION
-                </div>
-              )}
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="ml-auto border border-border bg-background p-2 transition-all hover:border-primary hover:bg-primary/5"
-              >
-                <div className="h-4 w-4 text-foreground">
-                  {sidebarOpen ? "←" : "→"}
-                </div>
-              </button>
-            </div>
+          {/* Toggle button - Desktop only */}
+          <div className="hidden md:flex justify-end p-2">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="border border-border bg-background p-1.5 transition-all hover:border-primary hover:bg-primary/5"
+              title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+            >
+              <div className="h-3 w-3 text-foreground text-xs flex items-center justify-center">
+                {sidebarOpen ? "←" : "→"}
+              </div>
+            </button>
           </div>
 
+          {/* Close button - Mobile only */}
+          {sidebarOpen && (
+            <div className="md:hidden flex justify-end p-2">
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="border border-border bg-background p-1.5 transition-all hover:border-destructive hover:bg-destructive/5"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
           {/* Sidebar menu */}
-          <nav className="p-4">
+          <nav className="px-3 pb-4">
             <SidebarItem
               icon="■"
               label="OVERVIEW"
@@ -237,7 +262,7 @@ export default function DashboardPage() {
               collapsed={!sidebarOpen}
             />
 
-            <div className="my-4 border-t border-border" />
+            <div className="my-3 border-t border-border" />
 
             <SidebarItem
               icon="⚙"
@@ -247,7 +272,7 @@ export default function DashboardPage() {
               collapsed={!sidebarOpen}
             />
 
-            <div className="my-4 border-t border-border" />
+            <div className="my-3 border-t border-border" />
 
             <SidebarItem
               icon="○"
@@ -262,28 +287,23 @@ export default function DashboardPage() {
               collapsed={!sidebarOpen}
             />
           </nav>
-
-          {/* Sidebar footer - wallet info */}
-          {sidebarOpen && (
-            <div className="absolute bottom-0 left-0 right-0 border-t-2 border-border bg-background/95 p-4">
-              <div className="mb-2 font-mono text-xs text-muted-foreground">
-                CONNECTED
-              </div>
-              <div className="mb-2 font-mono text-xs font-bold text-foreground">
-                {address?.slice(0, 6)}...{address?.slice(-4)}
-              </div>
-              <div className="font-mono text-xs text-primary">BASE NETWORK</div>
-            </div>
-          )}
-        </motion.aside>
+        </aside>
 
         {/* Main content */}
         <main
-          className={`min-h-screen flex-1 transition-all duration-300 ${
-            sidebarOpen ? "ml-64" : "ml-20"
-          } mt-16`}
+          className={`min-h-[calc(100vh-4rem)] flex-1 transition-all duration-300 ${
+            sidebarOpen ? "" : "md:ml-0"
+          }`}
         >
-          <div className="p-8">
+          <div className="p-4 md:p-8">
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden fixed bottom-6 right-6 z-20 border-2 border-primary bg-primary p-4 shadow-lg transition-all hover:bg-primary/90"
+            >
+              <Menu className="h-6 w-6 text-primary-foreground" />
+            </button>
+
             <AnimatePresence mode="wait">
               {activeTab === "overview" && <OverviewTab address={address} profile={profile} onCreatePool={() => setCreatePoolOpen(true)} />}
               {activeTab === "created" && <CreatedPoolsTab onCreatePool={() => setCreatePoolOpen(true)} />}

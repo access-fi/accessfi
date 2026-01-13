@@ -22,7 +22,7 @@ export default function PoolsPage() {
       <Navigation />
 
       <div className="relative z-10">
-        <main className="container mx-auto px-6 py-12">
+        <main className="container mx-auto px-4 py-8 md:px-6 md:py-12">
           {/* Page header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -102,7 +102,7 @@ export default function PoolsPage() {
 
           {/* Pools grid */}
           {isLoading ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className="border border-border bg-card p-6 animate-pulse">
                   <div className="h-4 bg-muted mb-4 w-3/4" />
@@ -116,7 +116,7 @@ export default function PoolsPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
             >
               {poolAddresses
                 .filter((address) =>
