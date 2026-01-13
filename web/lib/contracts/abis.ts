@@ -19,3 +19,10 @@ export const ABIS = {
 
 // Export individual ABIs for convenience
 export { FactoryUserABI, UserABI, FactoryAccessFiPoolABI, AccessFiPoolABI, AccessFiDataTokenABI };
+
+// Export with lowercase names for wagmi hooks compatibility
+export const factoryUserAbi = FactoryUserABI;
+export const userAbi = UserABI;
+export const factoryAccessFiPoolAbi = FactoryAccessFiPoolABI;
+export const accessFiPoolAbi = AccessFiPoolABI;
+export const accessFiDataTokenAbi = AccessFiDataTokenABI;

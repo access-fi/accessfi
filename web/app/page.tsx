@@ -4,9 +4,11 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Header } from "@/components/header";
+import { CreatePoolModal } from "@/components/create-pool-modal";
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
+  const [createPoolOpen, setCreatePoolOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -141,8 +143,8 @@ export default function Home() {
                 </motion.div>
 
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Link
-                    href="/pools/create"
+                  <button
+                    onClick={() => setCreatePoolOpen(true)}
                     className="group flex items-center gap-2 border-2 border-border bg-background px-8 py-4 font-mono text-base font-bold uppercase transition-all hover:border-foreground hover:bg-card"
                   >
                     CREATE POOL
@@ -159,7 +161,7 @@ export default function Home() {
                         d="M12 4v16m8-8H4"
                       />
                     </svg>
-                  </Link>
+                  </button>
                 </motion.div>
               </motion.div>
             </div>
@@ -170,8 +172,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Stats section */}
-          <motion.div
+          {/* Stats section - TODO: Load real stats from blockchain */}
+          {/* <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.9 }}
@@ -180,7 +182,7 @@ export default function Home() {
             <StatBox number="127" label="ACTIVE POOLS" trend="+12.5%" trendUp={true} delay={0} />
             <StatBox number="$2.4M" label="TOTAL VOLUME" trend="+24.8%" trendUp={true} delay={0.1} />
             <StatBox number="1,284" label="DATA VERIFIED" trend="+8.2%" trendUp={true} delay={0.2} />
-          </motion.div>
+          </motion.div> */}
 
           {/* Features grid */}
           <motion.div
@@ -209,8 +211,8 @@ export default function Home() {
             />
           </motion.div>
 
-          {/* Recent pools preview */}
-          <motion.div
+          {/* Recent pools preview - TODO: Load real pools from contract */}
+          {/* <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.3 }}
@@ -249,7 +251,7 @@ export default function Home() {
                 delay={0.2}
               />
             </div>
-          </motion.div>
+          </motion.div> */}
 
           {/* Footer */}
           <motion.footer
@@ -341,40 +343,50 @@ export default function Home() {
           </motion.footer>
         </main>
       </div>
+
+      {/* Create Pool Modal */}
+      <CreatePoolModal
+        open={createPoolOpen}
+        onClose={() => setCreatePoolOpen(false)}
+        onSuccess={() => {
+          setCreatePoolOpen(false);
+          // Optionally redirect to pools page or refresh data
+        }}
+      />
     </div>
   );
 }
 
-// Stat box component
-function StatBox({
-  number,
-  label,
-  trend,
-  trendUp,
-  delay,
-}: {
-  number: string;
-  label: string;
-  trend: string;
-  trendUp: boolean;
-  delay: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.4 }}
-      whileHover={{ scale: 1.02 }}
-      className="bg-background p-8 transition-all"
-    >
-      <div className="mb-2 font-mono text-4xl font-black text-foreground">{number}</div>
-      <div className="mb-2 font-mono text-xs text-muted-foreground">{label}</div>
-      <div className={`font-mono text-xs ${trendUp ? "text-primary" : "text-destructive"}`}>
-        {trend}
-      </div>
-    </motion.div>
-  );
-}
+// Stat box component - Commented out until we have real data
+// function StatBox({
+//   number,
+//   label,
+//   trend,
+//   trendUp,
+//   delay,
+// }: {
+//   number: string;
+//   label: string;
+//   trend: string;
+//   trendUp: boolean;
+//   delay: number;
+// }) {
+//   return (
+//     <motion.div
+//       initial={{ opacity: 0, y: 20 }}
+//       animate={{ opacity: 1, y: 0 }}
+//       transition={{ delay, duration: 0.4 }}
+//       whileHover={{ scale: 1.02 }}
+//       className="bg-background p-8 transition-all"
+//     >
+//       <div className="mb-2 font-mono text-4xl font-black text-foreground">{number}</div>
+//       <div className="mb-2 font-mono text-xs text-muted-foreground">{label}</div>
+//       <div className={`font-mono text-xs ${trendUp ? "text-primary" : "text-destructive"}`}>
+//         {trend}
+//       </div>
+//     </motion.div>
+//   );
+// }
 
 // Feature card component
 function FeatureCard({
@@ -409,67 +421,67 @@ function FeatureCard({
   );
 }
 
-// Pool card component
-function PoolCard({
-  name,
-  budget,
-  progress,
-  sellers,
-  status,
-  delay,
-}: {
-  name: string;
-  budget: string;
-  progress: number;
-  sellers: string;
-  status: string;
-  delay: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.4 }}
-      whileHover={{ scale: 1.02, borderColor: "var(--color-primary)" }}
-      className="group cursor-pointer border border-border bg-card p-6 transition-all hover:bg-primary/5"
-    >
-      <div className="mb-4 flex items-start justify-between">
-        <h3 className="font-mono text-sm font-bold uppercase">{name}</h3>
-        <span
-          className={`font-mono text-xs uppercase ${
-            status === "active"
-              ? "text-primary"
-              : status === "ending"
-                ? "text-accent"
-                : "text-muted-foreground"
-          }`}
-        >
-          [{status}]
-        </span>
-      </div>
+// Pool card component - Commented out until we have real data
+// function PoolCard({
+//   name,
+//   budget,
+//   progress,
+//   sellers,
+//   status,
+//   delay,
+// }: {
+//   name: string;
+//   budget: string;
+//   progress: number;
+//   sellers: string;
+//   status: string;
+//   delay: number;
+// }) {
+//   return (
+//     <motion.div
+//       initial={{ opacity: 0, y: 20 }}
+//       animate={{ opacity: 1, y: 0 }}
+//       transition={{ delay, duration: 0.4 }}
+//       whileHover={{ scale: 1.02, borderColor: "var(--color-primary)" }}
+//       className="group cursor-pointer border border-border bg-card p-6 transition-all hover:bg-primary/5"
+//     >
+//       <div className="mb-4 flex items-start justify-between">
+//         <h3 className="font-mono text-sm font-bold uppercase">{name}</h3>
+//         <span
+//           className={`font-mono text-xs uppercase ${
+//             status === "active"
+//               ? "text-primary"
+//               : status === "ending"
+//                 ? "text-accent"
+//                 : "text-muted-foreground"
+//           }`}
+//         >
+//           [{status}]
+//         </span>
+//       </div>
 
-      <div className="mb-4">
-        <div className="mb-2 flex justify-between font-mono text-xs text-muted-foreground">
-          <span>BUDGET</span>
-          <span className="text-foreground">{budget}</span>
-        </div>
-        <div className="h-1 w-full overflow-hidden bg-muted">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 1, ease: "easeOut", delay: delay + 0.3 }}
-            className="h-full bg-primary"
-          />
-        </div>
-      </div>
+//       <div className="mb-4">
+//         <div className="mb-2 flex justify-between font-mono text-xs text-muted-foreground">
+//           <span>BUDGET</span>
+//           <span className="text-foreground">{budget}</span>
+//         </div>
+//         <div className="h-1 w-full overflow-hidden bg-muted">
+//           <motion.div
+//             initial={{ width: 0 }}
+//             animate={{ width: `${progress}%` }}
+//             transition={{ duration: 1, ease: "easeOut", delay: delay + 0.3 }}
+//             className="h-full bg-primary"
+//           />
+//         </div>
+//       </div>
 
-      <div className="flex items-center justify-between font-mono text-xs">
-        <span className="text-muted-foreground">SELLERS</span>
-        <span className="text-foreground">{sellers}</span>
-      </div>
-    </motion.div>
-  );
-}
+//       <div className="flex items-center justify-between font-mono text-xs">
+//         <span className="text-muted-foreground">SELLERS</span>
+//         <span className="text-foreground">{sellers}</span>
+//       </div>
+//     </motion.div>
+//   );
+// }
 
 // Simple animated visual
 function FloatingCubes() {

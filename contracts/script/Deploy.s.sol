@@ -121,6 +121,10 @@ contract Deploy is Script {
         factoryUser = address(new FactoryUser(factoryPoolProxy, dataTokenProxy));
         console.log("   FactoryUser:", factoryUser);
 
+        // Update FactoryAccessFiPool to use the correct FactoryUser
+        FactoryAccessFiPool(payable(factoryPoolProxy)).setFactoryUser(factoryUser);
+        console.log("   FactoryAccessFiPool updated with correct FactoryUser");
+
         AccessFiDataToken(dataTokenProxy).grantRole(
             AccessFiDataToken(dataTokenProxy).FACTORY_ROLE(),
             factoryPoolProxy

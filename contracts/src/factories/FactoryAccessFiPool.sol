@@ -252,6 +252,15 @@ contract FactoryAccessFiPool is
         emit PlatformFeeUpdated(oldFee, newFeePercent);
     }
 
+    /**
+     * @notice Update factoryUser address (only admin)
+     * @param newFactoryUser New FactoryUser contract address
+     */
+    function setFactoryUser(address newFactoryUser) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(newFactoryUser != address(0), "Invalid factory user address");
+        factoryUser = newFactoryUser;
+    }
+
     // ==============================================================
     //                        UPGRADE AUTHORIZATION
     // ==============================================================

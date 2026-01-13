@@ -11,4 +11,10 @@ remappings = [
     '@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/',
 ]
 
+# Exclude certora folders from compilation
+exclude = [
+    "lib/openzeppelin-contracts-upgradeable/certora/**/*",
+    "lib/openzeppelin-contracts/certora/**/*"
+]
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

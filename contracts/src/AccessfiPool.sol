@@ -42,6 +42,7 @@ contract AccessFiPool is
     AccessFiDataToken public dataToken;
     verifyProof public zkVerifier;
     address public factoryUser;  // FactoryUser contract for verification
+    address public factory;  // FactoryAccessFiPool contract
     address public platformWallet;  // Platform fee recipient
     uint256 public platformFeePercent;  // Platform fee percentage
 
@@ -139,6 +140,7 @@ contract AccessFiPool is
         dataToken = AccessFiDataToken(_dataToken);
         zkVerifier = verifyProof(_zkVerifier);
         factoryUser = _factoryUser;
+        factory = msg.sender;  // Set factory to the deployer (FactoryAccessFiPool)
         platformWallet = _platformWallet;
         platformFeePercent = _platformFeePercent;
 
@@ -507,6 +509,13 @@ contract AccessFiPool is
      */
     receive() external payable {
         require(msg.value > 0, "Cannot fund with zero");
+
+        // Allow factory to send initial funding during deployment
+        if (msg.sender == factory) {
+            // Initial funding from factory - no fee deduction needed
+            // Factory already deducted the fee before sending
+            return;
+        }
 
         // Verify caller is creator's User contract OR creator EOA
         address eoa;

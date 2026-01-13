@@ -8,12 +8,16 @@ import { useState } from "react";
 import { Header } from "@/components/header";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { Copy, ExternalLink } from "lucide-react";
+import { CreatePoolModal } from "@/components/create-pool-modal";
+import { useUserCreatedPools } from "@/hooks/usePools";
+import { PoolCard as PoolCardComponent } from "@/components/pool-card";
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const { profile, loading, needsOnboarding } = useUserProfile();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [createPoolOpen, setCreatePoolOpen] = useState(false);
 
   // Loading state
   if (loading) {
@@ -281,8 +285,8 @@ export default function DashboardPage() {
         >
           <div className="p-8">
             <AnimatePresence mode="wait">
-              {activeTab === "overview" && <OverviewTab address={address} profile={profile} />}
-              {activeTab === "created" && <CreatedPoolsTab />}
+              {activeTab === "overview" && <OverviewTab address={address} profile={profile} onCreatePool={() => setCreatePoolOpen(true)} />}
+              {activeTab === "created" && <CreatedPoolsTab onCreatePool={() => setCreatePoolOpen(true)} />}
               {activeTab === "joined" && <JoinedPoolsTab />}
               {activeTab === "activity" && <ActivityTab />}
               {activeTab === "account" && <AccountDetailsTab address={address} profile={profile} />}
@@ -290,6 +294,16 @@ export default function DashboardPage() {
           </div>
         </main>
       </div>
+
+      {/* Create Pool Modal */}
+      <CreatePoolModal
+        open={createPoolOpen}
+        onClose={() => setCreatePoolOpen(false)}
+        onSuccess={() => {
+          setCreatePoolOpen(false);
+          // Optionally refresh pools or navigate
+        }}
+      />
     </div>
   );
 }
@@ -357,7 +371,7 @@ function SidebarItem({
 }
 
 // Overview tab content
-function OverviewTab({ address, profile }: { address: string | undefined; profile: any }) {
+function OverviewTab({ address, profile, onCreatePool }: { address: string | undefined; profile: any; onCreatePool: () => void }) {
   return (
     <motion.div
       key="overview"
@@ -380,17 +394,17 @@ function OverviewTab({ address, profile }: { address: string | undefined; profil
         </p>
       </motion.div>
 
-      {/* Stats grid */}
+      {/* Stats grid - TODO: Load real stats from blockchain */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         className="mb-8 grid gap-4 md:grid-cols-4"
       >
-        <StatCard label="POOLS CREATED" value="3" change="+1" positive />
-        <StatCard label="POOLS JOINED" value="7" change="+2" positive />
-        <StatCard label="DATA SOLD" value="12" change="+5" positive />
-        <StatCard label="TOTAL EARNED" value="2.4 ETH" change="+0.8" positive />
+        <StatCard label="POOLS CREATED" value="0" change="—" positive={false} />
+        <StatCard label="POOLS JOINED" value="0" change="—" positive={false} />
+        <StatCard label="DATA SOLD" value="0" change="—" positive={false} />
+        <StatCard label="TOTAL EARNED" value="0 ETH" change="—" positive={false} />
       </motion.div>
 
       {/* Quick actions */}
@@ -408,7 +422,7 @@ function OverviewTab({ address, profile }: { address: string | undefined; profil
             icon="+"
             title="CREATE POOL"
             description="Start new data pool"
-            href="/pools/create"
+            onClick={onCreatePool}
           />
           <ActionCard
             icon="→"
@@ -425,7 +439,7 @@ function OverviewTab({ address, profile }: { address: string | undefined; profil
         </div>
       </motion.div>
 
-      {/* Recent pools */}
+      {/* Recent pools - TODO: Load from blockchain */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -434,21 +448,13 @@ function OverviewTab({ address, profile }: { address: string | undefined; profil
         <h2 className="mb-4 font-mono text-lg font-bold uppercase">
           RECENT ACTIVITY
         </h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          <PoolCard
-            name="HEALTH DATA #A4F2"
-            budget="5.2 ETH"
-            progress={60}
-            sellers="12/20"
-            status="active"
-          />
-          <PoolCard
-            name="FITNESS METRICS #D3A1"
-            budget="8.5 ETH"
-            progress={75}
-            sellers="45/60"
-            status="active"
-          />
+        <div className="flex min-h-[200px] items-center justify-center border-2 border-dashed border-border p-8 text-center">
+          <div>
+            <div className="mb-3 text-4xl opacity-20">📊</div>
+            <p className="font-mono text-sm text-muted-foreground">
+              No recent activity yet
+            </p>
+          </div>
         </div>
       </motion.div>
     </motion.div>
@@ -662,7 +668,9 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 // Created pools tab
-function CreatedPoolsTab() {
+function CreatedPoolsTab({ onCreatePool }: { onCreatePool: () => void }) {
+  const { poolAddresses, isLoading } = useUserCreatedPools();
+
   return (
     <motion.div
       key="created"
@@ -677,14 +685,19 @@ function CreatedPoolsTab() {
         className="mb-8"
       >
         <div className="flex items-center justify-between">
-          <h1 className="font-mono text-3xl font-black uppercase">MY POOLS</h1>
+          <div>
+            <h1 className="font-mono text-3xl font-black uppercase">MY POOLS</h1>
+            <p className="mt-2 text-muted-foreground">
+              Pools you've created ({poolAddresses.length})
+            </p>
+          </div>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Link
-              href="/pools/create"
+            <button
+              onClick={onCreatePool}
               className="brutal-shadow border-2 border-primary bg-primary px-6 py-3 font-mono text-xs font-bold uppercase text-primary-foreground transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
             >
               + CREATE
-            </Link>
+            </button>
           </motion.div>
         </div>
       </motion.div>
@@ -693,32 +706,38 @@ function CreatedPoolsTab() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
       >
-        <PoolCard
-          name="HEALTH DATA POOL #A4F2"
-          budget="5.2 ETH"
-          remaining="2.1 ETH"
-          progress={60}
-          sellers="12/20"
-          status="active"
-        />
-        <PoolCard
-          name="LOCATION DATA #B7E9"
-          budget="3.8 ETH"
-          remaining="1.5 ETH"
-          progress={40}
-          sellers="8/15"
-          status="active"
-        />
-        <PoolCard
-          name="SURVEY RESPONSES #C1D4"
-          budget="2.5 ETH"
-          remaining="0.2 ETH"
-          progress={92}
-          sellers="18/20"
-          status="ending"
-        />
+        {isLoading ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="border border-border bg-card p-6 animate-pulse">
+                <div className="h-4 bg-muted mb-4 w-3/4" />
+                <div className="h-3 bg-muted mb-2 w-1/2" />
+                <div className="h-3 bg-muted w-2/3" />
+              </div>
+            ))}
+          </div>
+        ) : poolAddresses.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {poolAddresses.map((poolAddress) => (
+              <PoolCardComponent key={poolAddress} poolAddress={poolAddress} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex min-h-[300px] flex-col items-center justify-center border-2 border-dashed border-border p-12 text-center">
+            <div className="mb-4 text-6xl opacity-20">💼</div>
+            <h3 className="mb-2 font-mono text-xl font-bold uppercase">No Pools Created</h3>
+            <p className="mb-6 text-sm text-muted-foreground">
+              Create your first data pool to start collecting verified data
+            </p>
+            <button
+              onClick={onCreatePool}
+              className="brutal-shadow border-2 border-primary bg-primary px-6 py-3 font-mono text-sm font-bold uppercase text-primary-foreground transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+            >
+              + CREATE FIRST POOL
+            </button>
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );
@@ -747,36 +766,25 @@ function JoinedPoolsTab() {
         </p>
       </motion.div>
 
+      {/* TODO: Load joined pools from blockchain */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
       >
-        <PoolCard
-          name="FITNESS METRICS #D3A1"
-          budget="8.5 ETH"
-          progress={75}
-          sellers="45/60"
-          status="verified"
-          reward="0.14 ETH"
-        />
-        <PoolCard
-          name="SPENDING HABITS #E2F8"
-          budget="4.2 ETH"
-          progress={55}
-          sellers="22/40"
-          status="pending"
-          reward="0.11 ETH"
-        />
-        <PoolCard
-          name="SLEEP PATTERNS #F4C9"
-          budget="6.0 ETH"
-          progress={85}
-          sellers="34/40"
-          status="submitted"
-          reward="0.15 ETH"
-        />
+        <div className="flex min-h-[300px] flex-col items-center justify-center border-2 border-dashed border-border p-12 text-center">
+          <div className="mb-4 text-6xl opacity-20">🤝</div>
+          <h3 className="mb-2 font-mono text-xl font-bold uppercase">No Pools Joined</h3>
+          <p className="mb-6 text-sm text-muted-foreground">
+            Browse available pools and join to start selling your data
+          </p>
+          <Link
+            href="/pools"
+            className="brutal-shadow border-2 border-primary bg-primary px-6 py-3 font-mono text-sm font-bold uppercase text-primary-foreground transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+          >
+            BROWSE POOLS
+          </Link>
+        </div>
       </motion.div>
     </motion.div>
   );
@@ -801,35 +809,19 @@ function ActivityTab() {
         <p className="font-mono text-sm text-muted-foreground">Your recent transactions</p>
       </motion.div>
 
+      {/* TODO: Load activity from blockchain */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="border-2 border-border bg-card"
       >
-        <ActivityItem
-          type="verified"
-          pool="FITNESS METRICS #D3A1"
-          time="2 hours ago"
-          amount="0.14 ETH"
-        />
-        <ActivityItem type="joined" pool="SLEEP PATTERNS #F4C9" time="1 day ago" />
-        <ActivityItem
-          type="created"
-          pool="HEALTH DATA POOL #A4F2"
-          time="3 days ago"
-        />
-        <ActivityItem
-          type="submitted"
-          pool="SPENDING HABITS #E2F8"
-          time="5 days ago"
-        />
-        <ActivityItem
-          type="verified"
-          pool="LOCATION DATA #B7E9"
-          time="1 week ago"
-          amount="0.16 ETH"
-        />
+        <div className="flex min-h-[300px] flex-col items-center justify-center border-2 border-dashed border-border p-12 text-center">
+          <div className="mb-4 text-6xl opacity-20">⚡</div>
+          <h3 className="mb-2 font-mono text-xl font-bold uppercase">No Activity Yet</h3>
+          <p className="text-sm text-muted-foreground">
+            Your transaction history will appear here
+          </p>
+        </div>
       </motion.div>
     </motion.div>
   );
@@ -870,31 +862,41 @@ function ActionCard({
   title,
   description,
   href,
+  onClick,
 }: {
   icon: string;
   title: string;
   description: string;
-  href: string;
+  href?: string;
+  onClick?: () => void;
 }) {
-  return (
-    <Link href={href}>
+  const content = (
+    <motion.div
+      whileHover={{ scale: 1.02, borderColor: "var(--color-primary)" }}
+      whileTap={{ scale: 0.98 }}
+      className="group border-2 border-border bg-card p-6 transition-all hover:bg-primary/5"
+    >
       <motion.div
-        whileHover={{ scale: 1.02, borderColor: "var(--color-primary)" }}
-        whileTap={{ scale: 0.98 }}
-        className="group border-2 border-border bg-card p-6 transition-all hover:bg-primary/5"
+        whileHover={{ rotate: [0, -10, 10, -10, 0] }}
+        transition={{ duration: 0.5 }}
+        className="mb-4 flex h-12 w-12 items-center justify-center border-2 border-foreground bg-foreground font-mono text-2xl text-background transition-all group-hover:border-primary group-hover:bg-primary"
       >
-        <motion.div
-          whileHover={{ rotate: [0, -10, 10, -10, 0] }}
-          transition={{ duration: 0.5 }}
-          className="mb-4 flex h-12 w-12 items-center justify-center border-2 border-foreground bg-foreground font-mono text-2xl text-background transition-all group-hover:border-primary group-hover:bg-primary"
-        >
-          {icon}
-        </motion.div>
-        <h3 className="mb-2 font-mono text-sm font-bold uppercase">{title}</h3>
-        <p className="text-xs text-muted-foreground">{description}</p>
+        {icon}
       </motion.div>
-    </Link>
+      <h3 className="mb-2 font-mono text-sm font-bold uppercase">{title}</h3>
+      <p className="text-xs text-muted-foreground">{description}</p>
+    </motion.div>
   );
+
+  if (onClick) {
+    return (
+      <button onClick={onClick} className="w-full text-left">
+        {content}
+      </button>
+    );
+  }
+
+  return <Link href={href || "#"}>{content}</Link>;
 }
 
 // Pool card component
