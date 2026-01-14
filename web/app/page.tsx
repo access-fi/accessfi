@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Header } from "@/components/header";
 import { CreatePoolModal } from "@/components/create-pool-modal";
+import { StackedMonolith } from "@/components/stacked-monolith";
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
@@ -168,7 +169,7 @@ export default function Home() {
 
             {/* Right side - 3D Visual Element */}
             <div className="hidden lg:flex lg:items-center lg:justify-center">
-              <FloatingCubes />
+              <StackedMonolith />
             </div>
           </div>
 
@@ -483,98 +484,3 @@ function FeatureCard({
 //   );
 // }
 
-// Simple animated visual
-function FloatingCubes() {
-  return (
-    <div className="relative h-[500px] w-full">
-      {/* Decorative corner brackets - Top Left */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute left-0 top-0 z-10"
-      >
-        {/* Horizontal line */}
-        <div className="h-0.5 w-20 bg-gradient-to-r from-accent to-transparent" />
-        {/* Vertical line */}
-        <div className="h-20 w-0.5 bg-gradient-to-b from-accent to-transparent" />
-      </motion.div>
-
-      {/* Decorative corner brackets - Bottom Right */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute bottom-0 right-0 z-10"
-      >
-        {/* Horizontal line */}
-        <div className="h-0.5 w-20 bg-gradient-to-l from-primary to-transparent" />
-        {/* Vertical line */}
-        <div className="absolute bottom-0 right-0 h-20 w-0.5 bg-gradient-to-t from-primary to-transparent" />
-      </motion.div>
-
-      {/* Large animated square in center */}
-      <div className="flex h-full items-center justify-center">
-        <div className="relative">
-          {/* Rotating border effect */}
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-0 h-80 w-80 border-t-2 border-r-2 border-primary"
-          />
-          <motion.div
-            animate={{ rotate: -360 }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-0 h-80 w-80 border-b-2 border-l-2 border-accent"
-          />
-
-          {/* Center content */}
-          <div className="flex h-80 w-80 flex-col items-center justify-center border-2 border-border bg-background/50 p-8 backdrop-blur-sm">
-            {/* Placeholder for future content */}
-            <motion.div
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="font-mono text-sm text-muted-foreground"
-            >
-              DECENTRALIZED
-            </motion.div>
-          </div>
-
-          {/* Corner accents */}
-          <motion.div
-            animate={{ opacity: [0.3, 0.8, 0.3] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="absolute -left-2 -top-2 h-4 w-4 border-l-2 border-t-2 border-primary"
-          />
-          <motion.div
-            animate={{ opacity: [0.3, 0.8, 0.3] }}
-            transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-            className="absolute -right-2 -bottom-2 h-4 w-4 border-r-2 border-b-2 border-accent"
-          />
-        </div>
-      </div>
-
-      {/* Floating particles */}
-      {[...Array(12)].map((_, i) => (
-        <motion.div
-          key={i}
-          animate={{
-            y: [0, -30, 0],
-            x: [0, Math.random() * 20 - 10, 0],
-            opacity: [0, 0.6, 0],
-          }}
-          transition={{
-            duration: 3 + Math.random() * 2,
-            repeat: Infinity,
-            delay: i * 0.4,
-          }}
-          className="absolute h-1 w-1 bg-primary"
-          style={{
-            left: `${10 + Math.random() * 80}%`,
-            top: `${10 + Math.random() * 80}%`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
