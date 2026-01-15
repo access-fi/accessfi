@@ -35,7 +35,8 @@ export function getContractAddresses(chainId: number) {
   const addresses = CONTRACT_ADDRESSES[chainId as SupportedChainId];
 
   if (!addresses) {
-    throw new Error(`Unsupported chain ID: ${chainId}. Supported chains: ${Object.keys(CONTRACT_ADDRESSES).join(', ')}`);
+    console.warn(`Unsupported chain ID: ${chainId}. Supported chains: ${Object.keys(CONTRACT_ADDRESSES).join(', ')}`);
+    return null;
   }
 
   return addresses;
