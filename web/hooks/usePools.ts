@@ -75,9 +75,11 @@ export function usePoolInfo(poolAddress: `0x${string}` | undefined) {
   }
 
   // Cast poolInfo to any[] to avoid TypeScript indexing errors
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const info = poolInfo as any[];
 
   // getPoolStats returns: (remainingBudget, spentBudget, totalDataCollected, isActiveAndNotStopped)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const stats = poolStats as any[];
 
   // Actual struct order from contract:

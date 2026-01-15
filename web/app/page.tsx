@@ -1,19 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/header";
 import { CreatePoolModal } from "@/components/create-pool-modal";
 import { StackedMonolith } from "@/components/stacked-monolith";
 
 export default function Home() {
-  const [mounted, setMounted] = useState(false);
   const [createPoolOpen, setCreatePoolOpen] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -173,17 +168,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Stats section - TODO: Load real stats from blockchain */}
-          {/* <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.9 }}
-            className="my-12 grid grid-cols-1 gap-px border border-border bg-border md:grid-cols-3"
-          >
-            <StatBox number="127" label="ACTIVE POOLS" trend="+12.5%" trendUp={true} delay={0} />
-            <StatBox number="$2.4M" label="TOTAL VOLUME" trend="+24.8%" trendUp={true} delay={0.1} />
-            <StatBox number="1,284" label="DATA VERIFIED" trend="+8.2%" trendUp={true} delay={0.2} />
-          </motion.div> */}
 
           {/* Features grid */}
           <motion.div
@@ -212,47 +196,6 @@ export default function Home() {
             />
           </motion.div>
 
-          {/* Recent pools preview - TODO: Load real pools from contract */}
-          {/* <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 1.3 }}
-            className="mt-24"
-          >
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="font-mono text-2xl font-bold uppercase">TRENDING POOLS</h2>
-              <Link href="/pools" className="font-mono text-sm text-primary transition-colors hover:text-primary/80">
-                VIEW ALL →
-              </Link>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <PoolCard
-                name="HEALTH DATA POOL #A4F2"
-                budget="5.2 ETH"
-                progress={65}
-                sellers="12/20"
-                status="active"
-                delay={0}
-              />
-              <PoolCard
-                name="LOCATION DATA #B7E9"
-                budget="3.8 ETH"
-                progress={40}
-                sellers="8/15"
-                status="active"
-                delay={0.1}
-              />
-              <PoolCard
-                name="SURVEY RESPONSES #C1D4"
-                budget="2.5 ETH"
-                progress={90}
-                sellers="18/20"
-                status="ending"
-                delay={0.2}
-              />
-            </div>
-          </motion.div> */}
 
           {/* Footer */}
           <motion.footer

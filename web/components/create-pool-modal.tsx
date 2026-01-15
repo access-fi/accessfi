@@ -220,27 +220,9 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
         deadline: deadlineTimestamp,
       };
 
-      // DEBUG: Log all critical values
-      console.log('=== POOL CREATION DEBUG ===');
-      console.log('Current timestamp:', currentTimestamp.toString(), new Date(Number(currentTimestamp) * 1000).toISOString());
-      console.log('Deadline timestamp:', deadlineTimestamp.toString(), deadlineDate.toISOString());
-      console.log('Deadline > Current?', deadlineTimestamp > currentTimestamp);
-      console.log('Time difference (seconds):', (deadlineTimestamp - currentTimestamp).toString());
-      console.log('Pool Info:', {
-        name: poolInfo.name,
-        creator: poolInfo.creator,
-        pricePerData: pricePerDataWei.toString(),
-        totalBudget: totalBudgetWei.toString(),
-        proofRequirements: data.proofRequirements,
-      });
-      console.log('Sending value (contract will deduct 5% fee):', totalBudgetWei.toString());
-      console.log('========================');
-
       // Call contract - this will trigger wallet popup
       // Send totalBudget as value (NOT totalBudget + fee)
       const txHash = await createPool(poolInfo, totalBudgetWei);
-
-      console.log('Transaction submitted:', txHash);
 
       // Keep in confirming state while transaction is being mined
       // The useEffect will handle the success state when isConfirmed becomes true

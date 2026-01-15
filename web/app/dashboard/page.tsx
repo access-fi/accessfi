@@ -148,7 +148,7 @@ export default function DashboardPage() {
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="text-primary">4.</span>
-                    <span>Once complete, you'll automatically get access to the dashboard</span>
+                    <span>Once complete, you&apos;ll automatically get access to the dashboard</span>
                   </li>
                 </ul>
               </div>
@@ -391,7 +391,7 @@ function SidebarItem({
 }
 
 // Overview tab content
-function OverviewTab({ address, profile, onCreatePool }: { address: string | undefined; profile: any; onCreatePool: () => void }) {
+function OverviewTab({ address, profile, onCreatePool }: { address: string | undefined; profile: { fullName: string; role: string; createdAt: Date } | null; onCreatePool: () => void }) {
   return (
     <motion.div
       key="overview"
@@ -482,7 +482,7 @@ function OverviewTab({ address, profile, onCreatePool }: { address: string | und
 }
 
 // Account Details Tab
-function AccountDetailsTab({ address, profile }: { address: string | undefined; profile: any }) {
+function AccountDetailsTab({ address, profile }: { address: string | undefined; profile: { fullName: string; role: string; userContractAddress?: string; createdAt: Date; dataToBuy?: string | null; dataToSell?: string | null } | null }) {
   const [copied, setCopied] = useState<string | null>(null);
 
   const copyToClipboard = async (text: string, label: string) => {
@@ -595,7 +595,7 @@ function AccountDetailsTab({ address, profile }: { address: string | undefined; 
                 {profile?.userContractAddress && (
                   <>
                     <button
-                      onClick={() => copyToClipboard(profile.userContractAddress, "contract")}
+                      onClick={() => copyToClipboard(profile.userContractAddress!, "contract")}
                       className="border border-border bg-background p-2 transition-all hover:border-primary hover:bg-primary/5"
                       title="Copy address"
                     >
@@ -708,7 +708,7 @@ function CreatedPoolsTab({ onCreatePool }: { onCreatePool: () => void }) {
           <div>
             <h1 className="font-mono text-3xl font-black uppercase">MY POOLS</h1>
             <p className="mt-2 text-muted-foreground">
-              Pools you've created ({poolAddresses.length})
+              Pools you&apos;ve created ({poolAddresses.length})
             </p>
           </div>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -782,7 +782,7 @@ function JoinedPoolsTab() {
           JOINED POOLS
         </h1>
         <p className="mt-2 text-muted-foreground">
-          Pools where you're contributing data
+          Pools where you&apos;re contributing data
         </p>
       </motion.div>
 
@@ -919,7 +919,8 @@ function ActionCard({
   return <Link href={href || "#"}>{content}</Link>;
 }
 
-// Pool card component
+// Pool card component (reserved for future use)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function PoolCard({
   name,
   budget,
@@ -998,7 +999,8 @@ function PoolCard({
   );
 }
 
-// Activity item component
+// Activity item component (reserved for future use)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function ActivityItem({
   type,
   pool,
