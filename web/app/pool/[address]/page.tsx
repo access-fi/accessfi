@@ -2,10 +2,11 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { use } from "react";
+import { use, useState } from "react";
 import { formatEther } from "viem";
 import { usePoolInfo } from "@/hooks/usePools";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { JoinPoolModal } from "@/components/join-pool-modal";
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +17,7 @@ export default function PoolDetailPage({
 }) {
   const resolvedParams = use(params);
   const { pool, isLoading } = usePoolInfo(resolvedParams.address as `0x${string}`);
+  const [joinModalOpen, setJoinModalOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -178,6 +180,7 @@ export default function PoolDetailPage({
               className="text-center"
             >
               <button
+                onClick={() => setJoinModalOpen(true)}
                 className="brutal-shadow border-2 border-primary bg-primary px-12 py-4 font-mono text-sm font-bold uppercase text-primary-foreground transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
               >
                 JOIN POOL & SUBMIT DATA
@@ -185,6 +188,15 @@ export default function PoolDetailPage({
               <p className="mt-4 text-xs text-muted-foreground">
                 Submit your verified data to earn {formatEther(pool.pricePerData)} ETH
               </p>
+
+              {/* Join Pool Modal */}
+              <JoinPoolModal
+                open={joinModalOpen}
+                onClose={() => setJoinModalOpen(false)}
+                poolAddress={resolvedParams.address as `0x${string}`}
+                poolName={pool.name}
+                pricePerData={pool.pricePerData}
+              />
             </motion.div>
           )}
         </main>

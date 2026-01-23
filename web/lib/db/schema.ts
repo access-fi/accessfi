@@ -34,3 +34,40 @@ export const userProfiles = pgTable('user_profiles', {
 
 export type UserProfile = typeof userProfiles.$inferSelect;
 export type NewUserProfile = typeof userProfiles.$inferInsert;
+
+// Proof submissions tracking
+export const proofSubmissions = pgTable('proof_submissions', {
+  id: varchar('id', { length: 36 }).primaryKey(), // UUID
+  sellerAddress: varchar('seller_address', { length: 42 }).notNull(),
+  poolAddress: varchar('pool_address', { length: 42 }).notNull(),
+  proofType: varchar('proof_type', { length: 10 }).notNull(), // ProofType enum (0-3)
+  proofHash: varchar('proof_hash', { length: 66 }).notNull(),
+  status: varchar('status', { length: 20 }).notNull(), // 'pending', 'verified', 'failed'
+  txHash: varchar('tx_hash', { length: 66 }),
+  encryptedCID: text('encrypted_cid'),
+  dataHash: varchar('data_hash', { length: 66 }),
+  attestation: text('attestation'), // TEE attestation
+  errorMessage: text('error_message'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Data tokens tracking
+export const dataTokens = pgTable('data_tokens', {
+  id: varchar('id', { length: 36 }).primaryKey(), // UUID
+  tokenId: varchar('token_id', { length: 78 }).unique().notNull(),
+  sellerAddress: varchar('seller_address', { length: 42 }).notNull(),
+  buyerAddress: varchar('buyer_address', { length: 42 }).notNull(),
+  poolAddress: varchar('pool_address', { length: 42 }).notNull(),
+  encryptedCID: text('encrypted_cid').notNull(),
+  dataHash: varchar('data_hash', { length: 66 }).notNull(),
+  mintedAt: timestamp('minted_at').notNull(),
+  transferred: boolean('transferred').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// TypeScript types
+export type ProofSubmission = typeof proofSubmissions.$inferSelect;
+export type NewProofSubmission = typeof proofSubmissions.$inferInsert;
+export type DataToken = typeof dataTokens.$inferSelect;
+export type NewDataToken = typeof dataTokens.$inferInsert;
