@@ -12,7 +12,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useJoinPool, useSubmitProof } from '@/lib/contracts/hooks';
 import { ProofType } from '@/lib/contracts/types';
 import { EmailFileUpload } from './email-file-upload';
-import { generateCompleteProof } from '@/lib/proof';
+import { generateAndVerifyProof } from '@/lib/zkemail';
 import { toast } from 'sonner';
 
 type ModalStep =
@@ -95,9 +95,9 @@ export function JoinPoolModal({
       console.log('[JoinPool] Starting proof generation...');
       setStep('generating-proof');
 
-      const proofResult = await generateCompleteProof(
+      const proofResult = await generateAndVerifyProof(
         emlContent,
-        (progress, step) => {
+        (progress: number, step: string) => {
           setProofProgress(Math.floor(progress));
           console.log(`[JoinPool] ${step} - ${Math.floor(progress)}%`);
         }

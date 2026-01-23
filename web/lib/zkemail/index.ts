@@ -1,11 +1,14 @@
 /**
- * zkEmail + zkVerify Integration
+ * zkEmail Client-Side Proof Generation
+ *
+ * SECURITY: This file runs in the browser and only generates zkEmail proofs.
+ * zkVerify submission (with seed phrase) happens server-side via API.
  *
  * Based on: https://docs.zkverify.io/overview/explorations/zkemail
  */
 
 import zkeSDK from "@zk-email/sdk";
-import { zkVerifySession, Library, CurveType, ZkVerifyEvents } from "zkverifyjs";
+import { keccak256 } from "viem";
 import type { VerificationParams } from "../contracts/types";
 
 export interface ProofResult {
@@ -20,7 +23,12 @@ export interface ProofResult {
 }
 
 /**
- * Generate zkEmail proof and verify on zkVerify
+ * Generate zkEmail proof locally and submit to zkVerify via server API
+ *
+ * ARCHITECTURE:
+ * 1. Client (this file): Generate zkEmail proof locally
+ * 2. Server API: Submit to zkVerify with secure seed phrase
+ * 3. Client: Receive verification params for smart contract
  *
  * @param emlContent - Raw .eml file content
  * @param onProgress - Progress callback (0-100)
@@ -31,6 +39,8 @@ export async function generateAndVerifyProof(
   onProgress?: (progress: number, step: string) => void
 ): Promise<ProofResult> {
   try {
+    // ==== CLIENT-SIDE: Generate zkEmail Proof ====
+
     // Step 1: Initialize zkEmail SDK
     console.log('[zkEmail] Initializing SDK...');
     onProgress?.(5, 'Initializing zkEmail SDK...');
@@ -49,14 +59,18 @@ export async function generateAndVerifyProof(
     // Step 3: Download verification key
     console.log('[zkEmail] Downloading vkey...');
     onProgress?.(20, 'Downloading verification key...');
+    console.log("[zkEmail] Blueprint:", blueprint);
     const vkey = await blueprint.getVkey();
+    console.log('[zkEmail] Vkey:', vkey);
+    const vkeyHash = keccak256(vkey as `0x${string}`);
+    console.log('[zkEmail] Vkey hash:', vkeyHash);
 
     // Step 4: Create prover
     console.log('[zkEmail] Creating prover...');
     onProgress?.(25, 'Creating prover...');
     const prover = blueprint.createProver();
 
-    // Step 5: Generate proof (this takes the longest)
+    // Step 5: Generate proof (this takes the longest - 30-60 seconds)
     console.log('[zkEmail] Generating proof from email...');
     onProgress?.(30, 'Generating zero-knowledge proof...');
     const proof = await prover.generateProof(emlContent);
@@ -64,129 +78,54 @@ export async function generateAndVerifyProof(
     console.log('[zkEmail] Proof generated successfully');
     onProgress?.(60, 'Proof generated!');
 
-    // Step 6: Connect to zkVerify
-    console.log('[zkVerify] Connecting to zkVerify...');
-    onProgress?.(65, 'Connecting to zkVerify...');
+    // ==== SERVER-SIDE: Submit to zkVerify ====
 
-    const network = process.env.NEXT_PUBLIC_ZKVERIFY_NETWORK || 'volta';
-    const seedPhrase = process.env.NEXT_PUBLIC_ZKVERIFY_SEED_PHRASE;
+    console.log('[zkVerify] Submitting to server API...');
+    onProgress?.(65, 'Submitting to zkVerify...');
 
-    if (!seedPhrase) {
-      throw new Error('NEXT_PUBLIC_ZKVERIFY_SEED_PHRASE not configured');
-    }
-
-    const sessionBuilder = zkVerifySession.start();
-    const session = network === 'mainnet'
-      ? await sessionBuilder.Mainnet().withAccount(seedPhrase)
-      : await sessionBuilder.Volta().withAccount(seedPhrase);
-
-    console.log('[zkVerify] Session started');
-    onProgress?.(70, 'Submitting to zkVerify...');
-
-    // Step 7: Submit proof to zkVerify
-    console.log('[zkVerify] Submitting proof...');
-    const { events } = await session.verify()
-      .groth16({ library: Library.snarkjs, curve: CurveType.bn128 })
-      .execute({
+    // Call server-side API with proof data (NO seed phrase exposure)
+    const response = await fetch('/api/zkverify/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
         proofData: {
-          vk: JSON.parse(vkey),
           proof: proof.props.proofData,
-          publicSignals: proof.props.publicOutputs,
+          curve: 'bn128',
+          inputs: proof.props.publicOutputs,
         },
-      });
-
-    onProgress?.(80, 'Waiting for blockchain confirmation...');
-
-    // Step 8: Wait for IncludedInBlock event
-    console.log('[zkVerify] Waiting for IncludedInBlock event...');
-
-    const eventData = await new Promise<any>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('Timeout waiting for zkVerify confirmation'));
-      }, 120000); // 2 minute timeout
-
-      events.on(ZkVerifyEvents.IncludedInBlock, (data: any) => {
-        clearTimeout(timeout);
-        console.log('[zkVerify] Included in block:', data);
-        resolve(data);
-      });
-
-      events.on('error', (error: any) => {
-        clearTimeout(timeout);
-        reject(error);
-      });
+        publicOutputs: proof.props.publicOutputs,
+        vkeyHash,
+      }),
     });
 
-    onProgress?.(90, 'Getting verification parameters...');
-
-    // Step 9: Get attestation ID (might be in different places)
-    const attestationId = eventData.attestationId || eventData.statementHash;
-
-    console.log('[zkVerify] Event data:', {
-      txHash: eventData.txHash,
-      statement: eventData.statement,
-      attestationId: attestationId?.toString(),
-      domainId: eventData.domainId,
-      aggregationId: eventData.aggregationId,
-    });
-
-    // Step 10: Get merkle proof if attestationId is available
-    let verificationParams: VerificationParams;
-
-    if (attestationId) {
-      console.log('[zkVerify] Fetching merkle proof...');
-      const merkleProof = await session.merkleProof(BigInt(attestationId));
-
-      console.log('[zkVerify] Merkle proof received:', {
-        pathLength: merkleProof.path?.length,
-        leafIndex: merkleProof.leafIndex,
-        numberOfLeaves: merkleProof.numberOfLeaves,
-      });
-
-      verificationParams = {
-        aggregationId: BigInt(eventData.aggregationId || attestationId),
-        domainId: BigInt(eventData.domainId || merkleProof.domainId || 0),
-        merklePath: (merkleProof.path || []).map((p: string) =>
-          (p.startsWith('0x') ? p : `0x${p}`) as `0x${string}`
-        ),
-        leaf: (eventData.statement.startsWith('0x')
-          ? eventData.statement
-          : `0x${eventData.statement}`) as `0x${string}`,
-        leafCount: BigInt(merkleProof.numberOfLeaves || 1),
-        index: BigInt(merkleProof.leafIndex || 0),
-      };
-    } else {
-      // Fallback if no attestation ID (shouldn't happen normally)
-      console.warn('[zkVerify] No attestation ID, using statement as proof hash');
-      verificationParams = {
-        aggregationId: BigInt(0),
-        domainId: BigInt(0),
-        merklePath: [],
-        leaf: (eventData.statement.startsWith('0x')
-          ? eventData.statement
-          : `0x${eventData.statement}`) as `0x${string}`,
-        leafCount: BigInt(1),
-        index: BigInt(0),
-      };
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to submit proof to zkVerify');
     }
 
-    // Close session
-    await session.close();
-    console.log('[zkVerify] Session closed');
+    onProgress?.(90, 'Proof verified on zkVerify...');
+
+    const result = await response.json();
+    console.log('[zkVerify] Server response:', result);
 
     onProgress?.(100, 'Complete!');
 
-    // Return proof hash (use statement as unique identifier)
-    const proofHash = (eventData.statement.startsWith('0x')
-      ? eventData.statement
-      : `0x${eventData.statement}`) as `0x${string}`;
-
+    // Return formatted result
     return {
-      proofHash,
-      verificationParams,
-      txHash: eventData.txHash,
-      statement: eventData.statement,
-      attestationId: attestationId ? BigInt(attestationId) : undefined,
+      proofHash: result.proofHash,
+      verificationParams: {
+        aggregationId: BigInt(result.verificationParams.attestationId),
+        domainId: BigInt(0), // zkVerify uses attestationId
+        merklePath: result.verificationParams.merkleProof,
+        leaf: result.proofHash,
+        leafCount: BigInt(result.verificationParams.leafCount),
+        index: BigInt(result.verificationParams.leafIndex),
+      },
+      txHash: result.txHash,
+      statement: result.statement,
+      attestationId: BigInt(result.attestationId),
     };
 
   } catch (error: any) {
