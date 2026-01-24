@@ -105,7 +105,8 @@ export function JoinPoolModal({
 
       console.log('[JoinPool] Proof complete:', {
         proofHash: proofResult.proofHash,
-        attestationId: proofResult.attestationId.toString(),
+        statement: proofResult.statement,
+        txHash: proofResult.txHash,
       });
       setProofProgress(70);
 
