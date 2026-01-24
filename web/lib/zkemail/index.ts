@@ -108,19 +108,16 @@ export async function generateAndVerifyProof(
 
     onProgress?.(100, 'Complete!');
 
-    // Return formatted result
-    // Note: Basic zkVerify verification doesn't use domain aggregation,
-    // so we use the statement (proof hash) as the primary verification reference.
-    // For on-chain verification, the smart contract should verify against zkVerify's attestation.
+    // Return formatted result with domain aggregation data
     return {
       proofHash: result.proofHash,
       verificationParams: {
-        aggregationId: BigInt(0), // Not using domain aggregation
-        domainId: BigInt(0),
-        merklePath: [], // No merkle path in basic verification
-        leaf: result.statement as `0x${string}`, // The zkVerify statement is our proof
-        leafCount: BigInt(1),
-        index: BigInt(0),
+        aggregationId: BigInt(result.verificationParams.aggregationId || 0),
+        domainId: BigInt(result.verificationParams.domainId || 0),
+        merklePath: result.verificationParams.merklePath || [],
+        leaf: result.verificationParams.leaf as `0x${string}`,
+        leafCount: BigInt(result.verificationParams.leafCount || 1),
+        index: BigInt(result.verificationParams.index || 0),
       },
       txHash: result.txHash,
       statement: result.statement,

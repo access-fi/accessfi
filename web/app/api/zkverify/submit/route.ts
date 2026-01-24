@@ -3,13 +3,20 @@
  *
  * SECURITY: Keeps ZKVERIFY_SEED_PHRASE secure on server
  * Never exposes seed phrase to client
+ *
+ * Uses Domain Aggregation for on-chain verification support
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { zkVerifySession, Library, CurveType, ZkVerifyEvents, VerifyTransactionInfo } from 'zkverifyjs';
+import {
+  zkVerifySession,
+  Library,
+  CurveType,
+  ZkVerifyEvents,
+  VerifyTransactionInfo,
+} from 'zkverifyjs';
 // @ts-ignore - SDK exports correctly but TS has cache issue
 import { initZkEmailSdk } from '@zk-email/sdk';
-import { keccak256, toHex } from 'viem';
 
 interface SubmitRequest {
   blueprintId: string;
@@ -20,6 +27,16 @@ interface SubmitRequest {
   };
 }
 
+// Pre-registered zkVerify Domain IDs for different chains (Testnet)
+// See: https://docs.zkverify.io
+const ZKVERIFY_DOMAINS = {
+  horizenTestnet: 175,
+  ethereumSepolia: 0,
+  baseSepolia: 2,
+  optimismSepolia: 3,
+  arbitrumSepolia: 4,
+} as const;
+
 export async function POST(req: NextRequest) {
   try {
     const body: SubmitRequest = await req.json();
@@ -28,6 +45,9 @@ export async function POST(req: NextRequest) {
     // Validate required environment variables
     const seedPhrase = process.env.ZKVERIFY_SEED_PHRASE;
     const network = process.env.NEXT_PUBLIC_ZKVERIFY_NETWORK || 'volta';
+    const configuredDomainId = process.env.ZKVERIFY_DOMAIN_ID
+      ? parseInt(process.env.ZKVERIFY_DOMAIN_ID)
+      : null;
 
     if (!seedPhrase) {
       return NextResponse.json(
@@ -36,7 +56,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log('[zkVerify API] Submitting proof to zkVerify...');
+    console.log('[zkVerify API] Submitting proof to zkVerify with domain aggregation...');
     console.log('[zkVerify API] Network:', network);
 
     // Step 1: Fetch verification key from zkEmail (server-side only)
@@ -54,7 +74,12 @@ export async function POST(req: NextRequest) {
 
     console.log('[zkVerify API] Session created');
 
-    // Step 3: Submit proof to zkVerify
+    // Step 3: Use pre-registered domain for Horizen Testnet
+    // Domain IDs are pre-registered by zkVerify for each target chain
+    const domainId = configuredDomainId || ZKVERIFY_DOMAINS.horizenTestnet;
+    console.log('[zkVerify API] Using domain ID:', domainId);
+
+    // Step 4: Submit proof to zkVerify WITH domainId for aggregation
     const { events } = await session.verify()
       .groth16({ library: Library.snarkjs, curve: CurveType.bn128 })
       .execute({
@@ -63,19 +88,22 @@ export async function POST(req: NextRequest) {
           proof: proofData.proof,
           publicSignals: proofData.inputs,
         },
+        domainId, // Enable domain aggregation
       });
 
-    console.log('[zkVerify API] Proof submitted');
+    console.log('[zkVerify API] Proof submitted to domain:', domainId);
 
-    // Step 4: Wait for Finalized event to get statement (proof hash)
+    // Step 5: Wait for Finalized event
     const verificationResult = await new Promise<VerifyTransactionInfo>((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error('Timeout waiting for proof finalization'));
-      }, 180000); // 3 minute timeout for finalization
+      }, 180000); // 3 minute timeout
 
       events.on(ZkVerifyEvents.IncludedInBlock, (data: VerifyTransactionInfo) => {
         console.log('[zkVerify API] Proof included in block:', data.blockHash);
         console.log('[zkVerify API] Statement:', data.statement);
+        console.log('[zkVerify API] DomainId:', data.domainId);
+        console.log('[zkVerify API] AggregationId:', data.aggregationId);
       });
 
       events.on(ZkVerifyEvents.Finalized, (data: VerifyTransactionInfo) => {
@@ -91,40 +119,78 @@ export async function POST(req: NextRequest) {
       });
     });
 
-    // The statement is the proof hash - this is what proves the proof was verified
     const statement = verificationResult.statement;
     if (!statement) {
       throw new Error('No statement returned from zkVerify');
     }
 
     console.log('[zkVerify API] Verification complete!');
-    console.log('[zkVerify API] Statement (proof hash):', statement);
-    console.log('[zkVerify API] Transaction hash:', verificationResult.txHash);
+    console.log('[zkVerify API] Statement:', statement);
+    console.log('[zkVerify API] DomainId:', verificationResult.domainId);
+    console.log('[zkVerify API] AggregationId:', verificationResult.aggregationId);
 
-    // Create a unique proof hash for our smart contract
-    // Combines the zkVerify statement with public inputs for uniqueness
-    const proofHash = keccak256(
-      toHex(JSON.stringify({
-        statement,
-        publicInputs: proofData.inputs,
-        txHash: verificationResult.txHash,
-      }))
+    // Step 6: Wait for aggregation receipt (since aggregationSize=1, this should be immediate)
+    console.log('[zkVerify API] Waiting for aggregation receipt...');
+
+    const aggregationReceipt = await session.waitForAggregationReceipt(
+      verificationResult.domainId!,
+      verificationResult.aggregationId!
     );
+
+    console.log('[zkVerify API] Aggregation receipt received:', aggregationReceipt);
+
+    // Step 7: Get merkle proof path for on-chain verification
+    console.log('[zkVerify API] Getting merkle proof path...');
+
+    const merkleProofPath = await session.getAggregateStatementPath(
+      aggregationReceipt.blockHash,
+      verificationResult.domainId!,
+      verificationResult.aggregationId!,
+      statement
+    );
+
+    console.log('[zkVerify API] Merkle proof path:', merkleProofPath);
+
+    // Create proof hash for smart contract
+    const proofHash = statement as `0x${string}`;
 
     // Close session
     await session.close();
 
+    console.log('[zkVerify API] Proof submitted successfully');
+    console.log('[zkVerify API] Proof hash:', proofHash);
+    console.log('[zkVerify API] Tx hash:', verificationResult.txHash);
+    console.log('[zkVerify API] Statement:', statement);
+    console.log('[zkVerify API] DomainId:', verificationResult.domainId);
+    console.log('[zkVerify API] AggregationId:', verificationResult.aggregationId);
+    console.log('[zkVerify API] Merkle proof path:', merkleProofPath);
+    console.log('[zkVerify API] Leaf:', merkleProofPath.leaf);
+    console.log('[zkVerify API] Leaf count:', merkleProofPath.numberOfLeaves);
+    console.log('[zkVerify API] Leaf index:', merkleProofPath.leafIndex);
+    console.log('[zkVerify API] Root:', merkleProofPath.root);
     return NextResponse.json({
       success: true,
       proofHash,
       txHash: verificationResult.txHash,
       statement,
       blockHash: verificationResult.blockHash,
-      // For smart contract verification
+      // Domain aggregation data for on-chain verification
+      domainId: verificationResult.domainId,
+      aggregationId: verificationResult.aggregationId,
+      // Merkle proof for on-chain verification
+      merklePath: merkleProofPath.proof,
+      leaf: merkleProofPath.leaf,
+      leafCount: merkleProofPath.numberOfLeaves,
+      leafIndex: merkleProofPath.leafIndex,
+      root: merkleProofPath.root,
+      // For smart contract VerificationParams struct
       verificationParams: {
-        statement,
-        txHash: verificationResult.txHash,
-        blockHash: verificationResult.blockHash,
+        aggregationId: verificationResult.aggregationId,
+        domainId: verificationResult.domainId,
+        merklePath: merkleProofPath.proof,
+        leaf: merkleProofPath.leaf,
+        leafCount: merkleProofPath.numberOfLeaves,
+        index: merkleProofPath.leafIndex,
       },
     });
 

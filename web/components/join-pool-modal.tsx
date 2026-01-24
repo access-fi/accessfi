@@ -110,27 +110,24 @@ export function JoinPoolModal({
       });
       setProofProgress(70);
 
-      // Step 2: Encrypt via TEE
-      console.log('[JoinPool] Encrypting data via TEE...');
+      // Step 2: For now, skip TEE encryption - store email hash directly
+      // TODO: Re-enable TEE encryption when ready for production
+      console.log('[JoinPool] Preparing data (encryption skipped for testing)...');
       setStep('encrypting');
 
-      const encryptResponse = await fetch('/api/tee/encrypt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          emailData: emlContent,
-          poolAddress,
-          sellerAddress: address,
-        }),
-      });
+      // Create a simple CID from the email content (for testing)
+      // In production, this would be encrypted and stored on IPFS via TEE
+      const encoder = new TextEncoder();
+      const emailBytes = encoder.encode(emlContent);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', emailBytes);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const dataHash = '0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('') as `0x${string}`;
 
-      if (!encryptResponse.ok) {
-        const error = await encryptResponse.json();
-        throw new Error(error.error || 'Encryption failed');
-      }
+      // For testing: store email content as base64 in CID field
+      // In production: this would be an IPFS CID of encrypted data
+      const encryptedCID = btoa(emlContent).slice(0, 100); // Truncate for testing
 
-      const { encryptedCID, dataHash, attestation } = await encryptResponse.json();
-      console.log('[JoinPool] Data encrypted, CID:', encryptedCID);
+      console.log('[JoinPool] Data prepared:', { dataHash, cidLength: encryptedCID.length });
 
       // Step 3: Join pool if not already joined
       console.log('[JoinPool] Joining pool...');
