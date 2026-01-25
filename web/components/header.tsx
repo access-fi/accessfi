@@ -63,6 +63,12 @@ export function Header() {
               >
                 POOLS
               </Link>
+              <Link
+                href="/docs"
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                DOCS
+              </Link>
 
               <ConnectButton.Custom>
                 {({
@@ -233,6 +239,13 @@ export function Header() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 POOLS
+              </Link>
+              <Link
+                href="/docs"
+                className="block font-mono text-sm uppercase text-muted-foreground transition-colors hover:text-foreground"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                DOCS
               </Link>
 
               <ConnectButton.Custom>
