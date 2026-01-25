@@ -11,7 +11,7 @@ import { Copy, ExternalLink, X, Menu } from "lucide-react";
 import { CreatePoolModal } from "@/components/create-pool-modal";
 import { useUserCreatedPools } from "@/hooks/usePools";
 import { PoolCard as PoolCardComponent } from "@/components/pool-card";
-import { useUserStats, useUserJoinedPools, useGetBuyerTokens, useTokenMetadata } from "@/lib/contracts/hooks";
+import { useUserStats, useUserJoinedPools, useGetBuyerTokens, useTokenMetadata, usePoolInfo } from "@/lib/contracts/hooks";
 import { formatEther } from "viem";
 
 export default function DashboardPage() {
@@ -888,9 +888,10 @@ function ActivityTab() {
   );
 }
 
-// Purchases tab - Shows data tokens owned by the buyer
+// Purchases tab - Shows data grouped by pools
 function PurchasesTab({ address }: { address: string | undefined }) {
   const { data: tokenIds, isLoading } = useGetBuyerTokens(address as `0x${string}` | undefined);
+  const [selectedPool, setSelectedPool] = useState<string | null>(null);
   const [selectedToken, setSelectedToken] = useState<bigint | null>(null);
 
   const tokens = (tokenIds as bigint[]) || [];
@@ -909,10 +910,10 @@ function PurchasesTab({ address }: { address: string | undefined }) {
         className="mb-8"
       >
         <h1 className="font-mono text-3xl font-black uppercase">
-          PURCHASED DATA
+          MY DATA
         </h1>
         <p className="mt-2 text-muted-foreground">
-          Data tokens you&apos;ve acquired from pools ({tokens.length})
+          Verified data collected from your pools
         </p>
       </motion.div>
 
@@ -922,45 +923,52 @@ function PurchasesTab({ address }: { address: string | undefined }) {
         transition={{ delay: 0.1 }}
       >
         {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="border border-border bg-card p-6 animate-pulse">
-                <div className="h-4 bg-muted mb-4 w-3/4" />
-                <div className="h-3 bg-muted mb-2 w-1/2" />
-                <div className="h-3 bg-muted w-2/3" />
+          <div className="space-y-4">
+            {[1, 2].map((i) => (
+              <div key={i} className="border-2 border-border bg-card p-6 animate-pulse">
+                <div className="h-6 bg-muted mb-4 w-1/3" />
+                <div className="h-4 bg-muted mb-2 w-1/4" />
               </div>
             ))}
           </div>
         ) : tokens.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {tokens.map((tokenId) => (
-              <PurchasedTokenCard
-                key={tokenId.toString()}
-                tokenId={tokenId}
-                onViewData={() => setSelectedToken(tokenId)}
-              />
-            ))}
-          </div>
+          <TokensByPoolView
+            tokenIds={tokens}
+            onSelectPool={setSelectedPool}
+            onSelectToken={setSelectedToken}
+          />
         ) : (
           <div className="flex min-h-[300px] flex-col items-center justify-center border-2 border-dashed border-border p-12 text-center">
-            <div className="mb-4 text-6xl opacity-20">◆</div>
-            <h3 className="mb-2 font-mono text-xl font-bold uppercase">No Purchased Data</h3>
-            <p className="mb-6 text-sm text-muted-foreground">
-              When sellers submit verified data to your pools, tokens will appear here
+            <div className="mb-4 flex h-20 w-20 items-center justify-center border-2 border-border">
+              <span className="text-4xl opacity-20">◆</span>
+            </div>
+            <h3 className="mb-2 font-mono text-xl font-bold uppercase">No Data Yet</h3>
+            <p className="mb-6 text-sm text-muted-foreground max-w-md">
+              When sellers submit verified data to your pools, it will appear here organized by pool
             </p>
             <Link
               href="/pools"
               className="brutal-shadow border-2 border-primary bg-primary px-6 py-3 font-mono text-sm font-bold uppercase text-primary-foreground transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
             >
-              CREATE A POOL
+              BROWSE POOLS
             </Link>
           </div>
         )}
       </motion.div>
 
-      {/* Data Viewer Modal */}
+      {/* Pool Data Modal */}
+      {selectedPool && (
+        <PoolDataModal
+          poolAddress={selectedPool as `0x${string}`}
+          tokenIds={tokens}
+          onClose={() => setSelectedPool(null)}
+          onSelectToken={setSelectedToken}
+        />
+      )}
+
+      {/* Single Token Data Viewer */}
       {selectedToken !== null && (
-        <DataViewerModal
+        <EmailDataModal
           tokenId={selectedToken}
           onClose={() => setSelectedToken(null)}
         />
@@ -969,100 +977,173 @@ function PurchasesTab({ address }: { address: string | undefined }) {
   );
 }
 
-// Individual purchased token card
-function PurchasedTokenCard({ tokenId, onViewData }: { tokenId: bigint; onViewData: () => void }) {
-  const { data: metadata, isLoading } = useTokenMetadata(tokenId);
+// Groups tokens by pool and displays pool cards
+function TokensByPoolView({
+  tokenIds,
+  onSelectPool,
+  onSelectToken
+}: {
+  tokenIds: bigint[];
+  onSelectPool: (pool: string) => void;
+  onSelectToken: (token: bigint) => void;
+}) {
+  // We need to fetch metadata for each token to group by pool
+  // For now, we'll render individual token fetchers that report back
+  const [poolGroups, setPoolGroups] = useState<Record<string, bigint[]>>({});
 
-  // Parse metadata tuple from contract struct order:
-  // [encryptedCID, dataHash, seller, pool, mintedAt, transferred]
-  const tokenData = metadata as [string, string, string, string, bigint, boolean] | undefined;
-  const encryptedCID = tokenData?.[0];
-  const dataHash = tokenData?.[1];
-  const seller = tokenData?.[2];
-  const poolAddress = tokenData?.[3];
-  const mintedAt = tokenData?.[4];
+  return (
+    <div className="space-y-6">
+      {/* Token metadata fetchers - hidden, just for grouping */}
+      {tokenIds.map((tokenId) => (
+        <TokenPoolGrouper
+          key={tokenId.toString()}
+          tokenId={tokenId}
+          onPoolIdentified={(pool) => {
+            setPoolGroups((prev) => {
+              const existing = prev[pool] || [];
+              if (!existing.find(t => t === tokenId)) {
+                return { ...prev, [pool]: [...existing, tokenId] };
+              }
+              return prev;
+            });
+          }}
+        />
+      ))}
 
-  if (isLoading) {
-    return (
-      <div className="border-2 border-border bg-card p-6 animate-pulse">
-        <div className="h-4 bg-muted mb-4 w-3/4" />
-        <div className="h-3 bg-muted mb-2 w-1/2" />
-        <div className="h-3 bg-muted w-2/3" />
-      </div>
-    );
-  }
+      {/* Pool cards */}
+      {Object.keys(poolGroups).length > 0 ? (
+        <div className="grid gap-6 md:grid-cols-2">
+          {Object.entries(poolGroups).map(([poolAddress, poolTokens]) => (
+            <PoolDataCard
+              key={poolAddress}
+              poolAddress={poolAddress as `0x${string}`}
+              tokenCount={poolTokens.length}
+              onViewData={() => onSelectPool(poolAddress)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <div className="h-8 w-8 animate-spin border-4 border-border border-t-primary mx-auto mb-4"></div>
+          <p className="text-sm text-muted-foreground">Loading pool data...</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Hidden component that fetches token metadata and reports pool
+function TokenPoolGrouper({
+  tokenId,
+  onPoolIdentified
+}: {
+  tokenId: bigint;
+  onPoolIdentified: (pool: string) => void;
+}) {
+  const { data: metadata } = useTokenMetadata(tokenId);
+
+  useEffect(() => {
+    if (metadata) {
+      const tokenData = metadata as [string, string, string, string, bigint, boolean];
+      const poolAddress = tokenData[3];
+      if (poolAddress) {
+        onPoolIdentified(poolAddress);
+      }
+    }
+  }, [metadata, onPoolIdentified]);
+
+  return null; // Hidden component
+}
+
+// Pool card showing pool name and data count
+function PoolDataCard({
+  poolAddress,
+  tokenCount,
+  onViewData
+}: {
+  poolAddress: `0x${string}`;
+  tokenCount: number;
+  onViewData: () => void;
+}) {
+  const { data: poolInfo, isLoading } = usePoolInfo(poolAddress);
+
+  // Pool info tuple: [name, dataType, pricePerData, totalBudget, deadline, creator, proofRequirements, isActive]
+  const poolData = poolInfo as [string, string, bigint, bigint, bigint, string, number[], boolean] | undefined;
+  const poolName = poolData?.[0] || 'Unknown Pool';
+  const dataType = poolData?.[1] || 'Data';
 
   return (
     <motion.div
-      whileHover={{ scale: 1.02, borderColor: "var(--color-primary)" }}
-      className="group border-2 border-border bg-card p-6 transition-all"
+      whileHover={{ scale: 1.01 }}
+      className="border-2 border-border bg-card overflow-hidden transition-all hover:border-primary"
     >
-      <div className="mb-4 flex items-start justify-between">
-        <div className="flex h-10 w-10 items-center justify-center border-2 border-primary bg-primary/10 font-mono text-sm text-primary">
-          #{tokenId.toString()}
-        </div>
-        <span className="font-mono text-xs uppercase text-primary">
-          [OWNED]
-        </span>
-      </div>
-
-      <div className="mb-4 space-y-2">
-        <div className="flex justify-between font-mono text-xs">
-          <span className="text-muted-foreground">SELLER</span>
-          <span className="text-foreground">
-            {seller ? `${seller.slice(0, 6)}...${seller.slice(-4)}` : "Unknown"}
-          </span>
-        </div>
-        <div className="flex justify-between font-mono text-xs">
-          <span className="text-muted-foreground">POOL</span>
-          <span className="text-foreground">
-            {poolAddress ? `${poolAddress.slice(0, 6)}...${poolAddress.slice(-4)}` : "Unknown"}
-          </span>
-        </div>
-        <div className="flex justify-between font-mono text-xs">
-          <span className="text-muted-foreground">MINTED</span>
-          <span className="text-foreground">
-            {mintedAt ? new Date(Number(mintedAt) * 1000).toLocaleDateString() : "Unknown"}
-          </span>
-        </div>
-        <div className="flex justify-between font-mono text-xs">
-          <span className="text-muted-foreground">DATA</span>
-          <span className="text-foreground">
-            {encryptedCID ? `${encryptedCID.length} chars` : "No data"}
+      {/* Pool Header */}
+      <div className="bg-primary/5 border-b-2 border-border p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center border-2 border-primary bg-primary text-primary-foreground font-mono text-lg font-bold">
+              {tokenCount}
+            </div>
+            <div>
+              <h3 className="font-mono text-sm font-bold uppercase">
+                {isLoading ? '...' : poolName}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {tokenCount} {tokenCount === 1 ? 'record' : 'records'} collected
+              </p>
+            </div>
+          </div>
+          <span className="font-mono text-xs text-primary uppercase">
+            [{dataType}]
           </span>
         </div>
       </div>
 
-      <button
-        onClick={onViewData}
-        className="w-full border-2 border-primary bg-primary/10 px-4 py-2 font-mono text-xs font-bold uppercase text-primary transition-all hover:bg-primary hover:text-primary-foreground"
-      >
-        VIEW DATA
-      </button>
+      {/* Pool Stats */}
+      <div className="p-4 space-y-3">
+        <div className="flex justify-between font-mono text-xs">
+          <span className="text-muted-foreground">POOL ADDRESS</span>
+          <span className="text-foreground">
+            {poolAddress.slice(0, 6)}...{poolAddress.slice(-4)}
+          </span>
+        </div>
+        <div className="flex justify-between font-mono text-xs">
+          <span className="text-muted-foreground">STATUS</span>
+          <span className="text-primary">VERIFIED DATA</span>
+        </div>
+      </div>
+
+      {/* Action */}
+      <div className="border-t-2 border-border p-4">
+        <button
+          onClick={onViewData}
+          className="w-full border-2 border-primary bg-primary px-4 py-3 font-mono text-xs font-bold uppercase text-primary-foreground transition-all hover:bg-primary/90"
+        >
+          VIEW ALL DATA →
+        </button>
+      </div>
     </motion.div>
   );
 }
 
-// Modal to view the actual email data
-function DataViewerModal({ tokenId, onClose }: { tokenId: bigint; onClose: () => void }) {
-  const { data: metadata, isLoading } = useTokenMetadata(tokenId);
-  const [decodedData, setDecodedData] = useState<string | null>(null);
-  const [decodeError, setDecodeError] = useState<string | null>(null);
+// Modal showing all data tokens from a specific pool
+function PoolDataModal({
+  poolAddress,
+  tokenIds,
+  onClose,
+  onSelectToken
+}: {
+  poolAddress: `0x${string}`;
+  tokenIds: bigint[];
+  onClose: () => void;
+  onSelectToken: (token: bigint) => void;
+}) {
+  const { data: poolInfo } = usePoolInfo(poolAddress);
+  const poolData = poolInfo as [string, string, bigint, bigint, bigint, string, number[], boolean] | undefined;
+  const poolName = poolData?.[0] || 'Pool Data';
 
-  // Parse metadata tuple from contract struct order:
-  // [encryptedCID, dataHash, seller, pool, mintedAt, transferred]
-  const tokenData = metadata as [string, string, string, string, bigint, boolean] | undefined;
-  const encryptedCID = tokenData?.[0];
-
-  // For testing: email is stored as raw content
-  // In production with Phala TEE: this would fetch and decrypt from IPFS
-  useEffect(() => {
-    if (encryptedCID) {
-      // Raw email content is stored directly for testing
-      setDecodedData(encryptedCID);
-      setDecodeError(null);
-    }
-  }, [encryptedCID]);
+  // Filter tokens that belong to this pool
+  const [poolTokens, setPoolTokens] = useState<bigint[]>([]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -1070,16 +1151,16 @@ function DataViewerModal({ tokenId, onClose }: { tokenId: bigint; onClose: () =>
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="relative max-h-[80vh] w-full max-w-4xl overflow-hidden border-2 border-border bg-background"
+        className="relative max-h-[85vh] w-full max-w-5xl overflow-hidden border-2 border-border bg-background"
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b-2 border-border bg-card p-6">
           <div>
-            <h2 className="font-mono text-xl font-black uppercase">
-              DATA TOKEN #{tokenId.toString()}
+            <h2 className="font-mono text-2xl font-black uppercase">
+              {poolName}
             </h2>
             <p className="mt-1 text-xs text-muted-foreground">
-              Email verification data
+              {poolAddress.slice(0, 10)}...{poolAddress.slice(-8)}
             </p>
           </div>
           <button
@@ -1092,50 +1173,32 @@ function DataViewerModal({ tokenId, onClose }: { tokenId: bigint; onClose: () =>
 
         {/* Content */}
         <div className="max-h-[60vh] overflow-y-auto p-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="h-8 w-8 animate-spin border-4 border-border border-t-primary"></div>
-            </div>
-          ) : decodeError ? (
-            <div className="border-2 border-yellow-500 bg-yellow-500/10 p-6">
-              <h3 className="mb-2 font-mono text-sm font-bold uppercase text-yellow-500">
-                DECRYPTION REQUIRED
-              </h3>
-              <p className="font-mono text-xs text-muted-foreground">
-                {decodeError}
-              </p>
-              <p className="mt-4 font-mono text-xs text-muted-foreground">
-                In production, this data would be decrypted using Phala TEE with your wallet signature.
-              </p>
-            </div>
-          ) : decodedData ? (
-            <div className="space-y-4">
-              <div className="border-2 border-primary bg-primary/5 p-4">
-                <h3 className="mb-2 font-mono text-sm font-bold uppercase text-primary">
-                  EMAIL CONTENT
-                </h3>
-                <p className="font-mono text-xs text-muted-foreground mb-2">
-                  Raw email data ({decodedData.length.toLocaleString()} characters)
-                </p>
-              </div>
-              <pre className="max-h-[40vh] overflow-auto border-2 border-border bg-card p-4 font-mono text-xs whitespace-pre-wrap break-all">
-                {decodedData}
-              </pre>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="mb-4 text-4xl opacity-20">📭</div>
-              <h3 className="mb-2 font-mono text-lg font-bold uppercase">No Data Available</h3>
-              <p className="text-sm text-muted-foreground">
-                This token does not contain viewable data
-              </p>
-            </div>
-          )}
+          <div className="space-y-4">
+            {tokenIds.map((tokenId) => (
+              <PoolTokenRow
+                key={tokenId.toString()}
+                tokenId={tokenId}
+                poolAddress={poolAddress}
+                onView={() => {
+                  onClose();
+                  onSelectToken(tokenId);
+                }}
+                onBelongsToPool={(belongs) => {
+                  if (belongs && !poolTokens.find(t => t === tokenId)) {
+                    setPoolTokens(prev => [...prev, tokenId]);
+                  }
+                }}
+              />
+            ))}
+          </div>
         </div>
 
         {/* Footer */}
         <div className="border-t-2 border-border bg-card p-4">
-          <div className="flex justify-end gap-4">
+          <div className="flex justify-between items-center">
+            <span className="font-mono text-xs text-muted-foreground">
+              {poolTokens.length} verified records
+            </span>
             <button
               onClick={onClose}
               className="border-2 border-border bg-background px-6 py-2 font-mono text-xs font-bold uppercase transition-all hover:border-foreground"
@@ -1148,6 +1211,327 @@ function DataViewerModal({ tokenId, onClose }: { tokenId: bigint; onClose: () =>
     </div>
   );
 }
+
+// Individual token row in pool data modal
+function PoolTokenRow({
+  tokenId,
+  poolAddress,
+  onView,
+  onBelongsToPool
+}: {
+  tokenId: bigint;
+  poolAddress: `0x${string}`;
+  onView: () => void;
+  onBelongsToPool: (belongs: boolean) => void;
+}) {
+  const { data: metadata, isLoading } = useTokenMetadata(tokenId);
+
+  const tokenData = metadata as [string, string, string, string, bigint, boolean] | undefined;
+  const encryptedCID = tokenData?.[0];
+  const seller = tokenData?.[2];
+  const tokenPool = tokenData?.[3];
+  const mintedAt = tokenData?.[4];
+
+  // Check if this token belongs to the current pool
+  const belongsToPool = tokenPool?.toLowerCase() === poolAddress.toLowerCase();
+
+  useEffect(() => {
+    if (tokenPool) {
+      onBelongsToPool(belongsToPool);
+    }
+  }, [tokenPool, belongsToPool, onBelongsToPool]);
+
+  // Don't render if not from this pool
+  if (!belongsToPool && tokenPool) return null;
+  if (isLoading) return (
+    <div className="border-2 border-border bg-card p-4 animate-pulse">
+      <div className="h-4 bg-muted w-1/3" />
+    </div>
+  );
+
+  // Parse email headers for preview
+  const emailPreview = parseEmailPreview(encryptedCID || '');
+
+  return (
+    <motion.div
+      whileHover={{ borderColor: "var(--color-primary)" }}
+      className="border-2 border-border bg-card p-4 transition-all"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          {/* Token ID & Date */}
+          <div className="flex items-center gap-3 mb-2">
+            <span className="font-mono text-xs bg-primary/10 text-primary px-2 py-1 border border-primary/30">
+              #{tokenId.toString()}
+            </span>
+            <span className="font-mono text-xs text-muted-foreground">
+              {mintedAt ? new Date(Number(mintedAt) * 1000).toLocaleDateString() : ''}
+            </span>
+          </div>
+
+          {/* Email Preview */}
+          {emailPreview.from && (
+            <div className="mb-2">
+              <span className="font-mono text-xs text-muted-foreground">FROM: </span>
+              <span className="font-mono text-xs text-foreground">{emailPreview.from}</span>
+            </div>
+          )}
+          {emailPreview.subject && (
+            <div className="mb-2">
+              <span className="font-mono text-xs text-muted-foreground">SUBJECT: </span>
+              <span className="font-mono text-xs text-foreground truncate">{emailPreview.subject}</span>
+            </div>
+          )}
+          {!emailPreview.from && !emailPreview.subject && (
+            <p className="font-mono text-xs text-muted-foreground">
+              Email data ({encryptedCID?.length || 0} chars)
+            </p>
+          )}
+
+          {/* Seller */}
+          <div className="mt-2">
+            <span className="font-mono text-xs text-muted-foreground">SELLER: </span>
+            <span className="font-mono text-xs text-foreground">
+              {seller ? `${seller.slice(0, 6)}...${seller.slice(-4)}` : 'Unknown'}
+            </span>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <button
+          onClick={onView}
+          className="border-2 border-primary bg-primary/10 px-4 py-2 font-mono text-xs font-bold uppercase text-primary transition-all hover:bg-primary hover:text-primary-foreground whitespace-nowrap"
+        >
+          VIEW
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+// Parse email headers for preview
+function parseEmailPreview(content: string): { from?: string; subject?: string; date?: string } {
+  if (!content) return {};
+
+  const lines = content.split('\n');
+  const result: { from?: string; subject?: string; date?: string } = {};
+
+  for (const line of lines) {
+    const lowerLine = line.toLowerCase();
+    if (lowerLine.startsWith('from:') && !result.from) {
+      result.from = line.substring(5).trim().slice(0, 50);
+    } else if (lowerLine.startsWith('subject:') && !result.subject) {
+      result.subject = line.substring(8).trim().slice(0, 60);
+    } else if (lowerLine.startsWith('date:') && !result.date) {
+      result.date = line.substring(5).trim();
+    }
+    // Stop after headers (empty line marks end of headers)
+    if (line.trim() === '' && (result.from || result.subject)) break;
+  }
+
+  return result;
+}
+
+// Modal to view formatted email data
+function EmailDataModal({ tokenId, onClose }: { tokenId: bigint; onClose: () => void }) {
+  const { data: metadata, isLoading } = useTokenMetadata(tokenId);
+
+  const tokenData = metadata as [string, string, string, string, bigint, boolean] | undefined;
+  const encryptedCID = tokenData?.[0] || '';
+  const seller = tokenData?.[2];
+  const poolAddress = tokenData?.[3];
+  const mintedAt = tokenData?.[4];
+
+  // Parse email content
+  const emailData = parseEmailContent(encryptedCID);
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden border-2 border-border bg-background"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b-2 border-border bg-primary p-6">
+          <div className="text-primary-foreground">
+            <h2 className="font-mono text-xl font-black uppercase">
+              EMAIL DATA
+            </h2>
+            <p className="mt-1 text-xs opacity-80">
+              Token #{tokenId.toString()}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="border-2 border-primary-foreground/30 bg-primary-foreground/10 p-2 transition-all hover:bg-primary-foreground/20"
+          >
+            <X className="h-5 w-5 text-primary-foreground" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="max-h-[65vh] overflow-y-auto">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="h-8 w-8 animate-spin border-4 border-border border-t-primary"></div>
+            </div>
+          ) : (
+            <div className="divide-y-2 divide-border">
+              {/* Metadata Section */}
+              <div className="p-6 bg-card">
+                <h3 className="font-mono text-xs font-bold uppercase text-muted-foreground mb-4">
+                  RECORD INFO
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="font-mono text-xs text-muted-foreground block mb-1">SELLER</span>
+                    <span className="font-mono text-sm text-foreground">
+                      {seller ? `${seller.slice(0, 8)}...${seller.slice(-6)}` : 'Unknown'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-mono text-xs text-muted-foreground block mb-1">COLLECTED</span>
+                    <span className="font-mono text-sm text-foreground">
+                      {mintedAt ? new Date(Number(mintedAt) * 1000).toLocaleString() : 'Unknown'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-mono text-xs text-muted-foreground block mb-1">POOL</span>
+                    <span className="font-mono text-sm text-foreground">
+                      {poolAddress ? `${poolAddress.slice(0, 8)}...${poolAddress.slice(-6)}` : 'Unknown'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-mono text-xs text-muted-foreground block mb-1">DATA SIZE</span>
+                    <span className="font-mono text-sm text-foreground">
+                      {encryptedCID.length.toLocaleString()} characters
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Email Headers Section */}
+              {(emailData.from || emailData.to || emailData.subject || emailData.date) && (
+                <div className="p-6">
+                  <h3 className="font-mono text-xs font-bold uppercase text-muted-foreground mb-4">
+                    EMAIL HEADERS
+                  </h3>
+                  <div className="space-y-3 border-2 border-border bg-card p-4">
+                    {emailData.from && (
+                      <div>
+                        <span className="font-mono text-xs text-primary font-bold">FROM:</span>
+                        <p className="font-mono text-sm text-foreground mt-1">{emailData.from}</p>
+                      </div>
+                    )}
+                    {emailData.to && (
+                      <div>
+                        <span className="font-mono text-xs text-primary font-bold">TO:</span>
+                        <p className="font-mono text-sm text-foreground mt-1">{emailData.to}</p>
+                      </div>
+                    )}
+                    {emailData.subject && (
+                      <div>
+                        <span className="font-mono text-xs text-primary font-bold">SUBJECT:</span>
+                        <p className="font-mono text-sm text-foreground mt-1">{emailData.subject}</p>
+                      </div>
+                    )}
+                    {emailData.date && (
+                      <div>
+                        <span className="font-mono text-xs text-primary font-bold">DATE:</span>
+                        <p className="font-mono text-sm text-foreground mt-1">{emailData.date}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Email Body Section */}
+              <div className="p-6">
+                <h3 className="font-mono text-xs font-bold uppercase text-muted-foreground mb-4">
+                  {emailData.body ? 'EMAIL BODY' : 'RAW CONTENT'}
+                </h3>
+                <div className="border-2 border-border bg-card">
+                  <pre className="p-4 font-mono text-xs whitespace-pre-wrap break-words max-h-[300px] overflow-auto">
+                    {emailData.body || encryptedCID || 'No content available'}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="border-t-2 border-border bg-card p-4">
+          <div className="flex justify-between items-center">
+            <span className="font-mono text-xs text-muted-foreground">
+              Verified on-chain • zkEmail proof
+            </span>
+            <button
+              onClick={onClose}
+              className="border-2 border-primary bg-primary px-6 py-2 font-mono text-xs font-bold uppercase text-primary-foreground transition-all hover:bg-primary/90"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// Parse full email content into structured data
+function parseEmailContent(content: string): {
+  from?: string;
+  to?: string;
+  subject?: string;
+  date?: string;
+  body?: string;
+} {
+  if (!content) return {};
+
+  const result: {
+    from?: string;
+    to?: string;
+    subject?: string;
+    date?: string;
+    body?: string;
+  } = {};
+
+  const lines = content.split('\n');
+  let headersDone = false;
+  const bodyLines: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (!headersDone) {
+      const lowerLine = line.toLowerCase();
+
+      if (lowerLine.startsWith('from:')) {
+        result.from = line.substring(5).trim();
+      } else if (lowerLine.startsWith('to:')) {
+        result.to = line.substring(3).trim();
+      } else if (lowerLine.startsWith('subject:')) {
+        result.subject = line.substring(8).trim();
+      } else if (lowerLine.startsWith('date:')) {
+        result.date = line.substring(5).trim();
+      } else if (line.trim() === '') {
+        headersDone = true;
+      }
+    } else {
+      bodyLines.push(line);
+    }
+  }
+
+  if (bodyLines.length > 0) {
+    result.body = bodyLines.join('\n').trim();
+  }
+
+  return result;
+}
+
 
 // Stat card component
 function StatCard({
