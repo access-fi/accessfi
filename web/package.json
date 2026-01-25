@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "NODE_OPTIONS='--localstorage-file=/tmp/localstorage.json' next dev",
+    "build": "NODE_OPTIONS='--localstorage-file=/tmp/localstorage.json' next build",
+    "start": "NODE_OPTIONS='--localstorage-file=/tmp/localstorage.json' next start",
     "lint": "eslint"
   },
   "dependencies": {

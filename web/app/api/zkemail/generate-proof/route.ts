@@ -5,21 +5,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-// @ts-ignore - SDK exports correctly but TS has cache issue
-import { initZkEmailSdk } from '@zk-email/sdk';
 
-// Polyfill localStorage for server-side SDK usage
-if (typeof globalThis.localStorage === 'undefined') {
-  (globalThis as any).localStorage = {
-    getItem: () => null,
-    setItem: () => {},
-    removeItem: () => {},
-    clear: () => {},
-    length: 0,
-    key: () => null,
-  };
-}
-
+// Force dynamic - prevent static analysis of this route
+export const dynamic = 'force-dynamic';
 export const maxDuration = 120; // Allow up to 2 minutes for proof generation
 
 interface GenerateProofRequest {
@@ -45,6 +33,10 @@ export async function POST(req: NextRequest) {
     const normalizedContent = emlContent
       .replace(/\r\n/g, '\n')
       .replace(/\n/g, '\r\n');
+
+    // Dynamic import to avoid build-time localStorage issues
+    // @ts-ignore - SDK exports correctly but TS has cache issue
+    const { initZkEmailSdk } = await import('@zk-email/sdk');
 
     // Initialize SDK
     const sdk = initZkEmailSdk();

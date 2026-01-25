@@ -29,24 +29,23 @@ export async function POST(request: NextRequest) {
 
     // Verify signature
     const message = `Decrypt token ${tokenId}`;
-    let signer: string;
 
     try {
-      signer = await verifyMessage({
+      const isValid = await verifyMessage({
         address: buyerAddress as `0x${string}`,
         message,
         signature: signature as `0x${string}`,
       });
+
+      if (!isValid) {
+        return NextResponse.json(
+          { error: 'Signature verification failed' },
+          { status: 403 }
+        );
+      }
     } catch (error) {
       return NextResponse.json(
         { error: 'Invalid signature' },
-        { status: 403 }
-      );
-    }
-
-    if (signer.toLowerCase() !== buyerAddress.toLowerCase()) {
-      return NextResponse.json(
-        { error: 'Signature verification failed' },
         { status: 403 }
       );
     }

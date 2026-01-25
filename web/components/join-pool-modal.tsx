@@ -93,10 +93,10 @@ export function JoinPoolModal({
 
   // Contract hooks
   const { joinPool, isPending: isJoining, isConfirmed: joinConfirmed } =
-    useJoinPool(profile?.userContractAddress);
+    useJoinPool(profile?.userContractAddress as `0x${string}` | undefined);
 
   const { submitProof, isPending: isSubmitting, isConfirmed: submitConfirmed, hash: txHash } =
-    useSubmitProof(profile?.userContractAddress);
+    useSubmitProof(profile?.userContractAddress as `0x${string}` | undefined);
 
   // Reset on open
   React.useEffect(() => {

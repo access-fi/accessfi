@@ -8,15 +8,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  zkVerifySession,
-  Library,
-  CurveType,
-  ZkVerifyEvents,
-  VerifyTransactionInfo,
-} from 'zkverifyjs';
-// @ts-ignore - SDK exports correctly but TS has cache issue
-import { initZkEmailSdk } from '@zk-email/sdk';
+
+// Force dynamic - prevent static analysis of this route
+export const dynamic = 'force-dynamic';
+export const maxDuration = 180; // Allow up to 3 minutes for zkVerify submission
 
 interface SubmitRequest {
   blueprintId: string;
@@ -59,6 +54,11 @@ export async function POST(req: NextRequest) {
     console.log('[zkVerify API] Submitting proof to zkVerify with domain aggregation...');
     console.log('[zkVerify API] Network:', network);
 
+    // Dynamic imports to avoid build-time localStorage issues
+    // @ts-ignore - SDK exports correctly but TS has cache issue
+    const { initZkEmailSdk } = await import('@zk-email/sdk');
+    const { zkVerifySession, Library, CurveType, ZkVerifyEvents } = await import('zkverifyjs');
+
     // Step 1: Fetch verification key from zkEmail (server-side only)
     console.log('[zkVerify API] Fetching vkey for blueprint:', blueprintId);
     const sdk = initZkEmailSdk();
@@ -94,19 +94,19 @@ export async function POST(req: NextRequest) {
     console.log('[zkVerify API] Proof submitted to domain:', domainId);
 
     // Step 5: Wait for Finalized event
-    const verificationResult = await new Promise<VerifyTransactionInfo>((resolve, reject) => {
+    const verificationResult = await new Promise<any>((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error('Timeout waiting for proof finalization'));
       }, 180000); // 3 minute timeout
 
-      events.on(ZkVerifyEvents.IncludedInBlock, (data: VerifyTransactionInfo) => {
+      events.on(ZkVerifyEvents.IncludedInBlock, (data: any) => {
         console.log('[zkVerify API] Proof included in block:', data.blockHash);
         console.log('[zkVerify API] Statement:', data.statement);
         console.log('[zkVerify API] DomainId:', data.domainId);
         console.log('[zkVerify API] AggregationId:', data.aggregationId);
       });
 
-      events.on(ZkVerifyEvents.Finalized, (data: VerifyTransactionInfo) => {
+      events.on(ZkVerifyEvents.Finalized, (data: any) => {
         console.log('[zkVerify API] Proof finalized:', data);
         clearTimeout(timeout);
         resolve(data);
