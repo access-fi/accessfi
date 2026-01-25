@@ -15,6 +15,51 @@ import { EmailFileUpload } from './email-file-upload';
 import { generateAndVerifyProof } from '@/lib/zkemail';
 import { toast } from 'sonner';
 
+// Known contract error selectors and their user-friendly messages
+const CONTRACT_ERRORS: Record<string, string> = {
+  '0x3d367a03': 'This email has already been submitted. Each email can only be used once.',
+  '0x003b2682': 'You have already joined this pool.',
+  '0x71815202': 'The pool is no longer active.',
+  '0x398b36db': 'The pool has expired.',
+  '0x4dd23c8b': 'Insufficient budget in the pool.',
+  '0xf499da20': 'Payment to seller failed.',
+};
+
+// Parse contract errors from transaction failures
+function parseContractError(error: any): string {
+  const errorString = error?.message || error?.toString() || '';
+
+  // Check for known error selectors in the error message
+  for (const [selector, message] of Object.entries(CONTRACT_ERRORS)) {
+    if (errorString.includes(selector)) {
+      return message;
+    }
+  }
+
+  // Check for common error patterns
+  if (errorString.includes('DuplicateData')) {
+    return 'This email has already been submitted. Each email can only be used once.';
+  }
+  if (errorString.includes('AlreadyJoined')) {
+    return 'You have already joined this pool.';
+  }
+  if (errorString.includes('InsufficientBudget')) {
+    return 'The pool does not have enough budget to pay for this submission.';
+  }
+  if (errorString.includes('PoolNotActive')) {
+    return 'This pool is no longer accepting submissions.';
+  }
+  if (errorString.includes('User denied') || errorString.includes('user rejected')) {
+    return 'Transaction was cancelled by user.';
+  }
+  if (errorString.includes('insufficient funds')) {
+    return 'Insufficient funds for gas. Please add more ETH to your wallet.';
+  }
+
+  // Return original error if no match
+  return error?.shortMessage || error?.message || 'Failed to submit proof. Please try again.';
+}
+
 type ModalStep =
   | 'upload-email'      // Step 1: Upload .eml file
   | 'generating-proof'  // Step 2: zkEmail proof generation
@@ -167,10 +212,13 @@ export function JoinPoolModal({
 
     } catch (error: any) {
       console.error('[JoinPool] Submission error:', error);
-      setErrorMessage(error.message || 'Failed to submit proof');
+
+      // Parse contract-specific errors
+      const errorMessage = parseContractError(error);
+      setErrorMessage(errorMessage);
       setStep('error');
       toast.error('Proof submission failed', {
-        description: error.message,
+        description: errorMessage,
       });
     }
   };
