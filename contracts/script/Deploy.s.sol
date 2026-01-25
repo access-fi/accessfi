@@ -32,8 +32,9 @@ contract Deploy is Script {
         address deployer = vm.addr(deployerPrivateKey);
 
         address platformWallet = vm.envOr("PLATFORM_WALLET", deployer); // Default to deployer
-        address zkVerifyAddress = vm.envOr("ZK_VERIFY_ADDRESS", address(0));
-        bytes32 vkey = vm.envOr("VERIFICATION_KEY", bytes32(0));
+        // address zkVerifyAddress = vm.envOr("ZK_VERIFY_ADDRESS", address(0));
+        address zkVerifyAddress = 0xCC02D0A54F3184dF4c88811E5b9FAb7ff8131e4a;
+        // bytes32 vkey = vm.envOr("VERIFICATION_KEY", bytes32(0));
 
         console.log("=== AccessFi Deployment ===");
         console.log("Deployer:", deployer);
@@ -48,14 +49,15 @@ contract Deploy is Script {
         // ============================================================
 
         console.log("1. Deploying ZK Verifier...");
+        zkVerifier = address(new verifyProof(zkVerifyAddress));
 
-        if (zkVerifyAddress == address(0)) {
-            console.log("   WARNING: ZK_VERIFY_ADDRESS not set, deploying mock verifier");
-            // Deploy verifyProof contract (wrapper around zkVerify)
-            zkVerifier = address(new verifyProof(address(0), vkey));
-        } else {
-            zkVerifier = address(new verifyProof(zkVerifyAddress, vkey));
-        }
+        // if (zkVerifyAddress == address(0)) {
+        //     console.log("   WARNING: ZK_VERIFY_ADDRESS not set, deploying mock verifier");
+        //     // Deploy verifyProof contract (wrapper around zkVerify)
+        //     zkVerifier = address(new verifyProof(address(0)));
+        // } else {
+        //     zkVerifier = address(new verifyProof(zkVerifyAddress));
+        // }
 
         console.log("   ZK Verifier deployed:", zkVerifier);
         console.log("");

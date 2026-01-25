@@ -351,7 +351,7 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
                       <Input
                         id="pricePerData"
                         type="number"
-                        step="0.001"
+                        step="0.000001"
                         {...register('pricePerData')}
                         placeholder="0.01"
                         className="mt-2"
@@ -371,7 +371,7 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
                       <Input
                         id="totalBudget"
                         type="number"
-                        step="0.01"
+                        step="0.000001"
                         {...register('totalBudget')}
                         placeholder="1.0"
                         className="mt-2"

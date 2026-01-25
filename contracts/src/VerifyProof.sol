@@ -18,7 +18,7 @@ contract verifyProof {
     bytes32 public constant VERSION_HASH = sha256(abi.encodePacked(""));
 
     address public zkVerify;
-    bytes32 public vkey;
+    // bytes32 public vkey;
 
     event ProofVerified(
         address indexed verifier,
@@ -28,11 +28,11 @@ contract verifyProof {
     );
 
     constructor(
-        address _zkVerify,
-        bytes32 _vkey
+        address _zkVerify
+        // bytes32 _vkey
     ){
         zkVerify = _zkVerify;
-        vkey = _vkey;
+        // vkey = _vkey;
     }
 
     function _base64Encode(bytes memory data) internal pure returns (string memory) {

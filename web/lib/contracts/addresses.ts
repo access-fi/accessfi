@@ -1,12 +1,18 @@
 /**
  * AccessFi Smart Contract Addresses
- * Network: Base Sepolia
  *
  * Update these addresses after deployment
  */
 
 export const CONTRACT_ADDRESSES = {
-  //sepolia
+  // Horizen Testnet (Chain ID: 2651420)
+  2651420: {
+    DATA_TOKEN: process.env.NEXT_PUBLIC_DATA_TOKEN_ADDRESS || '',
+    FACTORY_POOL: process.env.NEXT_PUBLIC_FACTORY_POOL_ADDRESS || '',
+    FACTORY_USER: process.env.NEXT_PUBLIC_FACTORY_USER_ADDRESS || '',
+    ZK_VERIFIER: process.env.NEXT_PUBLIC_ZK_VERIFIER_ADDRESS || '',
+  },
+  // Sepolia (Chain ID: 11155111)
   11155111: {
     DATA_TOKEN: process.env.NEXT_PUBLIC_DATA_TOKEN_ADDRESS || '',
     FACTORY_POOL: process.env.NEXT_PUBLIC_FACTORY_POOL_ADDRESS || '',

@@ -131,6 +131,58 @@ export function useUserStats(userContractAddress?: `0x${string}`) {
   };
 }
 
+export function useUserJoinedPools(userContractAddress?: `0x${string}`) {
+  const user = useUser(userContractAddress);
+
+  const { data: joinedPools, isLoading, error, refetch } = useReadContract({
+    address: user.address,
+    abi: user.abi,
+    functionName: 'getJoinedPools',
+    query: { enabled: !!user.address },
+  });
+
+  return {
+    poolAddresses: (joinedPools as `0x${string}`[]) || [],
+    isLoading,
+    error,
+    refetch,
+  };
+}
+
+export function useUserCreatedTokens(userContractAddress?: `0x${string}`) {
+  const user = useUser(userContractAddress);
+
+  const { data: createdTokens, isLoading, error } = useReadContract({
+    address: user.address,
+    abi: user.abi,
+    functionName: 'getCreatedDataTokens',
+    query: { enabled: !!user.address },
+  });
+
+  return {
+    tokenIds: (createdTokens as bigint[]) || [],
+    isLoading,
+    error,
+  };
+}
+
+export function useUserOwnedTokens(userContractAddress?: `0x${string}`) {
+  const user = useUser(userContractAddress);
+
+  const { data: ownedTokens, isLoading, error } = useReadContract({
+    address: user.address,
+    abi: user.abi,
+    functionName: 'getOwnedDataTokens',
+    query: { enabled: !!user.address },
+  });
+
+  return {
+    tokenIds: (ownedTokens as bigint[]) || [],
+    isLoading,
+    error,
+  };
+}
+
 export function useCreatePool(userContractAddress?: `0x${string}`) {
   const user = useUser(userContractAddress);
   const { writeContractAsync, data: hash, isPending, error } = useWriteContract();
