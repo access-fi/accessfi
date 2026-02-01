@@ -55,7 +55,7 @@ export async function generateAndVerifyProof(
       onProgress?.(progressValue, 'Generating ZK proof on server...');
     }, 2000);
 
-    let proofData: { proofData: string; publicOutputs: string[] };
+    let proofData: { proofData: string; publicOutputs: string[]; vkey: string };
 
     try {
       const proofResponse = await fetch('/api/zkemail/generate-proof', {
@@ -87,12 +87,12 @@ export async function generateAndVerifyProof(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        blueprintId,
         proofData: {
           proof: proofData.proofData,
           curve: 'bn128',
           inputs: proofData.publicOutputs,
         },
+        vkey: proofData.vkey, // Pass vkey from generate-proof
       }),
     });
 

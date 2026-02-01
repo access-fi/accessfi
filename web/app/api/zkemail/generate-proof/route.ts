@@ -29,21 +29,19 @@ export async function POST(req: NextRequest) {
 
     console.log('[zkEmail API] Starting proof generation for blueprint:', blueprintId);
 
-    // Normalize line endings to CRLF
-    const normalizedContent = emlContent
-      .replace(/\r\n/g, '\n')
-      .replace(/\n/g, '\r\n');
-
     // Dynamic import to avoid build-time localStorage issues
     // @ts-ignore - SDK exports correctly but TS has cache issue
     const { initZkEmailSdk } = await import('@zk-email/sdk');
 
     // Initialize SDK
-    const sdk = initZkEmailSdk();
+    const sdk = initZkEmailSdk({ logging: { enabled: true } });
 
     // Get blueprint
     console.log('[zkEmail API] Loading blueprint...');
     const blueprint = await sdk.getBlueprint(blueprintId);
+
+    const isValid = await blueprint.validateEmail(emlContent);
+    console.log('[zkEmail API] Email is valid:', isValid);
 
     // Create prover
     console.log('[zkEmail API] Creating prover...');
@@ -51,13 +49,18 @@ export async function POST(req: NextRequest) {
 
     // Generate proof (this takes 30-60 seconds)
     console.log('[zkEmail API] Generating proof...');
-    const proof = await prover.generateProof(normalizedContent);
+    const proof = await prover.generateProof(emlContent);
 
     console.log('[zkEmail API] Proof generated successfully');
     console.log('[zkEmail API] Proof props keys:', Object.keys(proof.props));
     console.log('[zkEmail API] proofData exists:', !!proof.props.proofData);
     console.log('[zkEmail API] publicOutputs exists:', !!(proof.props as any).publicOutputs);
     console.log('[zkEmail API] publicData exists:', !!(proof.props as any).publicData);
+
+    // Also fetch vkey here so we don't need SDK in submit route
+    console.log('[zkEmail API] Fetching verification key...');
+    const vkey = await blueprint.getVkey();
+    console.log('[zkEmail API] Vkey fetched, length:', vkey.length);
 
     // Return proof data (v2.0 might use publicData instead of publicOutputs)
     const publicOutputs = (proof.props as any).publicOutputs || (proof.props as any).publicData || [];
@@ -66,6 +69,7 @@ export async function POST(req: NextRequest) {
       success: true,
       proofData: proof.props.proofData,
       publicOutputs,
+      vkey, // Include vkey for zkVerify submission
     });
 
   } catch (error: any) {
