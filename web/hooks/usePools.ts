@@ -46,7 +46,7 @@ export function usePoolInfo(poolAddress: `0x${string}` | undefined) {
   const { data: poolStats } = useReadContract({
     address: poolAddress,
     abi: accessFiPoolAbi,
-    functionName: 'getPoolStats',
+    functionName: 'getBudgetStatus',
     query: {
       enabled: !!poolAddress,
     },
@@ -78,27 +78,28 @@ export function usePoolInfo(poolAddress: `0x${string}` | undefined) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const info = poolInfo as any[];
 
-  // getPoolStats returns: (remainingBudget, spentBudget, totalDataCollected, isActiveAndNotStopped)
+  // getBudgetStatus returns: (remainingBudget, spentBudget, totalDataCollected, isActiveAndNotStopped)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const stats = poolStats as any[];
 
-  // Actual struct order from contract:
-  // 0: name, 1: description, 2: dataType, 3: proofRequirements (array)
-  // 4: pricePerData, 5: totalBudget, 6: creator, 7: isActive
-  // 8: createdAt, 9: deadline
+  // CRITICAL: poolInfo public getter OMITS proofRequirements array!
+  // Actual return order from ABI (verified):
+  // 0: name, 1: description, 2: dataType
+  // 3: pricePerData, 4: totalBudget, 5: remainingBudget, 6: creator
+  // 7: isActive, 8: createdAt, 9: deadline
 
   const pool: Pool = {
     address: poolAddress,
     name: info[0] as string,
     description: info[1] as string,
     dataType: info[2] as string,
-    proofRequirements: Array.isArray(info[3]) ? (info[3] as number[]) : [],
-    pricePerData: BigInt(info[4]),
-    totalBudget: BigInt(info[5]),
-    remainingBudget: stats ? BigInt(stats[0]) : BigInt(info[5]), // Get from getPoolStats or fallback to totalBudget
+    proofRequirements: [], // Not returned by poolInfo public getter
+    pricePerData: BigInt(info[3]),
+    totalBudget: BigInt(info[4]),
+    remainingBudget: stats ? BigInt(stats[0]) : BigInt(info[5]),
     creator: info[6] as `0x${string}`,
     isActive: Boolean(info[7]),
-    deadline: BigInt(info[9]),
+    deadline: (info[9]) as bigint,
     totalDataCollected: (totalDataCollected as bigint) || BigInt(0),
   };
 

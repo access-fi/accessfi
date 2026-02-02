@@ -14,12 +14,12 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 180; // Allow up to 3 minutes for zkVerify submission
 
 interface SubmitRequest {
-  blueprintId: string;
   proofData: {
     proof: string;
     curve: string;
     inputs: string[];
   };
+  vkey: string; // Verification key from generate-proof route
 }
 
 // Pre-registered zkVerify Domain IDs for different chains (Testnet)
@@ -35,7 +35,15 @@ const ZKVERIFY_DOMAINS = {
 export async function POST(req: NextRequest) {
   try {
     const body: SubmitRequest = await req.json();
-    const { blueprintId, proofData } = body;
+    const { proofData, vkey } = body;
+
+    // Validate request
+    if (!vkey || !proofData) {
+      return NextResponse.json(
+        { error: 'Missing vkey or proofData' },
+        { status: 400 }
+      );
+    }
 
     // Validate required environment variables
     const seedPhrase = process.env.ZKVERIFY_SEED_PHRASE;
@@ -53,20 +61,12 @@ export async function POST(req: NextRequest) {
 
     console.log('[zkVerify API] Submitting proof to zkVerify with domain aggregation...');
     console.log('[zkVerify API] Network:', network);
+    console.log('[zkVerify API] Vkey length:', vkey.length);
 
-    // Dynamic imports to avoid build-time localStorage issues
-    // @ts-ignore - SDK exports correctly but TS has cache issue
-    const { initZkEmailSdk } = await import('@zk-email/sdk');
+    // Dynamic import to avoid build-time issues
     const { zkVerifySession, Library, CurveType, ZkVerifyEvents } = await import('zkverifyjs');
 
-    // Step 1: Fetch verification key from zkEmail (server-side only)
-    console.log('[zkVerify API] Fetching vkey for blueprint:', blueprintId);
-    const sdk = initZkEmailSdk();
-    const blueprint = await sdk.getBlueprint(blueprintId);
-    const vkey = await blueprint.getVkey();
-    console.log('[zkVerify API] Vkey fetched successfully');
-
-    // Step 2: Create zkVerify session (server-side with seed phrase)
+    // Step 1: Create zkVerify session (server-side with seed phrase)
     const sessionBuilder = zkVerifySession.start();
     const session = network === 'mainnet'
       ? await sessionBuilder.zkVerify().withAccount(seedPhrase)
@@ -74,12 +74,12 @@ export async function POST(req: NextRequest) {
 
     console.log('[zkVerify API] Session created');
 
-    // Step 3: Use pre-registered domain for Horizen Testnet
+    // Step 2: Use pre-registered domain for Horizen Testnet
     // Domain IDs are pre-registered by zkVerify for each target chain
     const domainId = configuredDomainId || ZKVERIFY_DOMAINS.horizenTestnet;
     console.log('[zkVerify API] Using domain ID:', domainId);
 
-    // Step 4: Submit proof to zkVerify WITH domainId for aggregation
+    // Step 3: Submit proof to zkVerify WITH domainId for aggregation
     const { events } = await session.verify()
       .groth16({ library: Library.snarkjs, curve: CurveType.bn128 })
       .execute({
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     console.log('[zkVerify API] Proof submitted to domain:', domainId);
 
-    // Step 5: Wait for Finalized event
+    // Step 4: Wait for Finalized event
     const verificationResult = await new Promise<any>((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error('Timeout waiting for proof finalization'));
@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
     console.log('[zkVerify API] DomainId:', verificationResult.domainId);
     console.log('[zkVerify API] AggregationId:', verificationResult.aggregationId);
 
-    // Step 6: Wait for aggregation receipt (since aggregationSize=1, this should be immediate)
+    // Step 5: Wait for aggregation receipt (since aggregationSize=1, this should be immediate)
     console.log('[zkVerify API] Waiting for aggregation receipt...');
 
     const aggregationReceipt = await session.waitForAggregationReceipt(
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
 
     console.log('[zkVerify API] Aggregation receipt received:', aggregationReceipt);
 
-    // Step 7: Get merkle proof path for on-chain verification
+    // Step 6: Get merkle proof path for on-chain verification
     console.log('[zkVerify API] Getting merkle proof path...');
 
     const merkleProofPath = await session.getAggregateStatementPath(

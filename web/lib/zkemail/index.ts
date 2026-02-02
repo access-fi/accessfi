@@ -1,14 +1,15 @@
 /**
- * zkEmail Proof Generation (Server-Side)
+ * zkEmail Proof Generation (Client-Side)
  *
- * SECURITY & COMPATIBILITY:
- * - zkEmail proof generation runs server-side (avoids browser WASM issues)
+ * ARCHITECTURE:
+ * - Proof generation runs client-side via zkEmail SDK (uses remote provers)
  * - zkVerify submission runs server-side (keeps seed phrase secure)
  *
- * Based on: https://docs.zkverify.io/overview/explorations/zkemail
+ * Based on: https://docs.zk.email/zk-email-sdk/setup
  */
 
-import type { VerificationParams } from "../contracts/types";
+import { initZkEmailSdk } from '@zk-email/sdk';
+import type { VerificationParams } from '../contracts/types';
 
 export interface ProofResult {
   // For smart contract
@@ -22,11 +23,11 @@ export interface ProofResult {
 }
 
 /**
- * Generate zkEmail proof and submit to zkVerify (all server-side)
+ * Generate zkEmail proof and submit to zkVerify
  *
- * ARCHITECTURE:
- * 1. Client: Upload email content to /api/zkemail/generate-proof
- * 2. Server: Generate zkEmail proof (bypasses browser WASM issues)
+ * FLOW:
+ * 1. Client: Generate proof via zkEmail SDK (remote provers)
+ * 2. Client: Get vkey from blueprint
  * 3. Server: Submit to zkVerify with secure seed phrase
  * 4. Client: Receive verification params for smart contract
  *
@@ -44,42 +45,44 @@ export async function generateAndVerifyProof(
       throw new Error('NEXT_PUBLIC_ZKEMAIL_BLUEPRINT_ID not configured');
     }
 
-    // ==== STEP 1: Generate zkEmail Proof (Server-Side) ====
-    console.log('[zkEmail] Sending email to server for proof generation...');
-    onProgress?.(10, 'Uploading email...');
+    // ==== STEP 1: Initialize SDK and get blueprint ====
+    console.log('[zkEmail] Initializing SDK...');
+    onProgress?.(5, 'Initializing...');
 
-    // Start a progress animation while waiting (proof takes 30-60 seconds)
-    let progressValue = 10;
+    const sdk = initZkEmailSdk();
+    const blueprint = await sdk.getBlueprint(blueprintId);
+
+    console.log('[zkEmail] Blueprint loaded:', blueprint.props.title);
+    onProgress?.(10, 'Blueprint loaded');
+
+    // ==== STEP 2: Create prover and generate proof ====
+    console.log('[zkEmail] Creating prover...');
+    const prover = blueprint.createProver();
+
+    // Start progress animation (proof takes 30-60 seconds)
+    let progressValue = 15;
     const progressInterval = setInterval(() => {
-      progressValue = Math.min(progressValue + 2, 55); // Cap at 55%
-      onProgress?.(progressValue, 'Generating ZK proof on server...');
+      progressValue = Math.min(progressValue + 2, 55);
+      onProgress?.(progressValue, 'Generating ZK proof...');
     }, 2000);
 
-    let proofData: { proofData: string; publicOutputs: string[] };
+    console.log('[zkEmail] Generating proof (this may take a minute)...');
+    const proof = await prover.generateProof(emlContent);
 
-    try {
-      const proofResponse = await fetch('/api/zkemail/generate-proof', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ emlContent, blueprintId }),
-      });
+    clearInterval(progressInterval);
+    console.log('[zkEmail] Proof generated successfully');
+    onProgress?.(60, 'Proof generated!');
 
-      clearInterval(progressInterval);
+    // ==== STEP 3: Get verification key ====
+    console.log('[zkEmail] Fetching verification key...');
+    const vkey = await blueprint.getVkey();
+    console.log('[zkEmail] Vkey fetched, length:', vkey.length);
 
-      if (!proofResponse.ok) {
-        const error = await proofResponse.json();
-        throw new Error(error.error || 'Failed to generate zkEmail proof');
-      }
+    // Extract proof data
+    const proofData = proof.props.proofData;
+    const publicOutputs = (proof.props as any).publicOutputs || (proof.props as any).publicData || [];
 
-      proofData = await proofResponse.json();
-      console.log('[zkEmail] Proof generated successfully');
-      onProgress?.(60, 'Proof generated!');
-    } catch (err) {
-      clearInterval(progressInterval);
-      throw err;
-    }
-
-    // ==== STEP 2: Submit to zkVerify (Server-Side) ====
+    // ==== STEP 4: Submit to zkVerify (Server-Side) ====
     console.log('[zkVerify] Submitting proof to zkVerify...');
     onProgress?.(65, 'Submitting to zkVerify...');
 
@@ -87,12 +90,12 @@ export async function generateAndVerifyProof(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        blueprintId,
         proofData: {
-          proof: proofData.proofData,
+          proof: proofData,
           curve: 'bn128',
-          inputs: proofData.publicOutputs,
+          inputs: publicOutputs,
         },
+        vkey,
       }),
     });
 
