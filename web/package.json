@@ -29,6 +29,7 @@
     "drizzle-orm": "^0.45.1",
     "framer-motion": "^12.24.12",
     "lucide-react": "^0.562.0",
+    "mermaid": "^10.9.1",
     "next": "16.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { Header } from '@/components/header';
@@ -25,6 +25,7 @@ const sections = [
       { id: 'data-pools', title: 'Data Pools' },
       { id: 'proof-system', title: 'Proof System' },
       { id: 'payment-flow', title: 'Payment Flow' },
+      { id: 'fees', title: 'Fees' },
     ],
   },
   {
@@ -63,12 +64,38 @@ const sections = [
       { id: 'endpoints', title: 'Endpoints' },
     ],
   },
+  {
+    id: 'faq',
+    title: 'FAQ',
+    subsections: [
+      { id: 'buyers-faq', title: 'Buyers' },
+      { id: 'sellers-faq', title: 'Sellers' },
+      { id: 'security-faq', title: 'Security' },
+    ],
+  },
 ];
 
 export default function DocsPage() {
   const [activeSection, setActiveSection] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<string[]>(['introduction']);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const mermaid = (await import('mermaid')).default;
+      if (cancelled) return;
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'dark',
+        securityLevel: 'strict',
+      });
+      await mermaid.run({ querySelector: '.mermaid' });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeSection]);
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) =>
@@ -87,10 +114,10 @@ export default function DocsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-hidden">
       <Header />
 
-      <div className="flex">
+      <div className="flex h-[calc(100vh-4rem)]">
         {/* Mobile sidebar toggle */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -196,7 +223,7 @@ export default function DocsPage() {
         )}
 
         {/* Main content */}
-        <main className="flex-1 p-6 lg:p-12">
+        <main className="flex-1 overflow-y-auto p-6 lg:p-12">
           <div className="mx-auto max-w-4xl">
             <AnimatePresence mode="wait">
               <motion.div
@@ -213,6 +240,7 @@ export default function DocsPage() {
                 {activeSection === 'data-pools' && <DataPoolsSection />}
                 {activeSection === 'proof-system' && <ProofSystemSection />}
                 {activeSection === 'payment-flow' && <PaymentFlowSection />}
+                {activeSection === 'fees' && <FeesSection />}
                 {activeSection === 'creating-pools' && <CreatingPoolsSection />}
                 {activeSection === 'pool-settings' && <PoolSettingsSection />}
                 {activeSection === 'managing-data' && <ManagingDataSection />}
@@ -225,6 +253,9 @@ export default function DocsPage() {
                 {activeSection === 'security' && <SecuritySection />}
                 {activeSection === 'api-overview' && <ApiOverviewSection />}
                 {activeSection === 'endpoints' && <EndpointsSection />}
+                {activeSection === 'buyers-faq' && <BuyersFaqSection />}
+                {activeSection === 'sellers-faq' && <SellersFaqSection />}
+                {activeSection === 'security-faq' && <SecurityFaqSection />}
               </motion.div>
             </AnimatePresence>
           </div>
@@ -270,6 +301,14 @@ function CodeBlock({ children }: { children: string }) {
   );
 }
 
+function MermaidBlock({ children }: { children: string }) {
+  return (
+    <div className="mb-6 overflow-x-auto border-2 border-border bg-card p-4">
+      <div className="mermaid font-mono text-xs">{children}</div>
+    </div>
+  );
+}
+
 function InfoBox({ children }: { children: React.ReactNode }) {
   return (
     <div className="mb-6 border-2 border-primary/30 bg-primary/5 p-4">
@@ -300,9 +339,9 @@ function OverviewSection() {
   return (
     <DocSection title="Overview">
       <p className="mb-6 text-lg text-muted-foreground">
-        AccessFi is a decentralized marketplace for trading verified data with complete privacy.
-        Using zero-knowledge proofs, sellers can prove the authenticity of their data without
-        revealing the actual content, while buyers can trust the data they purchase is genuine.
+        AccessFi is a privacy-first marketplace where buyers collect verified data and sellers get paid
+        instantly. Sellers prove ownership of data (like an email) using zero-knowledge proofs, while
+        the raw content stays private and only minimal data is revealed.
       </p>
 
       <DocSubsection title="What is AccessFi?">
@@ -312,19 +351,19 @@ function OverviewSection() {
         <ul className="mb-6 space-y-2 text-muted-foreground">
           <li className="flex items-start gap-2">
             <span className="text-primary">◆</span>
-            <span>Sellers maintain privacy while proving data authenticity</span>
+            <span>Sellers prove authenticity with zkEmail without exposing raw email content</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary">◆</span>
-            <span>Buyers receive cryptographically verified data</span>
+            <span>Buyers receive cryptographically verified data tokens</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary">◆</span>
-            <span>All transactions are trustless and on-chain</span>
+            <span>Payments and ownership are enforced on-chain</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary">◆</span>
-            <span>No intermediaries or data custodians</span>
+            <span>Encrypted data stored in TEE, decryptable only by the buyer</span>
           </li>
         </ul>
       </DocSubsection>
@@ -356,6 +395,20 @@ function OverviewSection() {
             </Link>
           </div>
         </div>
+      </DocSubsection>
+
+      <DocSubsection title="System Overview Diagram">
+        <MermaidBlock>{`
+graph TD
+  A["Seller (.eml)"] --> B["Browser: zkEmail proof"]
+  B --> C["zkVerify (Horizen)"]
+  C --> D["AccessFi Pool"]
+  A --> E["TEE Encrypt (Phala CVM)"]
+  E --> D
+  D --> F["Seller Paid"]
+  D --> G["Data Token to Buyer"]
+  G --> H["Buyer Decrypts via TEE"]
+        `}</MermaidBlock>
       </DocSubsection>
     </DocSection>
   );
@@ -512,7 +565,8 @@ function ArchitectureSection() {
   return (
     <DocSection title="Architecture">
       <p className="mb-6 text-muted-foreground">
-        AccessFi combines multiple cutting-edge technologies to create a trustless data marketplace.
+        AccessFi combines ZK proofs, on-chain verification, and confidential compute to create a
+        trustless, privacy-preserving data marketplace.
       </p>
 
       <DocSubsection title="System Components">
@@ -523,7 +577,7 @@ function ArchitectureSection() {
                 1
               </div>
               <div>
-                <h4 className="font-mono text-sm font-bold">Smart Contracts (Base L2)</h4>
+                <h4 className="font-mono text-sm font-bold">Smart Contracts (Horizen Testnet)</h4>
                 <p className="text-sm text-muted-foreground">
                   Core contracts handle pool creation, proof verification, payments, and token minting.
                 </p>
@@ -559,9 +613,9 @@ function ArchitectureSection() {
                 4
               </div>
               <div>
-                <h4 className="font-mono text-sm font-bold">Phala TEE (Optional)</h4>
+                <h4 className="font-mono text-sm font-bold">Phala TEE (CVM)</h4>
                 <p className="text-sm text-muted-foreground">
-                  Hardware-secured encryption for sensitive data storage and decryption.
+                  Hardware-secured encryption for recipient data storage and controlled decryption.
                 </p>
               </div>
             </div>
@@ -570,21 +624,23 @@ function ArchitectureSection() {
       </DocSubsection>
 
       <DocSubsection title="Data Flow">
-        <CodeBlock>{`
-User uploads .eml file
-    ↓
-[Browser] Parse email + Extract DKIM signature
-    ↓
-[Browser] Generate zkEmail proof locally
-    ↓
-[zkVerify] Submit proof for on-chain verification
-    ↓
-[Base L2] Submit verified proof to AccessFi contract
-    ↓
-[Contract] Mint data token + Pay seller
-    ↓
-[Buyer] Receives verified data token
-        `}</CodeBlock>
+        <MermaidBlock>{`
+sequenceDiagram
+  participant S as Seller
+  participant B as Browser
+  participant T as Phala TEE
+  participant Z as zkVerify
+  participant C as AccessFi Pool
+  participant U as Buyer
+  S->>B: Upload .eml
+  B->>B: Extract recipient + generate zkEmail proof
+  B->>T: Encrypt recipient (returns encryptedCID)
+  B->>Z: Submit proof
+  Z->>C: Verification result
+  C->>C: Mint token + transfer to Buyer
+  C->>S: Pay seller
+  U->>T: Sign + decrypt
+        `}</MermaidBlock>
       </DocSubsection>
     </DocSection>
   );
@@ -619,7 +675,7 @@ struct Pool {
             <div className="flex h-8 w-8 items-center justify-center border-2 border-primary font-mono text-xs font-bold">
               1
             </div>
-            <span className="text-muted-foreground">Buyer creates pool with budget</span>
+            <span className="text-muted-foreground">Buyer creates pool and funds budget</span>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex h-8 w-8 items-center justify-center border-2 border-primary font-mono text-xs font-bold">
@@ -631,7 +687,7 @@ struct Pool {
             <div className="flex h-8 w-8 items-center justify-center border-2 border-primary font-mono text-xs font-bold">
               3
             </div>
-            <span className="text-muted-foreground">Verified sellers receive instant payment</span>
+            <span className="text-muted-foreground">Verified sellers are paid instantly</span>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex h-8 w-8 items-center justify-center border-2 border-primary font-mono text-xs font-bold">
@@ -694,6 +750,13 @@ function ProofSystemSection() {
           <li>5. Proof can be verified without revealing email content</li>
         </ol>
       </DocSubsection>
+
+      <DocSubsection title="What Gets Stored">
+        <InfoBox>
+          Only the recipient email is encrypted and stored in the TEE. The on-chain metadata stores
+          an encryptedCID plus a per-pool data hash.
+        </InfoBox>
+      </DocSubsection>
     </DocSection>
   );
 }
@@ -753,6 +816,33 @@ function PaymentFlowSection() {
             </li>
           </ol>
         </div>
+      </DocSubsection>
+    </DocSection>
+  );
+}
+
+function FeesSection() {
+  return (
+    <DocSection title="Fees">
+      <p className="mb-6 text-muted-foreground">
+        AccessFi charges a small platform fee on pool funding. Seller payments are automatic and
+        transparent.
+      </p>
+
+      <DocSubsection title="Platform Fee">
+        <div className="border-2 border-border bg-card p-6">
+          <p className="text-sm text-muted-foreground">
+            A 5% platform fee is deducted when a buyer funds a pool. The remaining amount becomes the
+            pool budget used to pay sellers. This fee is taken only once per funding action.
+          </p>
+        </div>
+      </DocSubsection>
+
+      <DocSubsection title="Seller Payouts">
+        <InfoBox>
+          Sellers receive the full “price per data” amount set by the pool after proof verification.
+          The platform fee is paid by the buyer when funding the pool.
+        </InfoBox>
       </DocSubsection>
     </DocSection>
   );
@@ -885,7 +975,8 @@ function ManagingDataSection() {
   return (
     <DocSection title="Managing Data">
       <p className="mb-6 text-muted-foreground">
-        Once sellers submit verified data, you can access it through your dashboard.
+        Once sellers submit verified data, you can access it through your dashboard and decrypt it
+        securely when needed.
       </p>
 
       <DocSubsection title="Accessing Your Data">
@@ -902,6 +993,18 @@ function ManagingDataSection() {
           Each verified submission mints an ERC-721 token that represents ownership of that data.
           These tokens are transferred to your wallet automatically.
         </InfoBox>
+      </DocSubsection>
+
+      <DocSubsection title="Secure Decryption">
+        <p className="mb-4 text-sm text-muted-foreground">
+          Recipient data is encrypted and stored in a TEE (Phala CVM). To view the data:
+        </p>
+        <ol className="space-y-2 text-sm text-muted-foreground">
+          <li>1. Click “View” on a token</li>
+          <li>2. Click “Decrypt”</li>
+          <li>3. Sign the wallet message to prove ownership</li>
+          <li>4. The data is decrypted inside the TEE and returned securely</li>
+        </ol>
       </DocSubsection>
 
       <DocSubsection title="API Access (Coming Soon)">
@@ -1027,8 +1130,8 @@ function SubmittingProofsSection() {
       </DocSubsection>
 
       <InfoBox>
-        Your raw email content never leaves your browser. Only the cryptographic proof is submitted
-        on-chain.
+        Your raw email content is processed locally. Only the recipient email is encrypted inside
+        the TEE and referenced on-chain via an encryptedCID.
       </InfoBox>
     </DocSection>
   );
@@ -1080,24 +1183,35 @@ function GettingPaidSection() {
 // ============================================================
 
 function SmartContractsSection() {
+  const dataToken = process.env.NEXT_PUBLIC_DATA_TOKEN_ADDRESS || '0x...';
+  const factoryPool = process.env.NEXT_PUBLIC_FACTORY_POOL_ADDRESS || '0x...';
+  const factoryUser = process.env.NEXT_PUBLIC_FACTORY_USER_ADDRESS || '0x...';
+  const zkVerifier = process.env.NEXT_PUBLIC_ZK_VERIFIER_ADDRESS || '0x...';
+
   return (
     <DocSection title="Smart Contracts">
       <p className="mb-6 text-muted-foreground">
-        AccessFi is built on a set of upgradeable smart contracts deployed on Base L2.
+        AccessFi is built on a set of upgradeable smart contracts deployed on Horizen Testnet.
       </p>
 
       <DocSubsection title="Contract Architecture">
         <div className="space-y-4">
           <div className="border-2 border-border bg-card p-4">
-            <h4 className="font-mono text-sm font-bold text-primary">AccessFiFactory</h4>
+            <h4 className="font-mono text-sm font-bold text-primary">FactoryAccessFiPool</h4>
             <p className="mt-2 text-sm text-muted-foreground">
-              Deploys and manages User and Pool contracts. Entry point for the protocol.
+              Creates and tracks AccessFi pool contracts.
             </p>
           </div>
           <div className="border-2 border-border bg-card p-4">
-            <h4 className="font-mono text-sm font-bold text-primary">AccessFiUser</h4>
+            <h4 className="font-mono text-sm font-bold text-primary">FactoryUser</h4>
             <p className="mt-2 text-sm text-muted-foreground">
-              Per-user contract managing pool interactions and proof submissions.
+              Deploys and tracks per-user User contracts.
+            </p>
+          </div>
+          <div className="border-2 border-border bg-card p-4">
+            <h4 className="font-mono text-sm font-bold text-primary">User</h4>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Per-user contract that submits proofs and manages user interactions.
             </p>
           </div>
           <div className="border-2 border-border bg-card p-4">
@@ -1112,15 +1226,23 @@ function SmartContractsSection() {
               ERC-721 token contract for verified data ownership.
             </p>
           </div>
+          <div className="border-2 border-border bg-card p-4">
+            <h4 className="font-mono text-sm font-bold text-primary">VerifyProof</h4>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Verifies zkVerify aggregation results for AccessFi pools.
+            </p>
+          </div>
         </div>
       </DocSubsection>
 
       <DocSubsection title="Deployed Addresses">
         <CodeBlock>{`
-Network: Base Sepolia (Testnet)
+Network: Horizen Testnet (Chain ID 2651420)
 
-Factory:    0x... (check basescan)
-DataToken:  0x... (check basescan)
+FactoryPool: ${factoryPool}
+FactoryUser: ${factoryUser}
+DataToken:   ${dataToken}
+ZkVerifier:  ${zkVerifier}
         `}</CodeBlock>
       </DocSubsection>
     </DocSection>
@@ -1174,7 +1296,7 @@ function ZkVerifySection() {
       <DocSubsection title="What is zkVerify?">
         <p className="mb-4 text-sm text-muted-foreground">
           zkVerify is a specialized blockchain for ZK proof verification. It aggregates multiple
-          proofs and posts verification results to other chains (like Base) for gas efficiency.
+          proofs and posts verification results for efficient on-chain checks.
         </p>
       </DocSubsection>
 
@@ -1182,8 +1304,7 @@ function ZkVerifySection() {
         <div className="border-2 border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">
             Multiple proofs are aggregated into a single verification transaction, drastically
-            reducing gas costs. The aggregated proof is posted to Base L2 where AccessFi contracts
-            can verify it.
+            reducing gas costs. AccessFi verifies results on Horizen Testnet.
           </p>
         </div>
       </DocSubsection>
@@ -1192,9 +1313,8 @@ function ZkVerifySection() {
         <CodeBlock>{`
 1. User submits proof to zkVerify (Horizen testnet)
 2. zkVerify verifies and aggregates proofs
-3. Aggregated proof posted to Base L2
-4. AccessFi contract verifies against merkle root
-5. Proof marked as verified, payment processed
+3. AccessFi contract verifies against merkle root on Horizen
+4. Proof marked as verified, payment processed
         `}</CodeBlock>
       </DocSubsection>
     </DocSection>
@@ -1224,7 +1344,7 @@ function SecuritySection() {
             <div>
               <h4 className="font-mono text-sm font-bold">Client-Side Proof Generation</h4>
               <p className="text-sm text-muted-foreground">
-                Proofs are generated in the user's browser. Raw data never sent to servers.
+                Proofs are generated in the user's browser. Raw email content stays local.
               </p>
             </div>
           </div>
@@ -1237,6 +1357,16 @@ function SecuritySection() {
               </p>
             </div>
           </div>
+          <div className="flex items-start gap-4 border-2 border-primary/30 bg-primary/5 p-4">
+            <span className="text-primary">✓</span>
+            <div>
+              <h4 className="font-mono text-sm font-bold">TEE-Encrypted Storage</h4>
+              <p className="text-sm text-muted-foreground">
+                Recipient data is encrypted and stored inside a TEE. Decryption requires wallet
+                signature and on-chain ownership.
+              </p>
+            </div>
+          </div>
         </div>
       </DocSubsection>
 
@@ -1244,7 +1374,7 @@ function SecuritySection() {
         <ul className="space-y-2 text-sm text-muted-foreground">
           <li className="flex items-start gap-2">
             <span className="text-primary">◆</span>
-            <span>Each email can only be used once (hash uniqueness check)</span>
+            <span>Each email can only be used once per pool (hash uniqueness check)</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary">◆</span>
@@ -1365,6 +1495,87 @@ Authorization: Bearer <your-api-key>
             <p className="text-sm text-muted-foreground">Register a webhook for pool events</p>
           </div>
         </div>
+      </DocSubsection>
+    </DocSection>
+  );
+}
+
+// ============================================================
+//                    FAQ SECTIONS
+// ============================================================
+
+function BuyersFaqSection() {
+  return (
+    <DocSection title="Buyers FAQ">
+      <DocSubsection title="What do I actually receive?">
+        <p className="text-sm text-muted-foreground">
+          You receive an ERC-721 data token for each verified submission, plus access to the
+          encrypted recipient email stored in the TEE. Decryption requires wallet ownership.
+        </p>
+      </DocSubsection>
+
+      <DocSubsection title="How is the data protected?">
+        <p className="text-sm text-muted-foreground">
+          Recipient data is encrypted in a Phala CVM (TEE). Only the token owner can decrypt it by
+          signing a wallet message, and ownership is verified on-chain.
+        </p>
+      </DocSubsection>
+
+      <DocSubsection title="Can I export data?">
+        <p className="text-sm text-muted-foreground">
+          API export is coming soon. Right now you can view and decrypt inside the dashboard.
+        </p>
+      </DocSubsection>
+    </DocSection>
+  );
+}
+
+function SellersFaqSection() {
+  return (
+    <DocSection title="Sellers FAQ">
+      <DocSubsection title="Do I upload my full email?">
+        <p className="text-sm text-muted-foreground">
+          No. The proof is generated locally. Only the recipient email is encrypted and stored in
+          the TEE. Raw email content stays on your device.
+        </p>
+      </DocSubsection>
+
+      <DocSubsection title="How do I get paid?">
+        <p className="text-sm text-muted-foreground">
+          Once your proof is verified, the pool contract instantly transfers ETH to your wallet.
+        </p>
+      </DocSubsection>
+
+      <DocSubsection title="Can I submit the same email to another pool?">
+        <p className="text-sm text-muted-foreground">
+          Yes. Uniqueness is enforced per pool, so the same email can be used across different pools.
+        </p>
+      </DocSubsection>
+    </DocSection>
+  );
+}
+
+function SecurityFaqSection() {
+  return (
+    <DocSection title="Security FAQ">
+      <DocSubsection title="What if someone steals a token?">
+        <p className="text-sm text-muted-foreground">
+          Decryption requires token ownership on-chain and a wallet signature. If ownership changes,
+          access changes with it.
+        </p>
+      </DocSubsection>
+
+      <DocSubsection title="Can the platform decrypt data?">
+        <p className="text-sm text-muted-foreground">
+          No. Decryption is performed inside the TEE and gated by wallet ownership. The platform
+          never sees raw data.
+        </p>
+      </DocSubsection>
+
+      <DocSubsection title="Is the proof reusable?">
+        <p className="text-sm text-muted-foreground">
+          Proofs are bound to a pool. Reusing the same email in the same pool is rejected.
+        </p>
       </DocSubsection>
     </DocSection>
   );
