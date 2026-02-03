@@ -217,27 +217,34 @@ export function JoinPoolModal({
       });
       setProofProgress(70);
 
-      // Step 2: For now, skip TEE encryption - store email hash directly
-      // TODO: Re-enable TEE encryption when ready for production
-      console.log('[JoinPool] Preparing data (encryption skipped for testing)...');
+      // Step 2: Encrypt recipient email via TEE service
+      console.log('[JoinPool] Preparing data (TEE encryption)...');
       setStep('encrypting');
 
-      // Create a simple CID from the email content (for testing)
-      // In production, this would be encrypted and stored on IPFS via TEE
-      const encoder = new TextEncoder();
-      // Include pool address to enforce per-pool uniqueness
-      const emailBytes = encoder.encode(`${emlContent}::${poolAddress}`);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', emailBytes);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const dataHash = '0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('') as `0x${string}`;
-
-      // For now: store only the recipient email address in CID field
-      // In production: this would be an IPFS CID of encrypted data
+      // Extract recipient email for encryption
       const recipientEmail = extractRecipientEmail(emlContent);
       if (!recipientEmail) {
         throw new Error('Recipient email not found in the .eml file.');
       }
-      const encryptedCID = recipientEmail;
+
+      const teeResponse = await fetch('/api/tee/encrypt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipientEmail,
+          poolAddress,
+          sellerAddress: address,
+        }),
+      });
+
+      if (!teeResponse.ok) {
+        const errorData = await teeResponse.json().catch(() => ({ error: 'TEE encryption failed' }));
+        throw new Error(errorData.error || 'TEE encryption failed');
+      }
+
+      const teeResult = await teeResponse.json();
+      const encryptedCID = teeResult.encryptedCID as string;
+      const dataHash = teeResult.dataHash as `0x${string}`;
 
       console.log('[JoinPool] Data prepared:', { dataHash, cidLength: encryptedCID.length });
 
