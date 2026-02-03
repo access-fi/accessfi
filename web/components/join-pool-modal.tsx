@@ -60,6 +60,41 @@ function parseContractError(error: any): string {
   return error?.shortMessage || error?.message || 'Failed to submit proof. Please try again.';
 }
 
+function extractRecipientEmail(emlContent: string): string | null {
+  if (!emlContent) return null;
+
+  const lines = emlContent.split('\n');
+  const pickHeaderValue = (headerName: string) => {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line) continue;
+      if (line.toLowerCase().startsWith(headerName)) {
+        let value = line.slice(headerName.length).trim();
+        // Handle folded header lines
+        for (let j = i + 1; j < lines.length; j++) {
+          const nextLine = lines[j];
+          if (nextLine && /^[\t ]/.test(nextLine)) {
+            value += ` ${nextLine.trim()}`;
+          } else {
+            break;
+          }
+        }
+        return value;
+      }
+      // Stop after headers
+      if (line.trim() === '') break;
+    }
+    return null;
+  };
+
+  const toValue = pickHeaderValue('to:');
+  const deliveredToValue = pickHeaderValue('delivered-to:');
+  const headerValue = toValue || deliveredToValue || '';
+
+  const match = headerValue.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+  return match ? match[0] : null;
+}
+
 type ModalStep =
   | 'upload-email'      // Step 1: Upload .eml file
   | 'generating-proof'  // Step 2: zkEmail proof generation
@@ -95,7 +130,15 @@ export function JoinPoolModal({
   const { joinPool, isPending: isJoining, isConfirmed: joinConfirmed } =
     useJoinPool(profile?.userContractAddress as `0x${string}` | undefined);
 
-  const { submitProof, isPending: isSubmitting, isConfirmed: submitConfirmed, hash: txHash } =
+  const {
+    submitProof,
+    isPending: isSubmitting,
+    isConfirmed: submitConfirmed,
+    isConfirmError: submitConfirmError,
+    confirmError: submitConfirmErrorDetails,
+    receipt: submitReceipt,
+    hash: txHash,
+  } =
     useSubmitProof(profile?.userContractAddress as `0x${string}` | undefined);
 
   // Reset on open
@@ -120,6 +163,25 @@ export function JoinPoolModal({
       }, 3000);
     }
   }, [submitConfirmed, step, onClose]);
+
+  React.useEffect(() => {
+    if (step !== 'confirming') return;
+
+    const status = submitReceipt?.status;
+    const reverted =
+      status === 'reverted';
+
+    if (submitConfirmError || reverted) {
+      const errorMessage = submitConfirmErrorDetails
+        ? parseContractError(submitConfirmErrorDetails)
+        : 'Transaction reverted on-chain. Please try again.';
+      setErrorMessage(errorMessage);
+      setStep('error');
+      toast.error('Proof submission failed', {
+        description: errorMessage,
+      });
+    }
+  }, [step, submitConfirmError, submitConfirmErrorDetails, submitReceipt]);
 
   const handleFileSelect = (file: File) => {
     setEmailFile(file);
@@ -163,14 +225,19 @@ export function JoinPoolModal({
       // Create a simple CID from the email content (for testing)
       // In production, this would be encrypted and stored on IPFS via TEE
       const encoder = new TextEncoder();
-      const emailBytes = encoder.encode(emlContent);
+      // Include pool address to enforce per-pool uniqueness
+      const emailBytes = encoder.encode(`${emlContent}::${poolAddress}`);
       const hashBuffer = await crypto.subtle.digest('SHA-256', emailBytes);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const dataHash = '0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('') as `0x${string}`;
 
-      // For testing: store email content as base64 in CID field
+      // For now: store only the recipient email address in CID field
       // In production: this would be an IPFS CID of encrypted data
-      const encryptedCID = btoa(emlContent).slice(0, 100); // Truncate for testing
+      const recipientEmail = extractRecipientEmail(emlContent);
+      if (!recipientEmail) {
+        throw new Error('Recipient email not found in the .eml file.');
+      }
+      const encryptedCID = recipientEmail;
 
       console.log('[JoinPool] Data prepared:', { dataHash, cidLength: encryptedCID.length });
 
@@ -224,14 +291,16 @@ export function JoinPoolModal({
   };
 
   const handleClose = () => {
-    if (step !== 'confirming' && step !== 'joining') {
-      onClose();
-    }
+    onClose();
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl border-2 border-border bg-background p-0 font-mono">
+    <Dialog open={open} onOpenChange={() => {}}>
+      <DialogContent
+        className="max-w-2xl border-2 border-border bg-background p-0 font-mono"
+        onInteractOutside={(event) => event.preventDefault()}
+        onEscapeKeyDown={(event) => event.preventDefault()}
+      >
         <AnimatePresence mode="wait">
 
           {/* Step: Upload Email */}
@@ -247,9 +316,6 @@ export function JoinPoolModal({
                   <h2 className="text-2xl font-black uppercase">JOIN POOL</h2>
                   <p className="mt-1 text-xs text-muted-foreground">{poolName}</p>
                 </div>
-                <button onClick={handleClose} className="transition-colors hover:text-primary">
-                  <X className="h-6 w-6" />
-                </button>
               </div>
 
               <div className="p-6">
@@ -262,8 +328,7 @@ export function JoinPoolModal({
                 <div className="mt-4 border-2 border-yellow-500 bg-yellow-500/10 p-4">
                   <AlertCircle className="inline mr-2 text-yellow-500" />
                   <span className="font-mono text-xs">
-                    Your email is processed locally and encrypted before submission.
-                    Raw email never leaves your device.
+                    Your email is processed locally. Only the recipient address is submitted.
                   </span>
                 </div>
 
@@ -277,9 +342,6 @@ export function JoinPoolModal({
                 </div>
 
                 <div className="mt-6 flex gap-4">
-                  <Button onClick={handleClose} variant="outline" className="flex-1">
-                    CANCEL
-                  </Button>
                   <Button
                     onClick={handleSubmit}
                     disabled={!emailFile}
@@ -399,8 +461,35 @@ export function JoinPoolModal({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center p-12"
+              className="relative flex flex-col items-center justify-center p-12 overflow-hidden"
             >
+              <div className="pointer-events-none absolute inset-0">
+                {[
+                  { left: '8%', delay: 0.0, duration: 2.4, size: 10 },
+                  { left: '18%', delay: 0.2, duration: 2.8, size: 12 },
+                  { left: '28%', delay: 0.4, duration: 2.6, size: 8 },
+                  { left: '38%', delay: 0.1, duration: 3.0, size: 11 },
+                  { left: '48%', delay: 0.3, duration: 2.5, size: 9 },
+                  { left: '58%', delay: 0.5, duration: 3.1, size: 12 },
+                  { left: '68%', delay: 0.2, duration: 2.7, size: 8 },
+                  { left: '78%', delay: 0.6, duration: 3.0, size: 10 },
+                  { left: '88%', delay: 0.1, duration: 2.9, size: 9 },
+                ].map((petal, index) => (
+                  <motion.span
+                    key={`petal-${index}`}
+                    className="absolute top-0 rounded-full bg-primary/60"
+                    style={{ left: petal.left, width: petal.size, height: petal.size }}
+                    initial={{ y: -30, opacity: 0 }}
+                    animate={{ y: 280, opacity: [0, 1, 1, 0] }}
+                    transition={{
+                      duration: petal.duration,
+                      delay: petal.delay,
+                      repeat: 2,
+                      ease: 'easeInOut',
+                    }}
+                  />
+                ))}
+              </div>
               <CheckCircle2 className="mb-6 h-16 w-16 text-primary" />
               <h3 className="mb-2 text-xl font-bold uppercase text-primary">
                 PROOF SUBMITTED!
@@ -412,6 +501,11 @@ export function JoinPoolModal({
                 <span className="font-mono text-sm text-primary">
                   Data token will be minted and you'll receive {formatEther(pricePerData)} ETH automatically.
                 </span>
+              </div>
+              <div className="mt-6">
+                <Button onClick={handleClose} variant="outline">
+                  CLOSE
+                </Button>
               </div>
             </motion.div>
           )}

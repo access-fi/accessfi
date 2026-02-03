@@ -1231,6 +1231,7 @@ function PoolTokenRow({
   const seller = tokenData?.[2];
   const tokenPool = tokenData?.[3];
   const mintedAt = tokenData?.[4];
+  const recipientEmail = encryptedCID && encryptedCID.includes('@') ? encryptedCID : undefined;
 
   // Check if this token belongs to the current pool
   const belongsToPool = tokenPool?.toLowerCase() === poolAddress.toLowerCase();
@@ -1270,19 +1271,25 @@ function PoolTokenRow({
           </div>
 
           {/* Email Preview */}
-          {emailPreview.from && (
+          {recipientEmail && (
+            <div className="mb-2">
+              <span className="font-mono text-xs text-muted-foreground">TO: </span>
+              <span className="font-mono text-xs text-foreground">{recipientEmail}</span>
+            </div>
+          )}
+          {!recipientEmail && emailPreview.from && (
             <div className="mb-2">
               <span className="font-mono text-xs text-muted-foreground">FROM: </span>
               <span className="font-mono text-xs text-foreground">{emailPreview.from}</span>
             </div>
           )}
-          {emailPreview.subject && (
+          {!recipientEmail && emailPreview.subject && (
             <div className="mb-2">
               <span className="font-mono text-xs text-muted-foreground">SUBJECT: </span>
               <span className="font-mono text-xs text-foreground truncate">{emailPreview.subject}</span>
             </div>
           )}
-          {!emailPreview.from && !emailPreview.subject && (
+          {!recipientEmail && !emailPreview.from && !emailPreview.subject && (
             <p className="font-mono text-xs text-muted-foreground">
               Email data ({encryptedCID?.length || 0} chars)
             </p>
@@ -1341,6 +1348,7 @@ function EmailDataModal({ tokenId, onClose }: { tokenId: bigint; onClose: () => 
   const seller = tokenData?.[2];
   const poolAddress = tokenData?.[3];
   const mintedAt = tokenData?.[4];
+  const recipientEmail = encryptedCID.includes('@') ? encryptedCID : undefined;
 
   // Parse email content
   const emailData = parseEmailContent(encryptedCID);
@@ -1413,12 +1421,18 @@ function EmailDataModal({ tokenId, onClose }: { tokenId: bigint; onClose: () => 
               </div>
 
               {/* Email Headers Section */}
-              {(emailData.from || emailData.to || emailData.subject || emailData.date) && (
+              {(recipientEmail || emailData.from || emailData.to || emailData.subject || emailData.date) && (
                 <div className="p-6">
                   <h3 className="font-mono text-xs font-bold uppercase text-muted-foreground mb-4">
                     EMAIL HEADERS
                   </h3>
                   <div className="space-y-3 border-2 border-border bg-card p-4">
+                    {recipientEmail && (
+                      <div>
+                        <span className="font-mono text-xs text-primary font-bold">TO:</span>
+                        <p className="font-mono text-sm text-foreground mt-1">{recipientEmail}</p>
+                      </div>
+                    )}
                     {emailData.from && (
                       <div>
                         <span className="font-mono text-xs text-primary font-bold">FROM:</span>
@@ -1450,11 +1464,11 @@ function EmailDataModal({ tokenId, onClose }: { tokenId: bigint; onClose: () => 
               {/* Email Body Section */}
               <div className="p-6">
                 <h3 className="font-mono text-xs font-bold uppercase text-muted-foreground mb-4">
-                  {emailData.body ? 'EMAIL BODY' : 'RAW CONTENT'}
+                  {recipientEmail ? 'RECIPIENT EMAIL' : (emailData.body ? 'EMAIL BODY' : 'RAW CONTENT')}
                 </h3>
                 <div className="border-2 border-border bg-card">
                   <pre className="p-4 font-mono text-xs whitespace-pre-wrap break-words max-h-[300px] overflow-auto">
-                    {emailData.body || encryptedCID || 'No content available'}
+                    {recipientEmail || emailData.body || encryptedCID || 'No content available'}
                   </pre>
                 </div>
               </div>
