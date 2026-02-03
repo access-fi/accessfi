@@ -2,7 +2,7 @@
 
 **A Privacy-First Internet-Verifiable Data Marketplace**
 
-AccessFi is a next-generation protocol that bridges Web2 data with Web3 trustlessness. Users prove they have specific data (like subscription receipts, ratings, activity history) using zero-knowledge proofs and secure hardware, without revealing private details. Businesses get cryptographically verified data that is 100% legal and privacy-compliant.
+AccessFi is a privacy-first marketplace where sellers prove they own data (like emails) using zero-knowledge proofs and get paid instantly, while buyers receive cryptographically verified data tokens. Sensitive recipient data is encrypted inside a Phala TEE (CVM) and decryptable only by the token owner via wallet signature.
 
 ## The Problem
 
@@ -10,8 +10,24 @@ Companies currently buy data from shady brokers or scrape it without permission.
 
 ## How AccessFi Works
 
-1. **Users** prove they have specific data (e.g., Spotify Premium subscription, high Uber rating) using **zkEmail** and **Phala TEE** without showing private details
-2. **Businesses** create Data Pools with specific rewards for verified data types
-3. **Smart Contracts** automate instant payment when verified data is locked in the secure vault
-4. **Buyers** receive cryptographically guaranteed, encrypted, privacy-compliant data
+1. **Sellers** upload a `.eml` file; zkEmail generates a proof locally in the browser.
+2. **Recipient email** is encrypted inside Phala TEE and stored as an `encryptedCID`.
+3. **zkVerify** validates proofs on Horizen testnet; AccessFi contracts verify and pay sellers.
+4. **Data tokens (ERC-721)** are minted and transferred to buyers, who can decrypt via wallet signature.
 
+## Key Components
+
+- **Smart Contracts**: `FactoryAccessFiPool`, `FactoryUser`, `AccessfiPool`, `User`, `AccessFiDataToken`, `VerifyProof`
+- **ZK Layer**: zkEmail (client-side proofs) + zkVerify (on-chain aggregation)
+- **TEE Layer**: Phala CVM handles encryption/decryption and secure storage
+
+## Fees
+
+- **5% platform fee** on pool funding (buyers pay once per funding action)
+- Sellers receive the full **price per data**
+
+## Repo Structure
+
+- `contracts/` smart contracts (Foundry)
+- `web/` Next.js app (UI + API routes)
+- `tee-service/` Phala CVM service (encrypt/decrypt)
