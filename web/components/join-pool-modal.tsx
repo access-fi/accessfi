@@ -291,14 +291,16 @@ export function JoinPoolModal({
   };
 
   const handleClose = () => {
-    if (step !== 'confirming' && step !== 'joining') {
-      onClose();
-    }
+    onClose();
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl border-2 border-border bg-background p-0 font-mono">
+    <Dialog open={open} onOpenChange={() => {}}>
+      <DialogContent
+        className="max-w-2xl border-2 border-border bg-background p-0 font-mono"
+        onInteractOutside={(event) => event.preventDefault()}
+        onEscapeKeyDown={(event) => event.preventDefault()}
+      >
         <AnimatePresence mode="wait">
 
           {/* Step: Upload Email */}
@@ -314,9 +316,6 @@ export function JoinPoolModal({
                   <h2 className="text-2xl font-black uppercase">JOIN POOL</h2>
                   <p className="mt-1 text-xs text-muted-foreground">{poolName}</p>
                 </div>
-                <button onClick={handleClose} className="transition-colors hover:text-primary">
-                  <X className="h-6 w-6" />
-                </button>
               </div>
 
               <div className="p-6">
@@ -329,8 +328,7 @@ export function JoinPoolModal({
                 <div className="mt-4 border-2 border-yellow-500 bg-yellow-500/10 p-4">
                   <AlertCircle className="inline mr-2 text-yellow-500" />
                   <span className="font-mono text-xs">
-                    Your email is processed locally and encrypted before submission.
-                    Raw email never leaves your device.
+                    Your email is processed locally. Only the recipient address is submitted.
                   </span>
                 </div>
 
@@ -344,9 +342,6 @@ export function JoinPoolModal({
                 </div>
 
                 <div className="mt-6 flex gap-4">
-                  <Button onClick={handleClose} variant="outline" className="flex-1">
-                    CANCEL
-                  </Button>
                   <Button
                     onClick={handleSubmit}
                     disabled={!emailFile}
@@ -466,8 +461,35 @@ export function JoinPoolModal({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center p-12"
+              className="relative flex flex-col items-center justify-center p-12 overflow-hidden"
             >
+              <div className="pointer-events-none absolute inset-0">
+                {[
+                  { left: '8%', delay: 0.0, duration: 2.4, size: 10 },
+                  { left: '18%', delay: 0.2, duration: 2.8, size: 12 },
+                  { left: '28%', delay: 0.4, duration: 2.6, size: 8 },
+                  { left: '38%', delay: 0.1, duration: 3.0, size: 11 },
+                  { left: '48%', delay: 0.3, duration: 2.5, size: 9 },
+                  { left: '58%', delay: 0.5, duration: 3.1, size: 12 },
+                  { left: '68%', delay: 0.2, duration: 2.7, size: 8 },
+                  { left: '78%', delay: 0.6, duration: 3.0, size: 10 },
+                  { left: '88%', delay: 0.1, duration: 2.9, size: 9 },
+                ].map((petal, index) => (
+                  <motion.span
+                    key={`petal-${index}`}
+                    className="absolute top-0 rounded-full bg-primary/60"
+                    style={{ left: petal.left, width: petal.size, height: petal.size }}
+                    initial={{ y: -30, opacity: 0 }}
+                    animate={{ y: 280, opacity: [0, 1, 1, 0] }}
+                    transition={{
+                      duration: petal.duration,
+                      delay: petal.delay,
+                      repeat: 2,
+                      ease: 'easeInOut',
+                    }}
+                  />
+                ))}
+              </div>
               <CheckCircle2 className="mb-6 h-16 w-16 text-primary" />
               <h3 className="mb-2 text-xl font-bold uppercase text-primary">
                 PROOF SUBMITTED!
@@ -479,6 +501,11 @@ export function JoinPoolModal({
                 <span className="font-mono text-sm text-primary">
                   Data token will be minted and you'll receive {formatEther(pricePerData)} ETH automatically.
                 </span>
+              </div>
+              <div className="mt-6">
+                <Button onClick={handleClose} variant="outline">
+                  CLOSE
+                </Button>
               </div>
             </motion.div>
           )}
