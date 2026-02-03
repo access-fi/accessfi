@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyMessage } from 'viem';
+import { verifyMessage, createPublicClient, http } from 'viem';
+import AccessFiDataTokenABI from '@/lib/contracts/AccessFiDataToken.abi.json';
+import { getContractAddresses } from '@/lib/contracts/addresses';
 
 const TEE_SERVICE_URL = process.env.TEE_SERVICE_URL || 'http://localhost:8080';
 
@@ -12,12 +14,12 @@ const TEE_SERVICE_URL = process.env.TEE_SERVICE_URL || 'http://localhost:8080';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { tokenId, buyerAddress, signature } = body;
+    const { tokenId, buyerAddress, signature, encryptedCID, chainId } = body;
 
     // Validate required fields
-    if (!tokenId || !buyerAddress || !signature) {
+    if (!tokenId || !buyerAddress || !signature || !encryptedCID || !chainId) {
       return NextResponse.json(
-        { error: 'Missing required fields: tokenId, buyerAddress, signature' },
+        { error: 'Missing required fields: tokenId, buyerAddress, signature, encryptedCID, chainId' },
         { status: 400 }
       );
     }
@@ -52,21 +54,52 @@ export async function POST(request: NextRequest) {
 
     console.log('[TEE Decrypt API] Signature verified');
 
-    // TODO: Verify buyer owns the token on-chain
-    // const dataToken = getContract({...});
-    // const owner = await dataToken.read.ownerOf([BigInt(tokenId)]);
-    // if (owner.toLowerCase() !== buyerAddress.toLowerCase()) {
-    //   return NextResponse.json({ error: 'Not token owner' }, { status: 403 });
-    // }
+    // Verify buyer owns the token on-chain
+    const addresses = getContractAddresses(Number(chainId));
+    const dataTokenAddress = addresses?.DATA_TOKEN;
+    if (!dataTokenAddress) {
+      return NextResponse.json(
+        { error: 'Data token contract address not configured for this chain' },
+        { status: 500 }
+      );
+    }
+
+    const rpcUrl =
+      process.env[`RPC_URL_${chainId}`] ||
+      process.env.TEE_RPC_URL ||
+      process.env.NEXT_PUBLIC_RPC_URL;
+
+    if (!rpcUrl) {
+      return NextResponse.json(
+        { error: 'RPC URL not configured for on-chain verification' },
+        { status: 500 }
+      );
+    }
+
+    const publicClient = createPublicClient({
+      transport: http(rpcUrl),
+    });
+
+    const owner = await publicClient.readContract({
+      address: dataTokenAddress as `0x${string}`,
+      abi: AccessFiDataTokenABI as any,
+      functionName: 'ownerOf',
+      args: [BigInt(tokenId)],
+    });
+
+    if (String(owner).toLowerCase() !== String(buyerAddress).toLowerCase()) {
+      return NextResponse.json(
+        { error: 'Not token owner' },
+        { status: 403 }
+      );
+    }
 
     // Check if TEE service is configured
     if (TEE_SERVICE_URL === 'http://localhost:8080') {
-      console.warn('[TEE Decrypt API] TEE service not configured, using mock decryption');
-
-      // Mock decryption for development
-      return NextResponse.json({
-        data: 'Mock decrypted email data - TEE service not configured',
-      });
+      return NextResponse.json(
+        { error: 'TEE service not configured' },
+        { status: 500 }
+      );
     }
 
     // Forward to TEE service
@@ -75,7 +108,7 @@ export async function POST(request: NextRequest) {
     const response = await fetch(`${TEE_SERVICE_URL}/decrypt`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tokenId, buyerAddress, signature }),
+      body: JSON.stringify({ encryptedCID, buyerAddress, signature }),
     });
 
     if (!response.ok) {

@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { keccak256, toHex } from 'viem';
-
 const TEE_SERVICE_URL = process.env.TEE_SERVICE_URL || 'http://localhost:8080';
 
 /**
@@ -12,12 +10,12 @@ const TEE_SERVICE_URL = process.env.TEE_SERVICE_URL || 'http://localhost:8080';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { emailData, poolAddress, sellerAddress } = body;
+    const { recipientEmail, poolAddress, sellerAddress } = body;
 
     // Validate required fields
-    if (!emailData || !poolAddress || !sellerAddress) {
+    if (!recipientEmail || !poolAddress || !sellerAddress) {
       return NextResponse.json(
-        { error: 'Missing required fields: emailData, poolAddress, sellerAddress' },
+        { error: 'Missing required fields: recipientEmail, poolAddress, sellerAddress' },
         { status: 400 }
       );
     }
@@ -25,16 +23,15 @@ export async function POST(request: NextRequest) {
     console.log('[TEE Encrypt API] Request received:', {
       poolAddress,
       sellerAddress,
-      emailDataLength: emailData.length,
+      recipientEmailLength: recipientEmail.length,
     });
 
     // Check if TEE service is configured
     if (TEE_SERVICE_URL === 'http://localhost:8080') {
-      console.warn('[TEE Encrypt API] TEE service not configured, using mock encryption');
-
-      // Mock encryption for development (REMOVE IN PRODUCTION)
-      const mockResult = await mockEncryption(emailData, poolAddress, sellerAddress);
-      return NextResponse.json(mockResult);
+      return NextResponse.json(
+        { error: 'TEE service not configured' },
+        { status: 500 }
+      );
     }
 
     // Forward to TEE service
@@ -43,7 +40,7 @@ export async function POST(request: NextRequest) {
     const response = await fetch(`${TEE_SERVICE_URL}/encrypt`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ emailData, poolAddress, sellerAddress }),
+      body: JSON.stringify({ recipientEmail, poolAddress, sellerAddress }),
     });
 
     if (!response.ok) {
@@ -67,38 +64,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-/**
- * Mock encryption for development
- * IMPORTANT: Remove this in production!
- */
-async function mockEncryption(
-  emailData: string,
-  poolAddress: string,
-  sellerAddress: string
-) {
-  console.log('[TEE Encrypt API] Using mock encryption (DEVELOPMENT ONLY)');
-
-  // Simulate encryption delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-
-  // Generate mock encrypted CID (hash of email data)
-  const encryptedCID = keccak256(toHex(emailData)).slice(0, 48); // Mock IPFS CID
-
-  // Generate data hash
-  const dataHash = keccak256(toHex(emailData + poolAddress + sellerAddress));
-
-  // Mock attestation
-  const attestation = JSON.stringify({
-    enclave: 'mock-tee-dev',
-    timestamp: Date.now(),
-    signature: '0x' + 'mock'.repeat(32),
-  });
-
-  return {
-    encryptedCID,
-    dataHash,
-    attestation,
-  };
 }

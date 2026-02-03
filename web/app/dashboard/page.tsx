@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount } from "wagmi";
+import { useAccount, useSignMessage } from "wagmi";
 import { useState, useEffect } from "react";
 import { Header } from "@/components/header";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -1232,6 +1232,8 @@ function PoolTokenRow({
   const tokenPool = tokenData?.[3];
   const mintedAt = tokenData?.[4];
   const recipientEmail = encryptedCID && encryptedCID.includes('@') ? encryptedCID : undefined;
+  const isEncryptedRef = encryptedCID?.startsWith('cvm_');
+  // const recipientEmail = encryptedCID && encryptedCID.includes('@') ? encryptedCID : undefined;
 
   // Check if this token belongs to the current pool
   const belongsToPool = tokenPool?.toLowerCase() === poolAddress.toLowerCase();
@@ -1251,7 +1253,7 @@ function PoolTokenRow({
   );
 
   // Parse email headers for preview
-  const emailPreview = parseEmailPreview(encryptedCID || '');
+  const emailPreview = parseEmailPreview(!recipientEmail && !isEncryptedRef ? (encryptedCID || '') : '');
 
   return (
     <motion.div
@@ -1277,6 +1279,11 @@ function PoolTokenRow({
               <span className="font-mono text-xs text-foreground">{recipientEmail}</span>
             </div>
           )}
+          {!recipientEmail && isEncryptedRef && (
+            <p className="font-mono text-xs text-muted-foreground">
+              Encrypted data stored in TEE
+            </p>
+          )}
           {!recipientEmail && emailPreview.from && (
             <div className="mb-2">
               <span className="font-mono text-xs text-muted-foreground">FROM: </span>
@@ -1289,7 +1296,7 @@ function PoolTokenRow({
               <span className="font-mono text-xs text-foreground truncate">{emailPreview.subject}</span>
             </div>
           )}
-          {!recipientEmail && !emailPreview.from && !emailPreview.subject && (
+          {!recipientEmail && !isEncryptedRef && !emailPreview.from && !emailPreview.subject && (
             <p className="font-mono text-xs text-muted-foreground">
               Email data ({encryptedCID?.length || 0} chars)
             </p>
@@ -1341,7 +1348,12 @@ function parseEmailPreview(content: string): { from?: string; subject?: string; 
 
 // Modal to view formatted email data
 function EmailDataModal({ tokenId, onClose }: { tokenId: bigint; onClose: () => void }) {
+  const { address, chainId } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const { data: metadata, isLoading } = useTokenMetadata(tokenId);
+  const [decryptedEmail, setDecryptedEmail] = useState<string | null>(null);
+  const [isDecrypting, setIsDecrypting] = useState(false);
+  const [decryptError, setDecryptError] = useState<string | null>(null);
 
   const tokenData = metadata as [string, string, string, string, bigint, boolean] | undefined;
   const encryptedCID = tokenData?.[0] || '';
@@ -1349,9 +1361,48 @@ function EmailDataModal({ tokenId, onClose }: { tokenId: bigint; onClose: () => 
   const poolAddress = tokenData?.[3];
   const mintedAt = tokenData?.[4];
   const recipientEmail = encryptedCID.includes('@') ? encryptedCID : undefined;
+  const isEncryptedRef = encryptedCID.startsWith('cvm_');
+  const displayEmail = decryptedEmail || recipientEmail;
 
   // Parse email content
-  const emailData = parseEmailContent(encryptedCID);
+  const emailData = parseEmailContent(!isEncryptedRef ? encryptedCID : '');
+
+  const handleDecrypt = async () => {
+    if (!address || !chainId) {
+      setDecryptError('Connect wallet to decrypt.');
+      return;
+    }
+    setIsDecrypting(true);
+    setDecryptError(null);
+    try {
+      const message = `Decrypt token ${tokenId.toString()}`;
+      const signature = await signMessageAsync({ message });
+
+      const response = await fetch('/api/tee/decrypt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tokenId: tokenId.toString(),
+          buyerAddress: address,
+          signature,
+          encryptedCID,
+          chainId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Decryption failed' }));
+        throw new Error(errorData.error || 'Decryption failed');
+      }
+
+      const result = await response.json();
+      setDecryptedEmail(result.recipientEmail);
+    } catch (error: any) {
+      setDecryptError(error?.message || 'Decryption failed');
+    } finally {
+      setIsDecrypting(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
@@ -1421,16 +1472,16 @@ function EmailDataModal({ tokenId, onClose }: { tokenId: bigint; onClose: () => 
               </div>
 
               {/* Email Headers Section */}
-              {(recipientEmail || emailData.from || emailData.to || emailData.subject || emailData.date) && (
+              {(displayEmail || emailData.from || emailData.to || emailData.subject || emailData.date) && (
                 <div className="p-6">
                   <h3 className="font-mono text-xs font-bold uppercase text-muted-foreground mb-4">
                     EMAIL HEADERS
                   </h3>
                   <div className="space-y-3 border-2 border-border bg-card p-4">
-                    {recipientEmail && (
+                    {displayEmail && (
                       <div>
                         <span className="font-mono text-xs text-primary font-bold">TO:</span>
-                        <p className="font-mono text-sm text-foreground mt-1">{recipientEmail}</p>
+                        <p className="font-mono text-sm text-foreground mt-1">{displayEmail}</p>
                       </div>
                     )}
                     {emailData.from && (
@@ -1464,13 +1515,32 @@ function EmailDataModal({ tokenId, onClose }: { tokenId: bigint; onClose: () => 
               {/* Email Body Section */}
               <div className="p-6">
                 <h3 className="font-mono text-xs font-bold uppercase text-muted-foreground mb-4">
-                  {recipientEmail ? 'RECIPIENT EMAIL' : (emailData.body ? 'EMAIL BODY' : 'RAW CONTENT')}
+                  {displayEmail ? 'RECIPIENT EMAIL' : (emailData.body ? 'EMAIL BODY' : 'RAW CONTENT')}
                 </h3>
                 <div className="border-2 border-border bg-card">
                   <pre className="p-4 font-mono text-xs whitespace-pre-wrap break-words max-h-[300px] overflow-auto">
-                    {recipientEmail || emailData.body || encryptedCID || 'No content available'}
+                    {displayEmail || emailData.body || encryptedCID || 'No content available'}
                   </pre>
                 </div>
+                {isEncryptedRef && !displayEmail && (
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <div className="text-xs text-muted-foreground">
+                      Encrypted in TEE. Sign to decrypt and view.
+                    </div>
+                    <button
+                      onClick={handleDecrypt}
+                      disabled={isDecrypting}
+                      className="border-2 border-primary bg-primary px-4 py-2 font-mono text-xs font-bold uppercase text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-60"
+                    >
+                      {isDecrypting ? 'DECRYPTING...' : 'DECRYPT'}
+                    </button>
+                  </div>
+                )}
+                {decryptError && (
+                  <div className="mt-3 text-xs text-destructive">
+                    {decryptError}
+                  </div>
+                )}
               </div>
             </div>
           )}
