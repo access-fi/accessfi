@@ -169,7 +169,7 @@ export function JoinPoolModal({
 
     const status = submitReceipt?.status;
     const reverted =
-      status === 'reverted' || status === 0 || status === 0n;
+      status === 'reverted';
 
     if (submitConfirmError || reverted) {
       const errorMessage = submitConfirmErrorDetails
