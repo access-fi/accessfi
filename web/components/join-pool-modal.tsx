@@ -60,6 +60,41 @@ function parseContractError(error: any): string {
   return error?.shortMessage || error?.message || 'Failed to submit proof. Please try again.';
 }
 
+function extractRecipientEmail(emlContent: string): string | null {
+  if (!emlContent) return null;
+
+  const lines = emlContent.split('\n');
+  const pickHeaderValue = (headerName: string) => {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line) continue;
+      if (line.toLowerCase().startsWith(headerName)) {
+        let value = line.slice(headerName.length).trim();
+        // Handle folded header lines
+        for (let j = i + 1; j < lines.length; j++) {
+          const nextLine = lines[j];
+          if (nextLine && /^[\t ]/.test(nextLine)) {
+            value += ` ${nextLine.trim()}`;
+          } else {
+            break;
+          }
+        }
+        return value;
+      }
+      // Stop after headers
+      if (line.trim() === '') break;
+    }
+    return null;
+  };
+
+  const toValue = pickHeaderValue('to:');
+  const deliveredToValue = pickHeaderValue('delivered-to:');
+  const headerValue = toValue || deliveredToValue || '';
+
+  const match = headerValue.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+  return match ? match[0] : null;
+}
+
 type ModalStep =
   | 'upload-email'      // Step 1: Upload .eml file
   | 'generating-proof'  // Step 2: zkEmail proof generation
@@ -95,7 +130,15 @@ export function JoinPoolModal({
   const { joinPool, isPending: isJoining, isConfirmed: joinConfirmed } =
     useJoinPool(profile?.userContractAddress as `0x${string}` | undefined);
 
-  const { submitProof, isPending: isSubmitting, isConfirmed: submitConfirmed, hash: txHash } =
+  const {
+    submitProof,
+    isPending: isSubmitting,
+    isConfirmed: submitConfirmed,
+    isConfirmError: submitConfirmError,
+    confirmError: submitConfirmErrorDetails,
+    receipt: submitReceipt,
+    hash: txHash,
+  } =
     useSubmitProof(profile?.userContractAddress as `0x${string}` | undefined);
 
   // Reset on open
@@ -120,6 +163,25 @@ export function JoinPoolModal({
       }, 3000);
     }
   }, [submitConfirmed, step, onClose]);
+
+  React.useEffect(() => {
+    if (step !== 'confirming') return;
+
+    const status = submitReceipt?.status;
+    const reverted =
+      status === 'reverted' || status === 0 || status === 0n;
+
+    if (submitConfirmError || reverted) {
+      const errorMessage = submitConfirmErrorDetails
+        ? parseContractError(submitConfirmErrorDetails)
+        : 'Transaction reverted on-chain. Please try again.';
+      setErrorMessage(errorMessage);
+      setStep('error');
+      toast.error('Proof submission failed', {
+        description: errorMessage,
+      });
+    }
+  }, [step, submitConfirmError, submitConfirmErrorDetails, submitReceipt]);
 
   const handleFileSelect = (file: File) => {
     setEmailFile(file);
@@ -163,14 +225,19 @@ export function JoinPoolModal({
       // Create a simple CID from the email content (for testing)
       // In production, this would be encrypted and stored on IPFS via TEE
       const encoder = new TextEncoder();
-      const emailBytes = encoder.encode(emlContent);
+      // Include pool address to enforce per-pool uniqueness
+      const emailBytes = encoder.encode(`${emlContent}::${poolAddress}`);
       const hashBuffer = await crypto.subtle.digest('SHA-256', emailBytes);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const dataHash = '0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('') as `0x${string}`;
 
-      // For testing: store email content as base64 in CID field
+      // For now: store only the recipient email address in CID field
       // In production: this would be an IPFS CID of encrypted data
-      const encryptedCID = btoa(emlContent).slice(0, 100); // Truncate for testing
+      const recipientEmail = extractRecipientEmail(emlContent);
+      if (!recipientEmail) {
+        throw new Error('Recipient email not found in the .eml file.');
+      }
+      const encryptedCID = recipientEmail;
 
       console.log('[JoinPool] Data prepared:', { dataHash, cidLength: encryptedCID.length });
 

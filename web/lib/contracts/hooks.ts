@@ -323,7 +323,13 @@ export function useSubmitProof(userContractAddress?: `0x${string}`) {
     });
   };
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+  const {
+    data: receipt,
+    isLoading: isConfirming,
+    isSuccess: isConfirmed,
+    isError: isConfirmError,
+    error: confirmError,
+  } = useWaitForTransactionReceipt({
     hash,
   });
 
@@ -333,6 +339,9 @@ export function useSubmitProof(userContractAddress?: `0x${string}`) {
     isPending,
     isConfirming,
     isConfirmed,
+    isConfirmError,
+    confirmError,
+    receipt,
     error,
   };
 }
