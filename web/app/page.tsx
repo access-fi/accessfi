@@ -52,7 +52,7 @@ export default function Home() {
                   transition={{ duration: 0.6, delay: 0.2 }}
                   className="block text-foreground"
                 >
-                  BUY & SELL
+                  Verifiable DATA
                 </motion.span>
                 <motion.span
                   initial={{ x: -50, opacity: 0 }}
@@ -60,7 +60,7 @@ export default function Home() {
                   transition={{ duration: 0.6, delay: 0.3 }}
                   className="block text-foreground"
                 >
-                  PRIVATE DATA
+                  Markets
                 </motion.span>
                 <motion.span
                   initial={{ scale: 0.8, opacity: 0 }}
@@ -101,9 +101,7 @@ export default function Home() {
                 transition={{ duration: 0.6, delay: 0.6 }}
                 className="mb-8 max-w-xl text-lg text-muted-foreground md:text-xl"
               >
-                A decentralized marketplace for verified data powered by
-                zero-knowledge proofs. Trade privately, securely, and
-                trustlessly.
+                Verify data. Reward contributors. Access only what’s necessary.
               </motion.p>
 
               {/* CTA buttons */}
@@ -851,7 +849,7 @@ function FinalCTASection({ onCreatePool }: { onCreatePool: () => void }) {
             transition={{ duration: 0.5, delay: 0.4 }}
             className="text-muted-foreground max-w-xl mx-auto mb-8"
           >
-            Join the decentralized data marketplace. Create a pool to buy verified data
+            Join the internet-verifiable market. Create a pool to buy verified data
             or start selling your own data with privacy-preserving proofs.
           </motion.p>
 
@@ -969,4 +967,3 @@ function FinalCTASection({ onCreatePool }: { onCreatePool: () => void }) {
 //     </motion.div>
 //   );
 // }
-

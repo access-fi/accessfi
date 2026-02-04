@@ -9,7 +9,7 @@ export interface Pool {
   name: string;
   description: string;
   dataType: string;
-  proofRequirements: number[];
+  proofRequirements: `0x${string}`[];
   pricePerData: bigint;
   totalBudget: bigint;
   remainingBudget: bigint;
