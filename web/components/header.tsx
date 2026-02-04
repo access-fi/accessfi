@@ -45,8 +45,16 @@ export function Header() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="font-mono text-base font-bold uppercase tracking-wider md:text-lg">
-              <span className="text-primary">●</span> ACCESSFI
+            <Link
+              href="/"
+              className="flex items-center gap-2 font-mono text-base font-bold uppercase tracking-wider md:text-lg"
+            >
+              <img
+                src="/accessfi_logo.png"
+                alt="AccessFi"
+                className="h-12 w-12 object-contain md:h-12 md:w-12"
+              />
+              <span className="hidden sm:inline">ACCESSFI</span>
             </Link>
 
             {/* Desktop Navigation */}
