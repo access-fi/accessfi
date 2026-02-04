@@ -663,7 +663,7 @@ struct Pool {
     uint256 totalBudget;   // Maximum pool budget
     uint256 deadline;      // Pool expiration timestamp
     address creator;       // Pool creator (buyer)
-    ProofType[] proofs;    // Required proof types
+    bytes32[] proofs;      // Required proof type IDs
     bool isActive;         // Pool status
 }
         `}</CodeBlock>

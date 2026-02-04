@@ -24,15 +24,10 @@ import { X, Loader2, CheckCircle2, AlertCircle, Wallet } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useCreatePool } from '@/lib/contracts/hooks';
-import { ProofType, type PoolInfo } from '@/lib/contracts/types';
+import { type PoolInfo, type ProofTypeId } from '@/lib/contracts/types';
+import { toProofTypeId, type ProofTypeRecord } from '@/lib/proof-types';
 
-// Define proof types based on contract enum
-const PROOF_TYPES = [
-  { id: ProofType.AGE_VERIFICATION, label: 'Age Verification', description: 'Verify age >18 without revealing exact birthdate' },
-  { id: ProofType.NATIONALITY, label: 'Nationality', description: 'Prove nationality/citizenship status' },
-  { id: ProofType.EMAIL_VERIFICATION, label: 'Email Verification', description: 'Verified email ownership' },
-  { id: ProofType.HACKERHOUSE_INVITATION, label: 'HackerHouse Invitation', description: 'HackerHouse event invitation proof' },
-];
+const DEFAULT_PROOF_KIND = 'zkemail';
 
 const DATA_TYPES = [
   { value: 'health', label: 'Health Data' },
@@ -64,7 +59,7 @@ const formSchema = z.object({
     const oneHourFromNow = new Date(now.getTime() + 3600000); // 1 hour minimum
     return selectedDate > oneHourFromNow;
   }, 'Deadline must be at least 1 hour in the future'),
-  proofRequirements: z.array(z.number()).min(1, 'Select at least one proof type'),
+  proofRequirements: z.array(z.string()).min(1, 'Select at least one proof type'),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -80,6 +75,13 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
   const { profile, needsOnboarding } = useUserProfile();
   const [step, setStep] = useState<'form' | 'confirming' | 'success' | 'error' | 'auth-required'>('form');
   const [errorMessage, setErrorMessage] = useState('');
+  const [proofTypes, setProofTypes] = useState<ProofTypeRecord[]>([]);
+  const [loadingProofTypes, setLoadingProofTypes] = useState(false);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customTitle, setCustomTitle] = useState('');
+  const [customDescription, setCustomDescription] = useState('');
+  const [customBlueprintId, setCustomBlueprintId] = useState('');
+  const [customPublic, setCustomPublic] = useState(true);
 
   // Contract hook for pool creation
   const { createPool, isPending, isConfirming, isConfirmed, error: contractError } = useCreatePool(
@@ -101,6 +103,12 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
       }
     }
   }, [open, isConnected, needsOnboarding, profile]);
+
+  React.useEffect(() => {
+    if (open) {
+      reloadProofTypes();
+    }
+  }, [open, address]);
 
   const {
     register,
@@ -143,12 +151,76 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
     }
   }, [contractError, step]);
 
-  const handleProofToggle = (proofId: number) => {
+  const handleProofToggle = (proofId: string) => {
     const current = proofRequirements;
     const updated = current.includes(proofId)
       ? current.filter((id) => id !== proofId)
       : [...current, proofId];
     setValue('proofRequirements', updated);
+  };
+
+  const reloadProofTypes = async () => {
+    if (!address) return;
+    setLoadingProofTypes(true);
+    try {
+      const res = await fetch(`/api/proof-types?address=${address}`);
+      if (!res.ok) throw new Error('Failed to load proof types');
+      const data = await res.json();
+      setProofTypes(data.items || []);
+    } catch (error) {
+      console.error('Failed to load proof types', error);
+    } finally {
+      setLoadingProofTypes(false);
+    }
+  };
+
+  const createCustomProof = async () => {
+    if (!address) {
+      setErrorMessage('Connect wallet to create a proof type');
+      return;
+    }
+    if (!customTitle || !customDescription || !customBlueprintId) {
+      setErrorMessage('Custom proof requires title, description, and blueprint ID');
+      return;
+    }
+
+    const slug = customTitle
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+    const id = `${DEFAULT_PROOF_KIND}:${slug || 'custom'}_${Date.now()}@v1`;
+
+    try {
+      const res = await fetch('/api/proof-types', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id,
+          title: customTitle,
+          description: customDescription,
+          kind: DEFAULT_PROOF_KIND,
+          blueprintId: customBlueprintId,
+          isPublic: customPublic,
+          createdBy: address,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Failed to create proof type' }));
+        throw new Error(errorData.error || 'Failed to create proof type');
+      }
+
+      await reloadProofTypes();
+      setValue('proofRequirements', [...proofRequirements, id]);
+      setCustomOpen(false);
+      setCustomTitle('');
+      setCustomDescription('');
+      setCustomBlueprintId('');
+      setCustomPublic(true);
+      setErrorMessage('');
+    } catch (error: any) {
+      setErrorMessage(error?.message || 'Failed to create proof type');
+    }
   };
 
   const calculateEstimatedSellers = () => {
@@ -210,7 +282,7 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
         name: data.name,
         description: data.description,
         dataType: data.dataType,
-        proofRequirements: data.proofRequirements as ProofType[],
+        proofRequirements: data.proofRequirements.map((id) => toProofTypeId(id)) as ProofTypeId[],
         pricePerData: pricePerDataWei,
         totalBudget: totalBudgetWei,
         remainingBudget: totalBudgetWei,
@@ -446,29 +518,99 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
                     Proof Requirements *
                   </h3>
                   <p className="mb-4 text-xs text-muted-foreground">
-                    Select the zero-knowledge proofs sellers must provide
+                    Select the proof types sellers must provide
                   </p>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    {PROOF_TYPES.map((proof) => (
-                      <label
-                        key={proof.id}
-                        className="flex cursor-pointer items-start gap-3 border-2 border-border bg-card p-4 transition-all hover:border-primary"
-                      >
-                        <Checkbox
-                          checked={proofRequirements.includes(proof.id)}
-                          onCheckedChange={() => handleProofToggle(proof.id)}
-                          className="mt-1"
-                        />
-                        <div className="flex-1">
-                          <div className="font-semibold">{proof.label}</div>
-                          <div className="text-xs text-muted-foreground">{proof.description}</div>
+                  {loadingProofTypes ? (
+                    <div className="text-xs text-muted-foreground">Loading proof types...</div>
+                  ) : proofTypes.length === 0 ? (
+                    <div className="text-xs text-muted-foreground">
+                      No proof types found. Create a custom proof below.
+                    </div>
+                  ) : (
+                    <div className="grid gap-3 md:grid-cols-2">
+                      {proofTypes.map((proof) => (
+                        <label
+                          key={proof.id}
+                          className="flex cursor-pointer items-start gap-3 border-2 border-border bg-card p-4 transition-all hover:border-primary"
+                        >
+                          <Checkbox
+                            checked={proofRequirements.includes(proof.id)}
+                            onCheckedChange={() => handleProofToggle(proof.id)}
+                            className="mt-1"
+                          />
+                          <div className="flex-1">
+                            <div className="font-semibold">{proof.title}</div>
+                            <div className="text-xs text-muted-foreground">{proof.description}</div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="mt-4 border-2 border-border bg-card p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-xs font-bold uppercase text-primary">Custom zkEmail Proof</div>
+                        <div className="text-xs text-muted-foreground">
+                          Create a custom blueprint-based proof type
                         </div>
-                      </label>
-                    ))}
+                      </div>
+                      <Button type="button" variant="outline" onClick={() => setCustomOpen(!customOpen)}>
+                        {customOpen ? 'Hide' : 'Add'}
+                      </Button>
+                    </div>
+
+                    {customOpen && (
+                      <div className="mt-4 space-y-3">
+                        <div>
+                          <Label htmlFor="customTitle">Proof Name</Label>
+                          <Input
+                            id="customTitle"
+                            value={customTitle}
+                            onChange={(e) => setCustomTitle(e.target.value)}
+                            className="mt-2"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="customDescription">Short Description</Label>
+                          <Textarea
+                            id="customDescription"
+                            value={customDescription}
+                            onChange={(e) => setCustomDescription(e.target.value)}
+                            className="mt-2"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="customBlueprintId">zkEmail Blueprint ID</Label>
+                          <Input
+                            id="customBlueprintId"
+                            value={customBlueprintId}
+                            onChange={(e) => setCustomBlueprintId(e.target.value)}
+                            className="mt-2"
+                            placeholder="e.g. access-fi/accessfi_email@v1"
+                          />
+                        </div>
+                        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Checkbox
+                            checked={customPublic}
+                            onCheckedChange={() => setCustomPublic(!customPublic)}
+                          />
+                          Make this proof type public
+                        </label>
+                        <Button type="button" onClick={createCustomProof}>
+                          Save Proof Type
+                        </Button>
+                      </div>
+                    )}
                   </div>
                   {errors.proofRequirements && (
                     <p className="mt-2 text-xs text-destructive">
                       {errors.proofRequirements.message}
+                    </p>
+                  )}
+                  {errorMessage && step === 'form' && (
+                    <p className="mt-2 text-xs text-destructive">
+                      {errorMessage}
                     </p>
                   )}
                 </div>

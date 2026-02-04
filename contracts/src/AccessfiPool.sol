@@ -48,9 +48,9 @@ contract AccessFiPool is
 
     mapping(address => bool) public isSellerJoined;
     mapping(address => bool) public isSellerVerified;
-    mapping(address => mapping(IAccessfiPool.ProofType => bool)) public sellerProofs;
+    mapping(address => mapping(bytes32 => bool)) public sellerProofs;
     mapping(address => bool) public isSellerFullyVerified;
-    mapping(address => mapping(IAccessfiPool.ProofType => bytes32)) public sellerProofHashes;
+    mapping(address => mapping(bytes32 => bytes32)) public sellerProofHashes;
     mapping(bytes32 => bool) public globalProofHashes;
     mapping(address => IAccessfiPool.VerifiedData) public verifiedSellerData;
     mapping(address => string[]) public buyerAccessibleCIDs;
@@ -61,7 +61,7 @@ contract AccessFiPool is
     bool public isStopped;
 
     // Gas optimization: map required proof types for O(1) lookup
-    mapping(IAccessfiPool.ProofType => bool) public requiredProofs;
+    mapping(bytes32 => bool) public requiredProofs;
 
     // Storage gap for future upgrades
     uint256[36] private __gap;
@@ -152,11 +152,11 @@ contract AccessFiPool is
         if (reqLength == 0) revert InvalidProofType();
 
         for (uint256 i = 0; i < reqLength;) {
-            IAccessfiPool.ProofType proofType = _poolInfo.proofRequirements[i];
+            bytes32 proofTypeId = _poolInfo.proofRequirements[i];
 
             // GAS OPTIMIZATION: Skip if already set (prevents duplicate writes)
-            if (!requiredProofs[proofType]) {
-                requiredProofs[proofType] = true;
+            if (!requiredProofs[proofTypeId]) {
+                requiredProofs[proofTypeId] = true;
             }
 
             unchecked { ++i; }
@@ -216,14 +216,14 @@ contract AccessFiPool is
     /**
      * @notice Submit proof for verification (CRITICAL: automatic minting on completion)
      * @dev MANDATORY: must call via User contract
-     * @param _proofType Type of proof being submitted
+     * @param _proofTypeId Type of proof being submitted
      * @param _proofHash Hash of the proof
      * @param encryptedCID IPFS CID of encrypted data
      * @param dataHash Hash of encrypted data
      * @param zkParams ZK verification parameters
      */
     function submitProofAsSeller(
-        IAccessfiPool.ProofType _proofType,
+        bytes32 _proofTypeId,
         bytes32 _proofHash,
         string calldata encryptedCID,
         bytes32 dataHash,
@@ -234,8 +234,8 @@ contract AccessFiPool is
 
         if (!isSellerJoined[eoa]) revert NotJoined();
         if (isSellerFullyVerified[eoa]) revert AlreadyVerified();
-        if (sellerProofs[eoa][_proofType]) revert ProofAlreadySubmitted();
-        if (!_isValidProofType(_proofType)) revert InvalidProofType();
+        if (sellerProofs[eoa][_proofTypeId]) revert ProofAlreadySubmitted();
+        if (!_isValidProofType(_proofTypeId)) revert InvalidProofType();
 
         // CRITICAL: Verify ZK proof via zkVerify
         zkVerifier.verify(
@@ -252,15 +252,15 @@ contract AccessFiPool is
 
         // Store unique proof hash to prevent reuse
         bytes32 uniqueProofHash = keccak256(
-            abi.encode(eoa, _proofType, _proofHash, address(this))
+            abi.encode(eoa, _proofTypeId, _proofHash, address(this))
         );
         if (globalProofHashes[uniqueProofHash]) revert ProofReused();
 
-        sellerProofs[eoa][_proofType] = true;
-        sellerProofHashes[eoa][_proofType] = uniqueProofHash;
+        sellerProofs[eoa][_proofTypeId] = true;
+        sellerProofHashes[eoa][_proofTypeId] = uniqueProofHash;
         globalProofHashes[uniqueProofHash] = true;
 
-        emit ProofSubmitted(eoa, _proofType, true);
+        emit ProofSubmitted(eoa, _proofTypeId, true);
 
         // Check if all proofs submitted → trigger automatic token minting
         _checkFullVerificationAndMint(eoa, encryptedCID, dataHash);
@@ -358,8 +358,8 @@ contract AccessFiPool is
     /**
      * @notice Check if proof type is required by pool (O(1) lookup)
      */
-    function _isValidProofType(IAccessfiPool.ProofType _proofType) internal view returns (bool) {
-        return requiredProofs[_proofType];
+    function _isValidProofType(bytes32 _proofTypeId) internal view returns (bool) {
+        return requiredProofs[_proofTypeId];
     }
 
     /**
@@ -472,6 +472,13 @@ contract AccessFiPool is
     }
 
     /**
+     * @notice Get required proof type IDs for this pool
+     */
+    function getProofRequirements() external view returns (bytes32[] memory) {
+        return poolInfo.proofRequirements;
+    }
+
+    /**
      * @notice Get all verified sellers
      */
     function getVerifiedSellers() external view returns (address[] memory) {
@@ -481,8 +488,8 @@ contract AccessFiPool is
     /**
      * @notice Check if seller has submitted specific proof type
      */
-    function hasProof(address seller, IAccessfiPool.ProofType proofType) external view returns (bool) {
-        return sellerProofs[seller][proofType];
+    function hasProof(address seller, bytes32 proofTypeId) external view returns (bool) {
+        return sellerProofs[seller][proofTypeId];
     }
 
     // ==============================================================

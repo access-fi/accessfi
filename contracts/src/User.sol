@@ -117,14 +117,14 @@ contract User is ReentrancyGuard {
 
     function submitProofAsSeller(
         address _poolAddress,
-        IAccessfiPool.ProofType _proofType,
+        bytes32 _proofTypeId,
         bytes32 _proofHash,
         string calldata encryptedCID,
         bytes32 dataHash,
         IAccessfiPool.VerificationParams calldata zkParams
     ) external nonReentrant {
         if (msg.sender != owner) revert OnlyOwner();
-        IAccessfiPool(_poolAddress).submitProofAsSeller(_proofType, _proofHash, encryptedCID, dataHash, zkParams);
+        IAccessfiPool(_poolAddress).submitProofAsSeller(_proofTypeId, _proofHash, encryptedCID, dataHash, zkParams);
     }
 
     // ==============================================================
