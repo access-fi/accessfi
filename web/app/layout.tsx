@@ -19,8 +19,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "AccessFi | Privacy-Preserving Data Marketplace",
-  description: "Decentralized data marketplace powered by zero-knowledge proofs. Buy and sell data with privacy guaranteed.",
-  keywords: ["web3", "data marketplace", "zero-knowledge", "privacy", "blockchain"],
+  description: "Internet-verifiable markets powered by zero-knowledge proofs. Buy and sell data with privacy guaranteed.",
+  keywords: ["web3", "internet-verifiable markets", "zero-knowledge", "privacy", "blockchain"],
 };
 
 export default function RootLayout({

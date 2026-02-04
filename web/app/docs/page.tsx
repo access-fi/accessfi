@@ -339,7 +339,7 @@ function OverviewSection() {
   return (
     <DocSection title="Overview">
       <p className="mb-6 text-lg text-muted-foreground">
-        AccessFi is a privacy-first marketplace where buyers collect verified data and sellers get paid
+        AccessFi is an internet-verifiable market where buyers collect verified data and sellers get paid
         instantly. Sellers prove ownership of data (like an email) using zero-knowledge proofs, while
         the raw content stays private and only minimal data is revealed.
       </p>
@@ -418,7 +418,7 @@ function WhyAccessFiSection() {
   return (
     <DocSection title="Why AccessFi?">
       <p className="mb-6 text-lg text-muted-foreground">
-        Traditional data marketplaces require trust in centralized intermediaries and expose
+        Traditional data exchanges require trust in centralized intermediaries and expose
         sensitive information. AccessFi solves this with zero-knowledge technology.
       </p>
 
@@ -429,7 +429,7 @@ function WhyAccessFiSection() {
             <div>
               <h4 className="font-mono text-sm font-bold">Privacy Risks</h4>
               <p className="text-sm text-muted-foreground">
-                Traditional marketplaces require sharing raw data, exposing sensitive information
+                Traditional markets require sharing raw data, exposing sensitive information
               </p>
             </div>
           </div>
@@ -566,7 +566,7 @@ function ArchitectureSection() {
     <DocSection title="Architecture">
       <p className="mb-6 text-muted-foreground">
         AccessFi combines ZK proofs, on-chain verification, and confidential compute to create a
-        trustless, privacy-preserving data marketplace.
+        trustless, privacy-preserving internet-verifiable market.
       </p>
 
       <DocSubsection title="System Components">
