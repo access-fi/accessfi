@@ -635,19 +635,21 @@ function ArchitectureSection() {
       <DocSubsection title="Data Flow">
         <MermaidBlock>{`
 sequenceDiagram
+  participant U as Buyer
+  participant C as AccessFi Pool
   participant S as Seller
   participant B as Browser
   participant T as Phala TEE
   participant Z as zkVerify
-  participant C as AccessFi Pool
-  participant U as Buyer
+  U->>C: Create & fund pool (proof requirements)
   S->>B: Upload .eml
   B->>B: Extract recipient + generate zkEmail proof
   B->>T: Encrypt recipient (returns encryptedCID)
   B->>Z: Submit proof
   Z->>C: Verification result
-  C->>C: Mint token + transfer to Buyer
+  C->>C: Mint data token to Seller (metadata = encryptedCID)
   C->>S: Pay seller
+  C->>U: Transfer token to Buyer (final owner)
   U->>T: Sign + decrypt
         `}</MermaidBlock>
       </DocSubsection>
