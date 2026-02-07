@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { Header } from '@/components/header';
@@ -79,23 +79,6 @@ export default function DocsPage() {
   const [activeSection, setActiveSection] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<string[]>(['introduction']);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const mermaid = (await import('mermaid')).default;
-      if (cancelled) return;
-      mermaid.initialize({
-        startOnLoad: false,
-        theme: 'dark',
-        securityLevel: 'strict',
-      });
-      await mermaid.run({ querySelector: '.mermaid' });
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [activeSection]);
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) =>
@@ -302,9 +285,35 @@ function CodeBlock({ children }: { children: string }) {
 }
 
 function MermaidBlock({ children }: { children: string }) {
+  const [svg, setSvg] = useState<string>('');
+  const mermaidId = useId();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const mermaid = (await import('mermaid')).default;
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'dark',
+        securityLevel: 'strict',
+      });
+      const { svg } = await mermaid.render(`mermaid-${mermaidId}`, children.trim());
+      if (!cancelled) {
+        setSvg(svg);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [children, mermaidId]);
+
   return (
     <div className="mb-6 overflow-x-auto border-2 border-border bg-card p-4">
-      <div className="mermaid font-mono text-xs">{children}</div>
+      {svg ? (
+        <div className="mermaid" dangerouslySetInnerHTML={{ __html: svg }} />
+      ) : (
+        <div className="font-mono text-xs text-muted-foreground">Rendering diagram…</div>
+      )}
     </div>
   );
 }
@@ -626,19 +635,21 @@ function ArchitectureSection() {
       <DocSubsection title="Data Flow">
         <MermaidBlock>{`
 sequenceDiagram
+  participant U as Buyer
+  participant C as AccessFi Pool
   participant S as Seller
   participant B as Browser
   participant T as Phala TEE
   participant Z as zkVerify
-  participant C as AccessFi Pool
-  participant U as Buyer
+  U->>C: Create & fund pool (proof requirements)
   S->>B: Upload .eml
   B->>B: Extract recipient + generate zkEmail proof
   B->>T: Encrypt recipient (returns encryptedCID)
   B->>Z: Submit proof
   Z->>C: Verification result
-  C->>C: Mint token + transfer to Buyer
+  C->>C: Mint data token to Seller (metadata = encryptedCID)
   C->>S: Pay seller
+  C->>U: Transfer token to Buyer (final owner)
   U->>T: Sign + decrypt
         `}</MermaidBlock>
       </DocSubsection>
