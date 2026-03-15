@@ -6,8 +6,9 @@
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useAccount } from 'wagmi';
 import { getContractAddresses } from './addresses';
-import { FactoryUserABI, UserABI, FactoryAccessFiPoolABI, AccessFiPoolABI, AccessFiDataTokenABI } from './abis';
-import type { PoolInfo, VerificationParams, ProofTypeId } from './types';
+
+import { FactoryUserABI, UserABI, FactoryAccessFiPoolABI, AccessFiPoolABI, AccessFiDataTokenABI, AssetRegistryABI } from './abis';
+import type { PoolInfo, VerificationParams, ProofTypeId, ResalePolicy } from './types';
 
 // ============================================================
 //                    FACTORY USER HOOKS
@@ -121,13 +122,29 @@ export function useUserStats(userContractAddress?: `0x${string}`) {
     query: { enabled: !!user.address },
   });
 
+  const purchasedAssetsCount = useReadContract({
+    address: user.address,
+    abi: user.abi,
+    functionName: 'getPurchasedAssetsCount',
+    query: { enabled: !!user.address },
+  });
+
+  const providedAssetsCount = useReadContract({
+    address: user.address,
+    abi: user.abi,
+    functionName: 'getProvidedAssetsCount',
+    query: { enabled: !!user.address },
+  });
+
   return {
     totalSpent: totalSpent.data,
     totalEarned: totalEarned.data,
     createdPoolsCount: createdPoolsCount.data,
     joinedPoolsCount: joinedPoolsCount.data,
-    isLoading: totalSpent.isLoading || totalEarned.isLoading || createdPoolsCount.isLoading || joinedPoolsCount.isLoading,
-    error: totalSpent.error || totalEarned.error || createdPoolsCount.error || joinedPoolsCount.error,
+    purchasedAssetsCount: purchasedAssetsCount.data,
+    providedAssetsCount: providedAssetsCount.data,
+    isLoading: totalSpent.isLoading || totalEarned.isLoading || createdPoolsCount.isLoading || joinedPoolsCount.isLoading || purchasedAssetsCount.isLoading || providedAssetsCount.isLoading,
+    error: totalSpent.error || totalEarned.error || createdPoolsCount.error || joinedPoolsCount.error || purchasedAssetsCount.error || providedAssetsCount.error,
   };
 }
 
@@ -149,35 +166,35 @@ export function useUserJoinedPools(userContractAddress?: `0x${string}`) {
   };
 }
 
-export function useUserCreatedTokens(userContractAddress?: `0x${string}`) {
+export function useUserProvidedAssets(userContractAddress?: `0x${string}`) {
   const user = useUser(userContractAddress);
 
-  const { data: createdTokens, isLoading, error } = useReadContract({
+  const { data: providedAssets, isLoading, error } = useReadContract({
     address: user.address,
     abi: user.abi,
-    functionName: 'getCreatedDataTokens',
+    functionName: 'getProvidedAssets',
     query: { enabled: !!user.address },
   });
 
   return {
-    tokenIds: (createdTokens as bigint[]) || [],
+    assetIds: (providedAssets as `0x${string}`[]) || [],
     isLoading,
     error,
   };
 }
 
-export function useUserOwnedTokens(userContractAddress?: `0x${string}`) {
+export function useUserPurchasedAssets(userContractAddress?: `0x${string}`) {
   const user = useUser(userContractAddress);
 
-  const { data: ownedTokens, isLoading, error } = useReadContract({
+  const { data: purchasedAssets, isLoading, error } = useReadContract({
     address: user.address,
     abi: user.abi,
-    functionName: 'getOwnedDataTokens',
+    functionName: 'getPurchasedAssets',
     query: { enabled: !!user.address },
   });
 
   return {
-    tokenIds: (ownedTokens as bigint[]) || [],
+    assetIds: (purchasedAssets as `0x${string}`[]) || [],
     isLoading,
     error,
   };
@@ -311,7 +328,9 @@ export function useSubmitProof(userContractAddress?: `0x${string}`) {
     proofHash: `0x${string}`,
     encryptedCID: string,
     dataHash: `0x${string}`,
-    zkParams: VerificationParams
+    assetId: `0x${string}`,
+    zkParams: VerificationParams,
+    resalePolicy: ResalePolicy
   ) => {
     if (!user.address) throw new Error('User contract address not found');
 
@@ -319,7 +338,7 @@ export function useSubmitProof(userContractAddress?: `0x${string}`) {
       address: user.address,
       abi: user.abi,
       functionName: 'submitProofAsSeller',
-      args: [poolAddress, proofType, proofHash, encryptedCID, dataHash, zkParams],
+      args: [poolAddress, proofType, proofHash, encryptedCID, dataHash, assetId, zkParams, resalePolicy],
     });
   };
 
@@ -342,6 +361,36 @@ export function useSubmitProof(userContractAddress?: `0x${string}`) {
     isConfirmError,
     confirmError,
     receipt,
+    error,
+  };
+}
+
+export function useBuyAsset(userContractAddress?: `0x${string}`) {
+  const user = useUser(userContractAddress);
+  const { writeContractAsync, data: hash, isPending, error } = useWriteContract();
+
+  const buyAsset = async (assetId: `0x${string}`, value: bigint) => {
+    if (!user.address) throw new Error('User contract address not found');
+
+    return await writeContractAsync({
+      address: user.address,
+      abi: user.abi,
+      functionName: 'buyAsset',
+      args: [assetId],
+      value,
+    });
+  };
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+  return {
+    buyAsset,
+    hash,
+    isPending,
+    isConfirming,
+    isConfirmed,
     error,
   };
 }
@@ -406,6 +455,16 @@ export function useFactoryPool() {
   return {
     address: addresses?.FACTORY_POOL as `0x${string}`,
     abi: FactoryAccessFiPoolABI,
+  };
+}
+
+export function useAssetRegistry() {
+  const { chainId } = useAccount();
+  const addresses = chainId ? getContractAddresses(chainId) : null;
+
+  return {
+    address: addresses?.ASSET_REGISTRY as `0x${string}`,
+    abi: AssetRegistryABI,
   };
 }
 

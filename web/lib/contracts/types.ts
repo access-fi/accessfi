@@ -3,8 +3,21 @@
  * Based on Solidity structs and enums
  */
 
+
 // Pool proof requirements (bytes32 id on-chain, string id off-chain)
 export type ProofTypeId = `0x${string}`;
+
+export enum ResalePolicy {
+  EXCLUSIVE = 0,
+  LIMITED_RESALE = 1,
+  OPEN_RESALE = 2,
+}
+
+export const ResalePolicyLabels: Record<ResalePolicy, string> = {
+  [ResalePolicy.EXCLUSIVE]: 'Exclusive',
+  [ResalePolicy.LIMITED_RESALE]: 'Limited Resale',
+  [ResalePolicy.OPEN_RESALE]: 'Open Resale',
+};
 
 // Pool Info struct
 export interface PoolInfo {
@@ -28,6 +41,8 @@ export interface VerifiedData {
   isEncrypted: boolean;
   isAccessTransferred: boolean;
   timestamp: bigint;
+  assetId: `0x${string}`;
+  resalePolicy: ResalePolicy;
 }
 
 // ZK Verification Parameters
@@ -56,8 +71,8 @@ export interface UserStats {
   totalEarned: bigint;
   createdPoolsCount: number;
   joinedPoolsCount: number;
-  ownedTokensCount: number;
-  createdTokensCount: number;
+  purchasedAssetsCount: number;
+  providedAssetsCount: number;
 }
 
 // Pool Status
@@ -82,6 +97,6 @@ export interface UserData {
   stats: UserStats;
   createdPools: `0x${string}`[];
   joinedPools: `0x${string}`[];
-  ownedTokens: bigint[];
-  createdTokens: bigint[];
+  purchasedAssets: `0x${string}`[];
+  providedAssets: `0x${string}`[];
 }

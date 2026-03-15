@@ -10,18 +10,19 @@ const TEE_SERVICE_URL = process.env.TEE_SERVICE_URL || 'http://localhost:8080';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { recipientEmail, poolAddress, sellerAddress } = body;
+    const { recipientEmail, poolAddress, sellerAddress, assetId } = body;
 
     // Validate required fields
-    if (!recipientEmail || !poolAddress || !sellerAddress) {
+    if (!recipientEmail || !sellerAddress || (!poolAddress && !assetId)) {
       return NextResponse.json(
-        { error: 'Missing required fields: recipientEmail, poolAddress, sellerAddress' },
+        { error: 'Missing required fields: recipientEmail, sellerAddress, and either poolAddress or assetId' },
         { status: 400 }
       );
     }
 
     console.log('[TEE Encrypt API] Request received:', {
       poolAddress,
+      assetId,
       sellerAddress,
       recipientEmailLength: recipientEmail.length,
     });
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
     const response = await fetch(`${TEE_SERVICE_URL}/encrypt`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ recipientEmail, poolAddress, sellerAddress }),
+      body: JSON.stringify({ recipientEmail, poolAddress, sellerAddress, assetId }),
     });
 
     if (!response.ok) {
@@ -57,10 +58,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[TEE Encrypt API] Error:', error);
     return NextResponse.json(
-      { error: error.message || 'Encryption failed' },
+      { error: error instanceof Error ? error.message : 'Encryption failed' },
       { status: 500 }
     );
   }

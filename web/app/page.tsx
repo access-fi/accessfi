@@ -101,7 +101,9 @@ export default function Home() {
                 transition={{ duration: 0.6, delay: 0.6 }}
                 className="mb-8 max-w-xl text-lg text-muted-foreground md:text-xl"
               >
-                Verify data. Reward contributors. Access only what’s necessary.
+                A decentralized verified data network powered by
+                zero-knowledge proofs. Buy instant access, create fallback
+                pools, and trade privately.
               </motion.p>
 
               {/* CTA buttons */}
@@ -113,13 +115,13 @@ export default function Home() {
               >
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
-                    href="/pools"
+                    href="/inventory"
                     className="group flex items-center gap-2 border-2 border-foreground bg-foreground px-8 py-4 font-mono text-base font-bold uppercase text-background transition-all hover:border-primary hover:bg-primary"
                     style={{
                       boxShadow: '6px 6px 0px rgba(0, 255, 133, 0.4)'
                     }}
                   >
-                    BROWSE POOLS
+                    BROWSE INVENTORY
                     <svg
                       className="h-4 w-4 transition-transform group-hover:translate-x-1"
                       fill="none"
@@ -141,7 +143,7 @@ export default function Home() {
                     onClick={() => setCreatePoolOpen(true)}
                     className="group flex items-center gap-2 border-2 border-border bg-background px-8 py-4 font-mono text-base font-bold uppercase transition-all hover:border-foreground hover:bg-card"
                   >
-                    CREATE POOL
+                    REQUEST DATA
                     <svg
                       className="h-4 w-4 transition-transform group-hover:translate-x-1"
                       fill="none"
@@ -183,7 +185,7 @@ export default function Home() {
             <FeatureCard
               icon="⚡"
               title="INSTANT SETTLEMENT"
-              description="Automatic payments and token transfers upon proof verification"
+              description="Automatic payments and access grants upon proof verification"
               delay={0.1}
             />
             <FeatureCard
@@ -344,39 +346,6 @@ export default function Home() {
 //   );
 // }
 
-// Feature card component
-function FeatureCard({
-  icon,
-  title,
-  description,
-  delay,
-}: {
-  icon: string;
-  title: string;
-  description: string;
-  delay: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.4 }}
-      whileHover={{ scale: 1.02, borderColor: "var(--color-primary)" }}
-      className="group border border-border bg-card p-8 transition-all hover:bg-primary/5"
-    >
-      <motion.div
-        whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }}
-        transition={{ duration: 0.5 }}
-        className="mb-4 text-4xl"
-      >
-        {icon}
-      </motion.div>
-      <h3 className="mb-3 font-mono text-lg font-bold uppercase">{title}</h3>
-      <p className="text-sm text-muted-foreground">{description}</p>
-    </motion.div>
-  );
-}
-
 // ============================================================
 //                    HOW IT WORKS SECTION
 // ============================================================
@@ -410,7 +379,7 @@ function HowItWorksSection() {
     {
       number: "04",
       title: "GET PAID",
-      description: "Verified sellers receive instant payment and buyers get the encrypted data token",
+      description: "Verified sellers receive instant payment and buyers get encrypted asset access",
       icon: "■",
       color: "accent"
     }

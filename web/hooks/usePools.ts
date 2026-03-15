@@ -19,6 +19,19 @@ export interface Pool {
   totalDataCollected: bigint;
 }
 
+type PoolInfoTuple = [
+  string,
+  string,
+  string,
+  bigint,
+  bigint,
+  bigint,
+  `0x${string}`,
+  boolean,
+  bigint,
+  bigint,
+];
+
 export function useAllPools() {
   // Get total pool count
   const { data: poolCount } = useReadContract({
@@ -74,19 +87,13 @@ export function usePoolInfo(poolAddress: `0x${string}` | undefined) {
     return { pool: null, isLoading, error };
   }
 
-  // Cast poolInfo to any[] to avoid TypeScript indexing errors
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const info = poolInfo as any[];
+  const info = poolInfo as PoolInfoTuple;
+  const stats = poolStats as [bigint, bigint, bigint, boolean] | undefined;
 
-  // getBudgetStatus returns: (remainingBudget, spentBudget, totalDataCollected, isActiveAndNotStopped)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const stats = poolStats as any[];
-
-  // CRITICAL: poolInfo public getter OMITS proofRequirements array!
-  // Actual return order from ABI (verified):
-  // 0: name, 1: description, 2: dataType
-  // 3: pricePerData, 4: totalBudget, 5: remainingBudget, 6: creator
-  // 7: isActive, 8: createdAt, 9: deadline
+  // `poolInfo()` omits the dynamic `proofRequirements` array in the public getter.
+  // ABI order is:
+  // 0: name, 1: description, 2: dataType, 3: pricePerData, 4: totalBudget,
+  // 5: remainingBudget, 6: creator, 7: isActive, 8: createdAt, 9: deadline.
 
   const pool: Pool = {
     address: poolAddress,
@@ -99,7 +106,7 @@ export function usePoolInfo(poolAddress: `0x${string}` | undefined) {
     remainingBudget: stats ? BigInt(stats[0]) : BigInt(info[5]),
     creator: info[6] as `0x${string}`,
     isActive: Boolean(info[7]),
-    deadline: (info[9]) as bigint,
+    deadline: info[9],
     totalDataCollected: (totalDataCollected as bigint) || BigInt(0),
   };
 

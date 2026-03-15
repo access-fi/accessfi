@@ -11,6 +11,7 @@ export const CONTRACT_ADDRESSES = {
     FACTORY_POOL: process.env.NEXT_PUBLIC_FACTORY_POOL_ADDRESS || '',
     FACTORY_USER: process.env.NEXT_PUBLIC_FACTORY_USER_ADDRESS || '',
     ZK_VERIFIER: process.env.NEXT_PUBLIC_ZK_VERIFIER_ADDRESS || '',
+    ASSET_REGISTRY: process.env.NEXT_PUBLIC_ASSET_REGISTRY_ADDRESS || '',
   },
   // Sepolia (Chain ID: 11155111)
   11155111: {
@@ -18,6 +19,7 @@ export const CONTRACT_ADDRESSES = {
     FACTORY_POOL: process.env.NEXT_PUBLIC_FACTORY_POOL_ADDRESS || '',
     FACTORY_USER: process.env.NEXT_PUBLIC_FACTORY_USER_ADDRESS || '',
     ZK_VERIFIER: process.env.NEXT_PUBLIC_ZK_VERIFIER_ADDRESS || '',
+    ASSET_REGISTRY: process.env.NEXT_PUBLIC_ASSET_REGISTRY_ADDRESS || '',
   },
   // Base Sepolia (Chain ID: 84532)
   84532: {
@@ -25,6 +27,7 @@ export const CONTRACT_ADDRESSES = {
     FACTORY_POOL: process.env.NEXT_PUBLIC_FACTORY_POOL_ADDRESS || '',
     FACTORY_USER: process.env.NEXT_PUBLIC_FACTORY_USER_ADDRESS || '',
     ZK_VERIFIER: process.env.NEXT_PUBLIC_ZK_VERIFIER_ADDRESS || '',
+    ASSET_REGISTRY: process.env.NEXT_PUBLIC_ASSET_REGISTRY_ADDRESS || '',
   },
   // Localhost (Chain ID: 31337) - for Anvil testing
   31337: {
@@ -32,6 +35,7 @@ export const CONTRACT_ADDRESSES = {
     FACTORY_POOL: '',
     FACTORY_USER: '',
     ZK_VERIFIER: '',
+    ASSET_REGISTRY: '',
   },
 } as const;
 

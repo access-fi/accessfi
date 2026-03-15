@@ -11,11 +11,11 @@ import { Copy, ExternalLink, X, Menu } from "lucide-react";
 import { CreatePoolModal } from "@/components/create-pool-modal";
 import { useUserCreatedPools } from "@/hooks/usePools";
 import { PoolCard as PoolCardComponent } from "@/components/pool-card";
-import { useUserStats, useUserJoinedPools, useGetBuyerTokens, useTokenMetadata, usePoolInfo } from "@/lib/contracts/hooks";
+import { useUserStats, useUserJoinedPools } from "@/lib/contracts/hooks";
 import { formatEther } from "viem";
 
 export default function DashboardPage() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const { profile, loading, needsOnboarding } = useUserProfile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -24,7 +24,7 @@ export default function DashboardPage() {
   // Open sidebar on desktop by default
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768 && !sidebarOpen) {
+      if (window.innerWidth >= 768) {
         setSidebarOpen(true);
       }
     };
@@ -317,7 +317,7 @@ export default function DashboardPage() {
               {activeTab === "overview" && <OverviewTab address={address} profile={profile} onCreatePool={() => setCreatePoolOpen(true)} />}
               {activeTab === "created" && <CreatedPoolsTab onCreatePool={() => setCreatePoolOpen(true)} />}
               {activeTab === "joined" && <JoinedPoolsTab profile={profile} />}
-              {activeTab === "purchases" && <PurchasesTab address={address} />}
+              {activeTab === "purchases" && <PurchasesTab address={address} chainId={chainId} />}
               {activeTab === "activity" && <ActivityTab />}
               {activeTab === "account" && <AccountDetailsTab address={address} profile={profile} />}
             </AnimatePresence>
@@ -403,13 +403,15 @@ function SidebarItem({
 // Overview tab content
 function OverviewTab({ address, profile, onCreatePool }: { address: string | undefined; profile: { fullName: string; role: string; createdAt: Date; userContractAddress?: string } | null; onCreatePool: () => void }) {
   // Fetch real stats from blockchain
-  const { totalEarned, createdPoolsCount, joinedPoolsCount, isLoading: statsLoading } = useUserStats(
+  const { totalEarned, createdPoolsCount, joinedPoolsCount, purchasedAssetsCount, providedAssetsCount, isLoading: statsLoading } = useUserStats(
     profile?.userContractAddress as `0x${string}` | undefined
   );
 
   // Format stats for display
   const poolsCreated = createdPoolsCount ? Number(createdPoolsCount) : 0;
   const poolsJoined = joinedPoolsCount ? Number(joinedPoolsCount) : 0;
+  const purchasedAssets = purchasedAssetsCount ? Number(purchasedAssetsCount) : 0;
+  const providedAssets = providedAssetsCount ? Number(providedAssetsCount) : 0;
   const earned = totalEarned ? formatEther(totalEarned as bigint) : "0";
 
   return (
@@ -441,9 +443,9 @@ function OverviewTab({ address, profile, onCreatePool }: { address: string | und
         transition={{ delay: 0.1 }}
         className="mb-8 grid gap-4 md:grid-cols-4"
       >
-        <StatCard label="POOLS CREATED" value={statsLoading ? "..." : String(poolsCreated)} change="—" positive={false} />
-        <StatCard label="POOLS JOINED" value={statsLoading ? "..." : String(poolsJoined)} change="—" positive={false} />
-        <StatCard label="DATA SOLD" value={statsLoading ? "..." : String(poolsJoined)} change="—" positive={false} />
+        <StatCard label="POOLS CREATED" value={statsLoading ? "..." : String(poolsCreated)} change="—" positive={poolsCreated > 0} />
+        <StatCard label="POOLS JOINED" value={statsLoading ? "..." : String(poolsJoined)} change="—" positive={poolsJoined > 0} />
+        <StatCard label="ASSETS SHARED" value={statsLoading ? "..." : String(providedAssets)} change={`Bought ${purchasedAssets}`} positive={providedAssets > 0 || purchasedAssets > 0} />
         <StatCard label="TOTAL EARNED" value={statsLoading ? "..." : `${earned} ETH`} change="—" positive={parseFloat(earned) > 0} />
       </motion.div>
 
@@ -472,9 +474,9 @@ function OverviewTab({ address, profile, onCreatePool }: { address: string | und
           />
           <ActionCard
             icon="⚡"
-            title="SUBMIT"
-            description="Submit ZK proof"
-            href="#"
+            title="INVENTORY"
+            description="Browse verified assets"
+            href="/inventory"
           />
         </div>
       </motion.div>
@@ -888,13 +890,56 @@ function ActivityTab() {
   );
 }
 
-// Purchases tab - Shows data grouped by pools
-function PurchasesTab({ address }: { address: string | undefined }) {
-  const { data: tokenIds, isLoading } = useGetBuyerTokens(address as `0x${string}` | undefined);
-  const [selectedPool, setSelectedPool] = useState<string | null>(null);
-  const [selectedToken, setSelectedToken] = useState<bigint | null>(null);
+type DashboardAsset = {
+  assetId: string;
+  category: string;
+  subtype: string | null;
+  proofTypeId: string;
+  encryptedCID: string;
+  searchableAttributes: Record<string, unknown>;
+  verifiedAt: string | null;
+  grantedAt?: string | null;
+  sellerAddress?: string;
+  resalePolicy?: string;
+  listingStatus?: string;
+  basePrice?: string;
+  poolAddress?: string | null;
+};
 
-  const tokens = (tokenIds as bigint[]) || [];
+function PurchasesTab({ address, chainId }: { address: string | undefined; chainId: number | undefined }) {
+  const [purchasedAssets, setPurchasedAssets] = useState<DashboardAsset[]>([]);
+  const [providedAssets, setProvidedAssets] = useState<DashboardAsset[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedAsset, setSelectedAsset] = useState<DashboardAsset | null>(null);
+
+  useEffect(() => {
+    const loadAssets = async () => {
+      if (!address || !chainId) {
+        setPurchasedAssets([]);
+        setProvidedAssets([]);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const [accessRes, providedRes] = await Promise.all([
+          fetch(`/api/inventory/access?buyerAddress=${address}&chainId=${chainId}`),
+          fetch(`/api/inventory/assets?sellerAddress=${address}&includeArchived=true`),
+        ]);
+
+        const accessJson = await accessRes.json();
+        const providedJson = await providedRes.json();
+
+        setPurchasedAssets(accessJson.items || []);
+        setProvidedAssets(providedJson.items || []);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAssets().catch(() => setIsLoading(false));
+  }, [address, chainId]);
 
   return (
     <motion.div
@@ -910,482 +955,152 @@ function PurchasesTab({ address }: { address: string | undefined }) {
         className="mb-8"
       >
         <h1 className="font-mono text-3xl font-black uppercase">
-          MY DATA
+          ASSET ACCESS
         </h1>
         <p className="mt-2 text-muted-foreground">
-          Verified data collected from your pools
+          Purchased verified assets and data you have contributed to the network
         </p>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
-        {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2].map((i) => (
-              <div key={i} className="border-2 border-border bg-card p-6 animate-pulse">
-                <div className="h-6 bg-muted mb-4 w-1/3" />
-                <div className="h-4 bg-muted mb-2 w-1/4" />
-              </div>
-            ))}
-          </div>
-        ) : tokens.length > 0 ? (
-          <TokensByPoolView
-            tokenIds={tokens}
-            onSelectPool={setSelectedPool}
-            onSelectToken={setSelectedToken}
-          />
-        ) : (
-          <div className="flex min-h-[300px] flex-col items-center justify-center border-2 border-dashed border-border p-12 text-center">
-            <div className="mb-4 flex h-20 w-20 items-center justify-center border-2 border-border">
-              <span className="text-4xl opacity-20">◆</span>
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2].map((i) => (
+            <div key={i} className="border-2 border-border bg-card p-6 animate-pulse">
+              <div className="h-6 bg-muted mb-4 w-1/3" />
+              <div className="h-4 bg-muted mb-2 w-1/2" />
             </div>
-            <h3 className="mb-2 font-mono text-xl font-bold uppercase">No Data Yet</h3>
-            <p className="mb-6 text-sm text-muted-foreground max-w-md">
-              When sellers submit verified data to your pools, it will appear here organized by pool
-            </p>
-            <Link
-              href="/pools"
-              className="brutal-shadow border-2 border-primary bg-primary px-6 py-3 font-mono text-sm font-bold uppercase text-primary-foreground transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
-            >
-              BROWSE POOLS
-            </Link>
-          </div>
-        )}
-      </motion.div>
-
-      {/* Pool Data Modal */}
-      {selectedPool && (
-        <PoolDataModal
-          poolAddress={selectedPool as `0x${string}`}
-          tokenIds={tokens}
-          onClose={() => setSelectedPool(null)}
-          onSelectToken={setSelectedToken}
-        />
-      )}
-
-      {/* Single Token Data Viewer */}
-      {selectedToken !== null && (
-        <EmailDataModal
-          tokenId={selectedToken}
-          onClose={() => setSelectedToken(null)}
-        />
-      )}
-    </motion.div>
-  );
-}
-
-// Groups tokens by pool and displays pool cards
-function TokensByPoolView({
-  tokenIds,
-  onSelectPool,
-  onSelectToken
-}: {
-  tokenIds: bigint[];
-  onSelectPool: (pool: string) => void;
-  onSelectToken: (token: bigint) => void;
-}) {
-  // We need to fetch metadata for each token to group by pool
-  // For now, we'll render individual token fetchers that report back
-  const [poolGroups, setPoolGroups] = useState<Record<string, bigint[]>>({});
-
-  return (
-    <div className="space-y-6">
-      {/* Token metadata fetchers - hidden, just for grouping */}
-      {tokenIds.map((tokenId) => (
-        <TokenPoolGrouper
-          key={tokenId.toString()}
-          tokenId={tokenId}
-          onPoolIdentified={(pool) => {
-            setPoolGroups((prev) => {
-              const existing = prev[pool] || [];
-              if (!existing.find(t => t === tokenId)) {
-                return { ...prev, [pool]: [...existing, tokenId] };
-              }
-              return prev;
-            });
-          }}
-        />
-      ))}
-
-      {/* Pool cards */}
-      {Object.keys(poolGroups).length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2">
-          {Object.entries(poolGroups).map(([poolAddress, poolTokens]) => (
-            <PoolDataCard
-              key={poolAddress}
-              poolAddress={poolAddress as `0x${string}`}
-              tokenCount={poolTokens.length}
-              onViewData={() => onSelectPool(poolAddress)}
-            />
           ))}
         </div>
       ) : (
-        <div className="text-center py-8">
-          <div className="h-8 w-8 animate-spin border-4 border-border border-t-primary mx-auto mb-4"></div>
-          <p className="text-sm text-muted-foreground">Loading pool data...</p>
+        <div className="grid gap-8 xl:grid-cols-2">
+          <AssetSection
+            title="PURCHASED ASSETS"
+            subtitle={`Assets you can decrypt now (${purchasedAssets.length})`}
+            emptyTitle="No purchased assets yet"
+            emptyDescription="Buy from verified inventory or fulfill your pool requests to see assets here."
+            items={purchasedAssets}
+            actionLabel="DECRYPT"
+            onSelect={setSelectedAsset}
+          />
+          <AssetSection
+            title="PROVIDED ASSETS"
+            subtitle={`Assets you supplied as a seller (${providedAssets.length})`}
+            emptyTitle="No provided assets yet"
+            emptyDescription="Join a pool or submit verified data to start building reusable inventory."
+            items={providedAssets}
+            actionLabel="VIEW"
+            onSelect={setSelectedAsset}
+          />
+        </div>
+      )}
+
+      {selectedAsset && (
+        <AssetDetailModal
+          asset={selectedAsset}
+          chainId={chainId}
+          canDecrypt={purchasedAssets.some((item) => item.assetId === selectedAsset.assetId)}
+          onClose={() => setSelectedAsset(null)}
+        />
+      )}
+    </motion.div>
+  );
+}
+
+function AssetSection({
+  title,
+  subtitle,
+  emptyTitle,
+  emptyDescription,
+  items,
+  actionLabel,
+  onSelect,
+}: {
+  title: string;
+  subtitle: string;
+  emptyTitle: string;
+  emptyDescription: string;
+  items: DashboardAsset[];
+  actionLabel: string;
+  onSelect: (asset: DashboardAsset) => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <p className="font-mono text-xs uppercase tracking-[0.3em] text-primary">{title}</p>
+        <h2 className="mt-2 font-mono text-2xl font-black uppercase text-foreground">{subtitle}</h2>
+      </div>
+
+      {items.length === 0 ? (
+        <div className="flex min-h-[240px] flex-col items-center justify-center border-2 border-dashed border-border p-8 text-center">
+          <div className="mb-4 text-5xl opacity-20">◆</div>
+          <h3 className="mb-2 font-mono text-lg font-bold uppercase">{emptyTitle}</h3>
+          <p className="max-w-md text-sm text-muted-foreground">{emptyDescription}</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {items.map((asset) => (
+            <div key={asset.assetId} className="border-2 border-border bg-card p-5 transition-all hover:border-primary">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-mono text-xs uppercase text-primary">{asset.proofTypeId}</p>
+                  <h3 className="mt-1 font-mono text-lg font-bold uppercase">{asset.category}</h3>
+                  {asset.subtype && <p className="mt-1 text-sm text-muted-foreground">{asset.subtype}</p>}
+                </div>
+                <button
+                  onClick={() => onSelect(asset)}
+                  className="border-2 border-primary bg-primary/10 px-4 py-2 font-mono text-xs font-bold uppercase text-primary transition-all hover:bg-primary hover:text-primary-foreground"
+                >
+                  {actionLabel}
+                </button>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {Object.entries(asset.searchableAttributes || {}).slice(0, 4).map(([key, value]) => (
+                  <span key={key} className="border border-primary/30 bg-primary/5 px-2 py-1 font-mono text-xs">
+                    {key}: {String(value)}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-4 flex flex-wrap gap-4 font-mono text-xs text-muted-foreground">
+                <span>Asset: {asset.assetId.slice(0, 10)}...{asset.assetId.slice(-8)}</span>
+                {asset.basePrice && <span>Price: {asset.basePrice} ETH</span>}
+                {asset.resalePolicy && <span>Resale: {asset.resalePolicy.replace('_', ' ')}</span>}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
   );
 }
 
-// Hidden component that fetches token metadata and reports pool
-function TokenPoolGrouper({
-  tokenId,
-  onPoolIdentified
-}: {
-  tokenId: bigint;
-  onPoolIdentified: (pool: string) => void;
-}) {
-  const { data: metadata } = useTokenMetadata(tokenId);
-
-  useEffect(() => {
-    if (metadata) {
-      const tokenData = metadata as [string, string, string, string, bigint, boolean];
-      const poolAddress = tokenData[3];
-      if (poolAddress) {
-        onPoolIdentified(poolAddress);
-      }
-    }
-  }, [metadata, onPoolIdentified]);
-
-  return null; // Hidden component
-}
-
-// Pool card showing pool name and data count
-function PoolDataCard({
-  poolAddress,
-  tokenCount,
-  onViewData
-}: {
-  poolAddress: `0x${string}`;
-  tokenCount: number;
-  onViewData: () => void;
-}) {
-  const { data: poolInfo, isLoading } = usePoolInfo(poolAddress);
-
-  // Pool info tuple: [name, dataType, pricePerData, totalBudget, deadline, creator, proofRequirements, isActive]
-  const poolData = poolInfo as [string, string, bigint, bigint, bigint, string, `0x${string}`[], boolean] | undefined;
-  const poolName = poolData?.[0] || 'Unknown Pool';
-  const dataType = poolData?.[1] || 'Data';
-
-  return (
-    <motion.div
-      whileHover={{ scale: 1.01 }}
-      className="border-2 border-border bg-card overflow-hidden transition-all hover:border-primary"
-    >
-      {/* Pool Header */}
-      <div className="bg-primary/5 border-b-2 border-border p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center border-2 border-primary bg-primary text-primary-foreground font-mono text-lg font-bold">
-              {tokenCount}
-            </div>
-            <div>
-              <h3 className="font-mono text-sm font-bold uppercase">
-                {isLoading ? '...' : poolName}
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                {tokenCount} {tokenCount === 1 ? 'record' : 'records'} collected
-              </p>
-            </div>
-          </div>
-          <span className="font-mono text-xs text-primary uppercase">
-            [{dataType}]
-          </span>
-        </div>
-      </div>
-
-      {/* Pool Stats */}
-      <div className="p-4 space-y-3">
-        <div className="flex justify-between font-mono text-xs">
-          <span className="text-muted-foreground">POOL ADDRESS</span>
-          <span className="text-foreground">
-            {poolAddress.slice(0, 6)}...{poolAddress.slice(-4)}
-          </span>
-        </div>
-        <div className="flex justify-between font-mono text-xs">
-          <span className="text-muted-foreground">STATUS</span>
-          <span className="text-primary">VERIFIED DATA</span>
-        </div>
-      </div>
-
-      {/* Action */}
-      <div className="border-t-2 border-border p-4">
-        <button
-          onClick={onViewData}
-          className="w-full border-2 border-primary bg-primary px-4 py-3 font-mono text-xs font-bold uppercase text-primary-foreground transition-all hover:bg-primary/90"
-        >
-          VIEW ALL DATA →
-        </button>
-      </div>
-    </motion.div>
-  );
-}
-
-// Modal showing all data tokens from a specific pool
-function PoolDataModal({
-  poolAddress,
-  tokenIds,
-  onClose,
-  onSelectToken
-}: {
-  poolAddress: `0x${string}`;
-  tokenIds: bigint[];
-  onClose: () => void;
-  onSelectToken: (token: bigint) => void;
-}) {
-  const { data: poolInfo } = usePoolInfo(poolAddress);
-  const poolData = poolInfo as [string, string, bigint, bigint, bigint, string, number[], boolean] | undefined;
-  const poolName = poolData?.[0] || 'Pool Data';
-
-  // Filter tokens that belong to this pool
-  const [poolTokens, setPoolTokens] = useState<bigint[]>([]);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="relative max-h-[85vh] w-full max-w-5xl overflow-hidden border-2 border-border bg-background"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b-2 border-border bg-card p-6">
-          <div>
-            <h2 className="font-mono text-2xl font-black uppercase">
-              {poolName}
-            </h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {poolAddress.slice(0, 10)}...{poolAddress.slice(-8)}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="border-2 border-border bg-background p-2 transition-all hover:border-destructive hover:bg-destructive/10"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="max-h-[60vh] overflow-y-auto p-6">
-          <div className="space-y-4">
-            {tokenIds.map((tokenId) => (
-              <PoolTokenRow
-                key={tokenId.toString()}
-                tokenId={tokenId}
-                poolAddress={poolAddress}
-                onView={() => {
-                  onClose();
-                  onSelectToken(tokenId);
-                }}
-                onBelongsToPool={(belongs) => {
-                  if (belongs && !poolTokens.find(t => t === tokenId)) {
-                    setPoolTokens(prev => [...prev, tokenId]);
-                  }
-                }}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="border-t-2 border-border bg-card p-4">
-          <div className="flex justify-between items-center">
-            <span className="font-mono text-xs text-muted-foreground">
-              {poolTokens.length} verified records
-            </span>
-            <button
-              onClick={onClose}
-              className="border-2 border-border bg-background px-6 py-2 font-mono text-xs font-bold uppercase transition-all hover:border-foreground"
-            >
-              CLOSE
-            </button>
-          </div>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
-// Individual token row in pool data modal
-function PoolTokenRow({
-  tokenId,
-  poolAddress,
-  onView,
-  onBelongsToPool
-}: {
-  tokenId: bigint;
-  poolAddress: `0x${string}`;
-  onView: () => void;
-  onBelongsToPool: (belongs: boolean) => void;
-}) {
-  const { data: metadata, isLoading } = useTokenMetadata(tokenId);
-
-  const tokenData = metadata as [string, string, string, string, bigint, boolean] | undefined;
-  const encryptedCID = tokenData?.[0];
-  const seller = tokenData?.[2];
-  const tokenPool = tokenData?.[3];
-  const mintedAt = tokenData?.[4];
-  const recipientEmail = encryptedCID && encryptedCID.includes('@') ? encryptedCID : undefined;
-  const isEncryptedRef = encryptedCID?.startsWith('cvm_');
-  // const recipientEmail = encryptedCID && encryptedCID.includes('@') ? encryptedCID : undefined;
-
-  // Check if this token belongs to the current pool
-  const belongsToPool = tokenPool?.toLowerCase() === poolAddress.toLowerCase();
-
-  useEffect(() => {
-    if (tokenPool) {
-      onBelongsToPool(belongsToPool);
-    }
-  }, [tokenPool, belongsToPool, onBelongsToPool]);
-
-  // Don't render if not from this pool
-  if (!belongsToPool && tokenPool) return null;
-  if (isLoading) return (
-    <div className="border-2 border-border bg-card p-4 animate-pulse">
-      <div className="h-4 bg-muted w-1/3" />
-    </div>
-  );
-
-  // Parse email headers for preview
-  const emailPreview = parseEmailPreview(!recipientEmail && !isEncryptedRef ? (encryptedCID || '') : '');
-
-  return (
-    <motion.div
-      whileHover={{ borderColor: "var(--color-primary)" }}
-      className="border-2 border-border bg-card p-4 transition-all"
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          {/* Token ID & Date */}
-          <div className="flex items-center gap-3 mb-2">
-            <span className="font-mono text-xs bg-primary/10 text-primary px-2 py-1 border border-primary/30">
-              #{tokenId.toString()}
-            </span>
-            <span className="font-mono text-xs text-muted-foreground">
-              {mintedAt ? new Date(Number(mintedAt) * 1000).toLocaleDateString() : ''}
-            </span>
-          </div>
-
-          {/* Email Preview */}
-          {recipientEmail && (
-            <div className="mb-2">
-              <span className="font-mono text-xs text-muted-foreground">TO: </span>
-              <span className="font-mono text-xs text-foreground">{recipientEmail}</span>
-            </div>
-          )}
-          {!recipientEmail && isEncryptedRef && (
-            <p className="font-mono text-xs text-muted-foreground">
-              Encrypted data stored in TEE
-            </p>
-          )}
-          {!recipientEmail && emailPreview.from && (
-            <div className="mb-2">
-              <span className="font-mono text-xs text-muted-foreground">FROM: </span>
-              <span className="font-mono text-xs text-foreground">{emailPreview.from}</span>
-            </div>
-          )}
-          {!recipientEmail && emailPreview.subject && (
-            <div className="mb-2">
-              <span className="font-mono text-xs text-muted-foreground">SUBJECT: </span>
-              <span className="font-mono text-xs text-foreground truncate">{emailPreview.subject}</span>
-            </div>
-          )}
-          {!recipientEmail && !isEncryptedRef && !emailPreview.from && !emailPreview.subject && (
-            <p className="font-mono text-xs text-muted-foreground">
-              Email data ({encryptedCID?.length || 0} chars)
-            </p>
-          )}
-
-          {/* Seller */}
-          <div className="mt-2">
-            <span className="font-mono text-xs text-muted-foreground">SELLER: </span>
-            <span className="font-mono text-xs text-foreground">
-              {seller ? `${seller.slice(0, 6)}...${seller.slice(-4)}` : 'Unknown'}
-            </span>
-          </div>
-        </div>
-
-        {/* Action Button */}
-        <button
-          onClick={onView}
-          className="border-2 border-primary bg-primary/10 px-4 py-2 font-mono text-xs font-bold uppercase text-primary transition-all hover:bg-primary hover:text-primary-foreground whitespace-nowrap"
-        >
-          VIEW
-        </button>
-      </div>
-    </motion.div>
-  );
-}
-
-// Parse email headers for preview
-function parseEmailPreview(content: string): { from?: string; subject?: string; date?: string } {
-  if (!content) return {};
-
-  const lines = content.split('\n');
-  const result: { from?: string; subject?: string; date?: string } = {};
-
-  for (const line of lines) {
-    const lowerLine = line.toLowerCase();
-    if (lowerLine.startsWith('from:') && !result.from) {
-      result.from = line.substring(5).trim().slice(0, 50);
-    } else if (lowerLine.startsWith('subject:') && !result.subject) {
-      result.subject = line.substring(8).trim().slice(0, 60);
-    } else if (lowerLine.startsWith('date:') && !result.date) {
-      result.date = line.substring(5).trim();
-    }
-    // Stop after headers (empty line marks end of headers)
-    if (line.trim() === '' && (result.from || result.subject)) break;
-  }
-
-  return result;
-}
-
-// Modal to view formatted email data
-function EmailDataModal({ tokenId, onClose }: { tokenId: bigint; onClose: () => void }) {
-  const { address, chainId } = useAccount();
+function AssetDetailModal({ asset, chainId, canDecrypt, onClose }: { asset: DashboardAsset; chainId: number | undefined; canDecrypt: boolean; onClose: () => void }) {
+  const { address } = useAccount();
   const { signMessageAsync } = useSignMessage();
-  const { data: metadata, isLoading } = useTokenMetadata(tokenId);
   const [decryptedEmail, setDecryptedEmail] = useState<string | null>(null);
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [decryptError, setDecryptError] = useState<string | null>(null);
-
-  const tokenData = metadata as [string, string, string, string, bigint, boolean] | undefined;
-  const encryptedCID = tokenData?.[0] || '';
-  const seller = tokenData?.[2];
-  const poolAddress = tokenData?.[3];
-  const mintedAt = tokenData?.[4];
-  const recipientEmail = encryptedCID.includes('@') ? encryptedCID : undefined;
+  const encryptedCID = asset.encryptedCID;
   const isEncryptedRef = encryptedCID.startsWith('cvm_');
-  const displayEmail = decryptedEmail || recipientEmail;
-
-  // Parse email content
-  const emailData = parseEmailContent(!isEncryptedRef ? encryptedCID : '');
+  const displayEmail = decryptedEmail || (!isEncryptedRef && encryptedCID.includes('@') ? encryptedCID : null);
 
   const handleDecrypt = async () => {
-    if (!address || !chainId) {
+    if (!address || !chainId || !canDecrypt) {
       setDecryptError('Connect wallet to decrypt.');
       return;
     }
     setIsDecrypting(true);
     setDecryptError(null);
     try {
-      const message = `Decrypt token ${tokenId.toString()}`;
+      const message = `Decrypt assets:${asset.assetId}`;
       const signature = await signMessageAsync({ message });
 
-      const response = await fetch('/api/tee/decrypt', {
+      const response = await fetch('/api/tee/decrypt-batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tokenId: tokenId.toString(),
+          assetIds: [asset.assetId],
           buyerAddress: address,
           signature,
-          encryptedCID,
           chainId,
         }),
       });
@@ -1396,9 +1111,10 @@ function EmailDataModal({ tokenId, onClose }: { tokenId: bigint; onClose: () => 
       }
 
       const result = await response.json();
-      setDecryptedEmail(result.recipientEmail);
-    } catch (error: any) {
-      setDecryptError(error?.message || 'Decryption failed');
+      const match = (result.results || []).find((item: { encryptedCID: string; recipientEmail: string }) => item.encryptedCID === encryptedCID);
+      setDecryptedEmail(match?.recipientEmail || null);
+    } catch (error: unknown) {
+      setDecryptError(error instanceof Error ? error.message : 'Decryption failed');
     } finally {
       setIsDecrypting(false);
     }
@@ -1410,16 +1126,16 @@ function EmailDataModal({ tokenId, onClose }: { tokenId: bigint; onClose: () => 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden border-2 border-border bg-background"
-      >
+          className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden border-2 border-border bg-background"
+        >
         {/* Header */}
         <div className="flex items-center justify-between border-b-2 border-border bg-primary p-6">
           <div className="text-primary-foreground">
             <h2 className="font-mono text-xl font-black uppercase">
-              EMAIL DATA
+              ASSET DATA
             </h2>
             <p className="mt-1 text-xs opacity-80">
-              Token #{tokenId.toString()}
+              {asset.assetId.slice(0, 10)}...{asset.assetId.slice(-8)}
             </p>
           </div>
           <button
@@ -1432,11 +1148,6 @@ function EmailDataModal({ tokenId, onClose }: { tokenId: bigint; onClose: () => 
 
         {/* Content */}
         <div className="max-h-[65vh] overflow-y-auto">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <div className="h-8 w-8 animate-spin border-4 border-border border-t-primary"></div>
-            </div>
-          ) : (
             <div className="divide-y-2 divide-border">
               {/* Metadata Section */}
               <div className="p-6 bg-card">
@@ -1445,84 +1156,42 @@ function EmailDataModal({ tokenId, onClose }: { tokenId: bigint; onClose: () => 
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <span className="font-mono text-xs text-muted-foreground block mb-1">SELLER</span>
+                    <span className="font-mono text-xs text-muted-foreground block mb-1">CATEGORY</span>
                     <span className="font-mono text-sm text-foreground">
-                      {seller ? `${seller.slice(0, 8)}...${seller.slice(-6)}` : 'Unknown'}
+                      {asset.category}
                     </span>
                   </div>
                   <div>
-                    <span className="font-mono text-xs text-muted-foreground block mb-1">COLLECTED</span>
+                    <span className="font-mono text-xs text-muted-foreground block mb-1">VERIFIED</span>
                     <span className="font-mono text-sm text-foreground">
-                      {mintedAt ? new Date(Number(mintedAt) * 1000).toLocaleString() : 'Unknown'}
+                      {asset.verifiedAt ? new Date(asset.verifiedAt).toLocaleString() : 'Unknown'}
                     </span>
                   </div>
                   <div>
-                    <span className="font-mono text-xs text-muted-foreground block mb-1">POOL</span>
+                    <span className="font-mono text-xs text-muted-foreground block mb-1">PROOF TYPE</span>
                     <span className="font-mono text-sm text-foreground">
-                      {poolAddress ? `${poolAddress.slice(0, 8)}...${poolAddress.slice(-6)}` : 'Unknown'}
+                      {asset.proofTypeId}
                     </span>
                   </div>
                   <div>
-                    <span className="font-mono text-xs text-muted-foreground block mb-1">DATA SIZE</span>
+                    <span className="font-mono text-xs text-muted-foreground block mb-1">DATA REF</span>
                     <span className="font-mono text-sm text-foreground">
-                      {encryptedCID.length.toLocaleString()} characters
+                      {encryptedCID.slice(0, 10)}...{encryptedCID.slice(-8)}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Email Headers Section */}
-              {(displayEmail || emailData.from || emailData.to || emailData.subject || emailData.date) && (
-                <div className="p-6">
-                  <h3 className="font-mono text-xs font-bold uppercase text-muted-foreground mb-4">
-                    EMAIL HEADERS
-                  </h3>
-                  <div className="space-y-3 border-2 border-border bg-card p-4">
-                    {displayEmail && (
-                      <div>
-                        <span className="font-mono text-xs text-primary font-bold">TO:</span>
-                        <p className="font-mono text-sm text-foreground mt-1">{displayEmail}</p>
-                      </div>
-                    )}
-                    {emailData.from && (
-                      <div>
-                        <span className="font-mono text-xs text-primary font-bold">FROM:</span>
-                        <p className="font-mono text-sm text-foreground mt-1">{emailData.from}</p>
-                      </div>
-                    )}
-                    {emailData.to && (
-                      <div>
-                        <span className="font-mono text-xs text-primary font-bold">TO:</span>
-                        <p className="font-mono text-sm text-foreground mt-1">{emailData.to}</p>
-                      </div>
-                    )}
-                    {emailData.subject && (
-                      <div>
-                        <span className="font-mono text-xs text-primary font-bold">SUBJECT:</span>
-                        <p className="font-mono text-sm text-foreground mt-1">{emailData.subject}</p>
-                      </div>
-                    )}
-                    {emailData.date && (
-                      <div>
-                        <span className="font-mono text-xs text-primary font-bold">DATE:</span>
-                        <p className="font-mono text-sm text-foreground mt-1">{emailData.date}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Email Body Section */}
               <div className="p-6">
                 <h3 className="font-mono text-xs font-bold uppercase text-muted-foreground mb-4">
-                  {displayEmail ? 'RECIPIENT EMAIL' : (emailData.body ? 'EMAIL BODY' : 'RAW CONTENT')}
+                  {displayEmail ? 'DECRYPTED DATA' : 'ASSET PREVIEW'}
                 </h3>
                 <div className="border-2 border-border bg-card">
                   <pre className="p-4 font-mono text-xs whitespace-pre-wrap break-words max-h-[300px] overflow-auto">
-                    {displayEmail || emailData.body || encryptedCID || 'No content available'}
+                    {displayEmail || JSON.stringify(asset.searchableAttributes || {}, null, 2) || 'No content available'}
                   </pre>
                 </div>
-                {isEncryptedRef && !displayEmail && (
+                {canDecrypt && isEncryptedRef && !displayEmail && (
                   <div className="mt-4 flex items-center justify-between gap-3">
                     <div className="text-xs text-muted-foreground">
                       Encrypted in TEE. Sign to decrypt and view.
@@ -1536,6 +1205,11 @@ function EmailDataModal({ tokenId, onClose }: { tokenId: bigint; onClose: () => 
                     </button>
                   </div>
                 )}
+                {!canDecrypt && (
+                  <div className="mt-4 text-xs text-muted-foreground">
+                    This asset is listed in your seller inventory. Only buyers with access can decrypt it.
+                  </div>
+                )}
                 {decryptError && (
                   <div className="mt-3 text-xs text-destructive">
                     {decryptError}
@@ -1543,14 +1217,13 @@ function EmailDataModal({ tokenId, onClose }: { tokenId: bigint; onClose: () => 
                 )}
               </div>
             </div>
-          )}
         </div>
 
         {/* Footer */}
         <div className="border-t-2 border-border bg-card p-4">
           <div className="flex justify-between items-center">
             <span className="font-mono text-xs text-muted-foreground">
-              Verified on-chain • zkEmail proof
+              Verified on-chain • AssetRegistry access
             </span>
             <button
               onClick={onClose}
@@ -1564,58 +1237,6 @@ function EmailDataModal({ tokenId, onClose }: { tokenId: bigint; onClose: () => 
     </div>
   );
 }
-
-// Parse full email content into structured data
-function parseEmailContent(content: string): {
-  from?: string;
-  to?: string;
-  subject?: string;
-  date?: string;
-  body?: string;
-} {
-  if (!content) return {};
-
-  const result: {
-    from?: string;
-    to?: string;
-    subject?: string;
-    date?: string;
-    body?: string;
-  } = {};
-
-  const lines = content.split('\n');
-  let headersDone = false;
-  const bodyLines: string[] = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    if (!headersDone) {
-      const lowerLine = line.toLowerCase();
-
-      if (lowerLine.startsWith('from:')) {
-        result.from = line.substring(5).trim();
-      } else if (lowerLine.startsWith('to:')) {
-        result.to = line.substring(3).trim();
-      } else if (lowerLine.startsWith('subject:')) {
-        result.subject = line.substring(8).trim();
-      } else if (lowerLine.startsWith('date:')) {
-        result.date = line.substring(5).trim();
-      } else if (line.trim() === '') {
-        headersDone = true;
-      }
-    } else {
-      bodyLines.push(line);
-    }
-  }
-
-  if (bodyLines.length > 0) {
-    result.body = bodyLines.join('\n').trim();
-  }
-
-  return result;
-}
-
 
 // Stat card component
 function StatCard({

@@ -64,6 +64,12 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
+function getMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  return 'Unknown error';
+}
+
 interface CreatePoolModalProps {
   open: boolean;
   onClose: () => void;
@@ -84,7 +90,7 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
   const [customPublic, setCustomPublic] = useState(true);
 
   // Contract hook for pool creation
-  const { createPool, isPending, isConfirming, isConfirmed, error: contractError } = useCreatePool(
+  const { createPool, isConfirmed, error: contractError } = useCreatePool(
     profile?.userContractAddress as `0x${string}` | undefined
   );
 
@@ -104,12 +110,6 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
     }
   }, [open, isConnected, needsOnboarding, profile]);
 
-  React.useEffect(() => {
-    if (open) {
-      reloadProofTypes();
-    }
-  }, [open, address]);
-
   const {
     register,
     handleSubmit,
@@ -118,7 +118,6 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
     reset,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
-    // @ts-ignore - Zod v4 compatibility
     resolver: zodResolver(formSchema),
     defaultValues: {
       proofRequirements: [],
@@ -159,7 +158,7 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
     setValue('proofRequirements', updated);
   };
 
-  const reloadProofTypes = async () => {
+  const reloadProofTypes = React.useCallback(async () => {
     if (!address) return;
     setLoadingProofTypes(true);
     try {
@@ -172,7 +171,13 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
     } finally {
       setLoadingProofTypes(false);
     }
-  };
+  }, [address]);
+
+  React.useEffect(() => {
+    if (open) {
+      reloadProofTypes();
+    }
+  }, [open, reloadProofTypes]);
 
   const createCustomProof = async () => {
     if (!address) {
@@ -218,8 +223,8 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
       setCustomBlueprintId('');
       setCustomPublic(true);
       setErrorMessage('');
-    } catch (error: any) {
-      setErrorMessage(error?.message || 'Failed to create proof type');
+    } catch (error: unknown) {
+      setErrorMessage(getMessage(error));
     }
   };
 
@@ -294,14 +299,13 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
 
       // Call contract - this will trigger wallet popup
       // Send totalBudget as value (NOT totalBudget + fee)
-      const txHash = await createPool(poolInfo, totalBudgetWei);
+      await createPool(poolInfo, totalBudgetWei);
 
       // Keep in confirming state while transaction is being mined
       // The useEffect will handle the success state when isConfirmed becomes true
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Pool creation error:', error);
-      const errorMsg = error.message || error.toString() || 'Failed to create pool';
-      setErrorMessage(errorMsg);
+      setErrorMessage(getMessage(error));
       setStep('error');
     }
   };

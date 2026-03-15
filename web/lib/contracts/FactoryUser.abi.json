@@ -8,7 +8,7 @@
         "internalType": "address"
       },
       {
-        "name": "_dataToken",
+        "name": "_assetRegistry",
         "type": "address",
         "internalType": "address"
       }
@@ -36,14 +36,7 @@
   },
   {
     "type": "function",
-    "name": "createUser",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "dataToken",
+    "name": "assetRegistry",
     "inputs": [],
     "outputs": [
       {
@@ -53,6 +46,13 @@
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "createUser",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",

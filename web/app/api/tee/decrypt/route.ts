@@ -5,11 +5,20 @@ import { getContractAddresses } from '@/lib/contracts/addresses';
 
 const TEE_SERVICE_URL = process.env.TEE_SERVICE_URL || 'http://localhost:8080';
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  return 'Decryption failed';
+}
+
 /**
- * TEE Decryption Proxy Endpoint
+ * Legacy TEE Decryption Proxy Endpoint
  *
- * Allows token owners to decrypt their purchased data
- * Verifies ownership via wallet signature before forwarding to TEE service
+ * This route supports the old ERC721 token flow only.
+ * The real inventory/access flow now uses `/api/tee/decrypt-batch`, which checks
+ * `AssetRegistry.hasAccess(assetId, buyer)` instead of token ownership.
+ *
+ * Keep this route only for compatibility with legacy testnet/token-based screens.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -45,7 +54,7 @@ export async function POST(request: NextRequest) {
           { status: 403 }
         );
       }
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { error: 'Invalid signature' },
         { status: 403 }
@@ -54,7 +63,7 @@ export async function POST(request: NextRequest) {
 
     console.log('[TEE Decrypt API] Signature verified');
 
-    // Verify buyer owns the token on-chain
+    // Legacy path: verify buyer owns the old ERC721 token on-chain.
     const addresses = getContractAddresses(Number(chainId));
     const dataTokenAddress = addresses?.DATA_TOKEN;
     if (!dataTokenAddress) {
@@ -82,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     const owner = await publicClient.readContract({
       address: dataTokenAddress as `0x${string}`,
-      abi: AccessFiDataTokenABI as any,
+      abi: AccessFiDataTokenABI,
       functionName: 'ownerOf',
       args: [BigInt(tokenId)],
     });
@@ -122,10 +131,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[TEE Decrypt API] Error:', error);
     return NextResponse.json(
-      { error: error.message || 'Decryption failed' },
+      { error: getErrorMessage(error) },
       { status: 500 }
     );
   }

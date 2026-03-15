@@ -7,10 +7,12 @@ import { useAccount } from 'wagmi';
 import { formatEther } from 'viem';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { X, Loader2, CheckCircle2, AlertCircle, Lock } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertCircle, Lock } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { useJoinPool, useSubmitProof, usePoolProofRequirements } from '@/lib/contracts/hooks';
 import type { ProofTypeId } from '@/lib/contracts/types';
+import { useJoinPool, usePoolInfo, useSubmitProof, usePoolProofRequirements } from '@/lib/contracts/hooks';
+import { ResalePolicy as ContractResalePolicy } from '@/lib/contracts/types';
+import { createAssetId, normalizeRecipientEmail, type ResalePolicy } from '@/lib/inventory';
 import { EmailFileUpload } from './email-file-upload';
 import { generateAndVerifyProof } from '@/lib/zkemail';
 import { toast } from 'sonner';
@@ -26,9 +28,20 @@ const CONTRACT_ERRORS: Record<string, string> = {
   '0xf499da20': 'Payment to seller failed.',
 };
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  return 'Failed to submit proof. Please try again.';
+}
+
 // Parse contract errors from transaction failures
-function parseContractError(error: any): string {
-  const errorString = error?.message || error?.toString() || '';
+function parseContractError(error: unknown): string {
+  const errorString =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'string'
+        ? error
+        : String(error ?? '');
 
   // Check for known error selectors in the error message
   for (const [selector, message] of Object.entries(CONTRACT_ERRORS)) {
@@ -58,7 +71,7 @@ function parseContractError(error: any): string {
   }
 
   // Return original error if no match
-  return error?.shortMessage || error?.message || 'Failed to submit proof. Please try again.';
+  return getErrorMessage(error);
 }
 
 function extractRecipientEmail(emlContent: string): string | null {
@@ -113,6 +126,19 @@ interface JoinPoolModalProps {
   pricePerData: bigint;
 }
 
+type PoolInfoTuple = readonly [
+  string,
+  string,
+  string,
+  bigint,
+  bigint,
+  bigint,
+  `0x${string}`,
+  boolean,
+  bigint,
+  bigint,
+];
+
 export function JoinPoolModal({
   open,
   onClose,
@@ -120,22 +146,31 @@ export function JoinPoolModal({
   poolName,
   pricePerData
 }: JoinPoolModalProps) {
-  const { address, isConnected } = useAccount();
+  const { address } = useAccount();
   const { profile } = useUserProfile();
   const [step, setStep] = useState<ModalStep>('upload-email');
   const [errorMessage, setErrorMessage] = useState('');
   const [proofProgress, setProofProgress] = useState(0);
   const [emailFile, setEmailFile] = useState<File | null>(null);
   const [proofTypes, setProofTypes] = useState<ProofTypeRecord[]>([]);
-  const [loadingProofTypes, setLoadingProofTypes] = useState(false);
+
+  const [resalePolicy, setResalePolicy] = useState<ResalePolicy>('exclusive');
+  const [pendingAssetRecord, setPendingAssetRecord] = useState<Record<string, unknown> | null>(null);
+  const { data: poolInfoData } = usePoolInfo(poolAddress);
+
+  const resalePolicyToContractValue = (policy: ResalePolicy): ContractResalePolicy => {
+    if (policy === 'limited_resale') return ContractResalePolicy.LIMITED_RESALE;
+    if (policy === 'open_resale') return ContractResalePolicy.OPEN_RESALE;
+    return ContractResalePolicy.EXCLUSIVE;
+  };
+
 
   // Contract hooks
-  const { joinPool, isPending: isJoining, isConfirmed: joinConfirmed } =
+  const { joinPool } =
     useJoinPool(profile?.userContractAddress as `0x${string}` | undefined);
 
   const {
     submitProof,
-    isPending: isSubmitting,
     isConfirmed: submitConfirmed,
     isConfirmError: submitConfirmError,
     confirmError: submitConfirmErrorDetails,
@@ -154,22 +189,21 @@ export function JoinPoolModal({
       setErrorMessage('');
       setProofProgress(0);
       setEmailFile(null);
+      setResalePolicy('exclusive');
+      setPendingAssetRecord(null);
     }
   }, [open]);
 
   React.useEffect(() => {
     const loadProofTypes = async () => {
       if (!open) return;
-      setLoadingProofTypes(true);
       try {
         const res = await fetch(`/api/proof-types?address=${address || ''}`);
         if (!res.ok) throw new Error('Failed to load proof types');
         const data = await res.json();
         setProofTypes(data.items || []);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('[JoinPool] Failed to load proof types:', error);
-      } finally {
-        setLoadingProofTypes(false);
       }
     };
 
@@ -178,16 +212,36 @@ export function JoinPoolModal({
 
   // Monitor transaction confirmation
   React.useEffect(() => {
-    if (submitConfirmed && step === 'confirming') {
+    if (!submitConfirmed || step !== 'confirming') return;
+
+    const persistAsset = async () => {
+      if (pendingAssetRecord) {
+        const response = await fetch('/api/inventory/assets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(pendingAssetRecord),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Failed to sync inventory' }));
+          throw new Error(errorData.error || 'Failed to sync inventory');
+        }
+      }
+
       setStep('success');
       toast.success('Proof submitted successfully!', {
-        description: 'Token will be minted and payment processed',
+        description: 'Asset registered, seller paid, and inventory updated',
       });
       setTimeout(() => {
         onClose();
       }, 3000);
-    }
-  }, [submitConfirmed, step, onClose]);
+    };
+
+    persistAsset().catch((error: unknown) => {
+      setErrorMessage(getErrorMessage(error) || 'Proof submitted but inventory sync failed');
+      setStep('error');
+    });
+  }, [submitConfirmed, step, onClose, pendingAssetRecord]);
 
   React.useEffect(() => {
     if (step !== 'confirming') return;
@@ -234,8 +288,8 @@ export function JoinPoolModal({
         throw new Error('Multiple proofs per pool are not supported yet.');
       }
 
-      const proofTypeId = poolProofs[0];
-      const proofType = proofTypes.find((p) => toProofTypeId(p.id) === proofTypeId);
+      const poolProofTypeId = poolProofs[0];
+      const proofType = proofTypes.find((p) => toProofTypeId(p.id) === poolProofTypeId);
       if (!proofType || proofType.kind !== 'zkemail' || !proofType.blueprintId) {
         throw new Error('Pool proof type is not configured for zkEmail.');
       }
@@ -266,6 +320,9 @@ export function JoinPoolModal({
         throw new Error('Recipient email not found in the .eml file.');
       }
 
+      const normalizedRecipientEmail = normalizeRecipientEmail(recipientEmail);
+      const assetId = createAssetId(address, proofType.id, normalizedRecipientEmail);
+
       const teeResponse = await fetch('/api/tee/encrypt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -273,6 +330,7 @@ export function JoinPoolModal({
           recipientEmail,
           poolAddress,
           sellerAddress: address,
+          assetId,
         }),
       });
 
@@ -297,9 +355,9 @@ export function JoinPoolModal({
 
         // Wait briefly for join confirmation
         await new Promise(resolve => setTimeout(resolve, 2000));
-      } catch (joinError: any) {
+      } catch (joinError: unknown) {
         // If already joined, continue to proof submission
-        if (joinError.message?.includes('AlreadyJoined')) {
+        if (getErrorMessage(joinError).includes('AlreadyJoined')) {
           console.log('[JoinPool] Already joined pool, continuing...');
         } else {
           throw joinError;
@@ -312,18 +370,52 @@ export function JoinPoolModal({
 
       await submitProof(
         poolAddress,
-        proofTypeId,
+        poolProofTypeId,
         proofResult.proofHash,
         encryptedCID,
         dataHash as `0x${string}`,
-        proofResult.verificationParams
+        assetId,
+        proofResult.verificationParams,
+        resalePolicyToContractValue(resalePolicy)
       );
+
+      const poolInfoTuple = poolInfoData as PoolInfoTuple | undefined;
+      const buyerAddress = poolInfoTuple?.[6]?.toLowerCase();
+      const category = poolInfoTuple?.[2] || 'email';
+
+      setPendingAssetRecord({
+        sellerAddress: address,
+        buyerAddress,
+        recipientEmail,
+        category,
+        subtype: poolName,
+        proofTypeId: proofType.id,
+        encryptedCID,
+        dataHash,
+        sourceType: 'pool_fulfillment',
+        resalePolicy,
+        basePrice: formatEther(pricePerData),
+        verificationTxHash: proofResult.txHash,
+        proofHash: proofResult.proofHash,
+        aggregationId: proofResult.verificationParams.aggregationId.toString(),
+        domainId: proofResult.verificationParams.domainId.toString(),
+        proofStatement: proofResult.statement,
+        poolAddress,
+        searchableAttributes: {
+          category,
+          proofTypeId: proofType.id,
+          provider: 'zkemail',
+          poolName,
+          resalePolicy,
+          sourceType: 'pool_fulfillment',
+        },
+      });
 
       console.log('[JoinPool] Proof submitted, waiting for confirmation...');
 
       // Success handled by useEffect watching submitConfirmed
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[JoinPool] Submission error:', error);
 
       // Parse contract-specific errors
@@ -383,8 +475,43 @@ export function JoinPoolModal({
                     REWARD: {formatEther(pricePerData)} ETH
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    You'll receive this amount once your proof is verified
+                    You will receive this amount once your proof is verified
                   </p>
+                </div>
+
+                <div className="mt-4 border-2 border-border bg-card p-4">
+                  <p className="mb-3 font-mono text-xs font-bold uppercase text-primary">
+                    FUTURE RESALE
+                  </p>
+                  <div className="space-y-2 font-mono text-xs text-muted-foreground">
+                    <label className="flex items-start gap-2">
+                      <input
+                        type="radio"
+                        name="resale-policy"
+                        checked={resalePolicy === 'exclusive'}
+                        onChange={() => setResalePolicy('exclusive')}
+                      />
+                      <span>Exclusive: only this buyer gets access.</span>
+                    </label>
+                    <label className="flex items-start gap-2">
+                      <input
+                        type="radio"
+                        name="resale-policy"
+                        checked={resalePolicy === 'limited_resale'}
+                        onChange={() => setResalePolicy('limited_resale')}
+                      />
+                      <span>Limited resale: keep in inventory for future matching buyers.</span>
+                    </label>
+                    <label className="flex items-start gap-2">
+                      <input
+                        type="radio"
+                        name="resale-policy"
+                        checked={resalePolicy === 'open_resale'}
+                        onChange={() => setResalePolicy('open_resale')}
+                      />
+                      <span>Open resale: make it globally available after verification.</span>
+                    </label>
+                  </div>
                 </div>
 
                 <div className="mt-6 flex gap-4">
@@ -545,7 +672,7 @@ export function JoinPoolModal({
               </p>
               <div className="border-2 border-primary bg-primary/10 p-4 text-center">
                 <span className="font-mono text-sm text-primary">
-                  Data token will be minted and you'll receive {formatEther(pricePerData)} ETH automatically.
+                  Asset access will be registered and you will receive {formatEther(pricePerData)} ETH automatically.
                 </span>
               </div>
               <div className="mt-6">

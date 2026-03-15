@@ -12,23 +12,20 @@ contract FactoryUser {
     address[] public allUsers;
 
     address public immutable poolFactory;
-    address public immutable dataToken;
+    address public immutable assetRegistry;
 
     event UserCreated(address indexed wallet, address indexed userContract);
 
-    constructor(address _poolFactory, address _dataToken) {
+    constructor(address _poolFactory, address _assetRegistry) {
         poolFactory = _poolFactory;
-        dataToken = _dataToken;
+        assetRegistry = _assetRegistry;
     }
 
     function createUser() external {
         require(users[msg.sender] == address(0), "User exists");
-
-        // CRITICAL: Ensure caller is EOA (not a contract)
-        // This prevents re-entrancy attacks and ensures immutable ownership
         require(msg.sender == tx.origin, "Only EOAs can create User contracts");
 
-        User newUser = new User(msg.sender, poolFactory, dataToken);
+        User newUser = new User(msg.sender, poolFactory, assetRegistry);
         users[msg.sender] = address(newUser);
         allUsers.push(address(newUser));
 
