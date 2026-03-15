@@ -1,7 +1,18 @@
 [
   {
     "type": "constructor",
-    "inputs": [],
+    "inputs": [
+      {
+        "name": "admin",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_platformWallet",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {
@@ -19,7 +30,7 @@
   },
   {
     "type": "function",
-    "name": "UPGRADER_ROLE",
+    "name": "OPERATOR_ROLE",
     "inputs": [],
     "outputs": [
       {
@@ -32,145 +43,51 @@
   },
   {
     "type": "function",
-    "name": "UPGRADE_INTERFACE_VERSION",
-    "inputs": [],
+    "name": "assetExists",
+    "inputs": [
+      {
+        "name": "assetId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
     "outputs": [
       {
         "name": "",
-        "type": "string",
-        "internalType": "string"
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
     "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "accessFiPools",
+    "name": "authorizePool",
     "inputs": [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
+        "name": "pool",
         "type": "address",
         "internalType": "address"
       }
     ],
-    "stateMutability": "view"
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
-    "name": "assetRegistry",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "createAccessFiPool",
-    "inputs": [
-      {
-        "name": "_poolInfo",
-        "type": "tuple",
-        "internalType": "struct IAccessfiPool.PoolInfo",
-        "components": [
-          {
-            "name": "name",
-            "type": "string",
-            "internalType": "string"
-          },
-          {
-            "name": "description",
-            "type": "string",
-            "internalType": "string"
-          },
-          {
-            "name": "dataType",
-            "type": "string",
-            "internalType": "string"
-          },
-          {
-            "name": "proofRequirements",
-            "type": "uint8[]",
-            "internalType": "enum IAccessfiPool.ProofType[]"
-          },
-          {
-            "name": "pricePerData",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "totalBudget",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "remainingBudget",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "creator",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "isActive",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "createdAt",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "deadline",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
-      }
-    ],
-    "outputs": [
-      {
-        "name": "poolAddress",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "payable"
-  },
-  {
-    "type": "function",
-    "name": "creatorPools",
+    "name": "authorizedPools",
     "inputs": [
       {
         "name": "",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "outputs": [
       {
         "name": "",
-        "type": "address",
-        "internalType": "address"
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
     "stateMutability": "view"
@@ -190,10 +107,124 @@
   },
   {
     "type": "function",
-    "name": "getAccessFiPool",
+    "name": "getAsset",
     "inputs": [
       {
-        "name": "_index",
+        "name": "assetId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct IAssetRegistry.Asset",
+        "components": [
+          {
+            "name": "seller",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "proofTypeId",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "encryptedRef",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "dataHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "verificationStatus",
+            "type": "uint8",
+            "internalType": "enum IAssetRegistry.VerificationStatus"
+          },
+          {
+            "name": "resalePolicy",
+            "type": "uint8",
+            "internalType": "enum IAssetRegistry.ResalePolicy"
+          },
+          {
+            "name": "basePrice",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "verifiedAt",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "expiresAt",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "isListed",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getBuyerAssets",
+    "inputs": [
+      {
+        "name": "buyer",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getPurchaseCount",
+    "inputs": [
+      {
+        "name": "assetId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getPurchaseRecord",
+    "inputs": [
+      {
+        "name": "assetId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "index",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -201,53 +232,35 @@
     "outputs": [
       {
         "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getAccessFiPoolCount",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getAccessFiPools",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address[]",
-        "internalType": "address[]"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getCreatorPools",
-    "inputs": [
-      {
-        "name": "_creator",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address[]",
-        "internalType": "address[]"
+        "type": "tuple",
+        "internalType": "struct AssetRegistry.PurchaseRecord",
+        "components": [
+          {
+            "name": "buyer",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "platformFee",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "sellerPayout",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "purchasedAt",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
       }
     ],
     "stateMutability": "view"
@@ -273,6 +286,43 @@
   },
   {
     "type": "function",
+    "name": "getSellerAssets",
+    "inputs": [
+      {
+        "name": "seller",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "grantAccess",
+    "inputs": [
+      {
+        "name": "assetId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "buyer",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "grantRole",
     "inputs": [
       {
@@ -288,6 +338,30 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "hasAccess",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -312,39 +386,6 @@
       }
     ],
     "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "initialize",
-    "inputs": [
-      {
-        "name": "_assetRegistry",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_zkVerifier",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_platformWallet",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_factoryUser",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "admin",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -374,7 +415,7 @@
   },
   {
     "type": "function",
-    "name": "poolImplementation",
+    "name": "poolFactory",
     "inputs": [],
     "outputs": [
       {
@@ -387,16 +428,74 @@
   },
   {
     "type": "function",
-    "name": "proxiableUUID",
-    "inputs": [],
-    "outputs": [
+    "name": "purchaseAsset",
+    "inputs": [
       {
-        "name": "",
+        "name": "assetId",
         "type": "bytes32",
         "internalType": "bytes32"
       }
     ],
-    "stateMutability": "view"
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "registerOrUpdateVerifiedAsset",
+    "inputs": [
+      {
+        "name": "assetId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "seller",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "proofTypeId",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "encryptedRef",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "dataHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "verificationStatus",
+        "type": "uint8",
+        "internalType": "enum IAssetRegistry.VerificationStatus"
+      },
+      {
+        "name": "resalePolicy",
+        "type": "uint8",
+        "internalType": "enum IAssetRegistry.ResalePolicy"
+      },
+      {
+        "name": "basePrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "expiresAt",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "isListed",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -409,6 +508,19 @@
       },
       {
         "name": "callerConfirmation",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "revokePool",
+    "inputs": [
+      {
+        "name": "pool",
         "type": "address",
         "internalType": "address"
       }
@@ -436,10 +548,28 @@
   },
   {
     "type": "function",
+    "name": "setAssetListing",
+    "inputs": [
+      {
+        "name": "assetId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "isListed",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "setFactoryUser",
     "inputs": [
       {
-        "name": "newFactoryUser",
+        "name": "_factoryUser",
         "type": "address",
         "internalType": "address"
       }
@@ -449,12 +579,12 @@
   },
   {
     "type": "function",
-    "name": "setPlatformFee",
+    "name": "setPoolFactory",
     "inputs": [
       {
-        "name": "newFeePercent",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "_poolFactory",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "outputs": [],
@@ -480,55 +610,55 @@
     "stateMutability": "view"
   },
   {
-    "type": "function",
-    "name": "upgradeToAndCall",
+    "type": "event",
+    "name": "AssetAccessGranted",
     "inputs": [
       {
-        "name": "newImplementation",
-        "type": "address",
-        "internalType": "address"
+        "name": "assetId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
       },
       {
-        "name": "data",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "payable"
-  },
-  {
-    "type": "function",
-    "name": "zkVerifier",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
+        "name": "buyer",
         "type": "address",
+        "indexed": true,
         "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "event",
-    "name": "Initialized",
-    "inputs": [
-      {
-        "name": "version",
-        "type": "uint64",
-        "indexed": false,
-        "internalType": "uint64"
       }
     ],
     "anonymous": false
   },
   {
     "type": "event",
-    "name": "PlatformFeeCollected",
+    "name": "AssetListingUpdated",
     "inputs": [
       {
-        "name": "creator",
+        "name": "assetId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "isListed",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "AssetPurchased",
+    "inputs": [
+      {
+        "name": "assetId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "buyer",
         "type": "address",
         "indexed": true,
         "internalType": "address"
@@ -544,44 +674,77 @@
   },
   {
     "type": "event",
-    "name": "PlatformFeeUpdated",
+    "name": "AssetRegistered",
     "inputs": [
       {
-        "name": "oldFee",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
+        "name": "assetId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
       },
       {
-        "name": "newFee",
-        "type": "uint256",
+        "name": "seller",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "proofTypeId",
+        "type": "string",
         "indexed": false,
-        "internalType": "uint256"
+        "internalType": "string"
       }
     ],
     "anonymous": false
   },
   {
     "type": "event",
-    "name": "PoolCreated",
+    "name": "FactoryUserUpdated",
     "inputs": [
       {
-        "name": "creator",
+        "name": "factoryUser",
         "type": "address",
         "indexed": true,
         "internalType": "address"
-      },
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PoolAuthorized",
+    "inputs": [
       {
-        "name": "poolAddress",
+        "name": "pool",
         "type": "address",
         "indexed": true,
         "internalType": "address"
-      },
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PoolFactoryUpdated",
+    "inputs": [
       {
-        "name": "name",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
+        "name": "poolFactory",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PoolRevoked",
+    "inputs": [
+      {
+        "name": "pool",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
       }
     ],
     "anonymous": false
@@ -662,17 +825,9 @@
     "anonymous": false
   },
   {
-    "type": "event",
-    "name": "Upgraded",
-    "inputs": [
-      {
-        "name": "implementation",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
-    ],
-    "anonymous": false
+    "type": "error",
+    "name": "AccessAlreadyGranted",
+    "inputs": []
   },
   {
     "type": "error",
@@ -697,110 +852,62 @@
   },
   {
     "type": "error",
-    "name": "AddressEmptyCode",
-    "inputs": [
-      {
-        "name": "target",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "CreatorMismatch",
+    "name": "AssetNotFound",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "ERC1967InvalidImplementation",
-    "inputs": [
-      {
-        "name": "implementation",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "ERC1967NonPayable",
+    "name": "AssetNotListed",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "FailedInnerCall",
+    "name": "InvalidAmount",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InsufficientPayment",
+    "name": "InvalidFactoryUser",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InvalidBudget",
+    "name": "InvalidListingForExclusive",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InvalidDeadline",
+    "name": "InvalidPlatformWallet",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InvalidFeePercent",
+    "name": "InvalidPoolFactory",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InvalidInitialization",
+    "name": "OnlyAuthorizedBuyerPath",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InvalidPrice",
+    "name": "PaymentFailed",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InvalidUserContract",
+    "name": "PoolNotAuthorized",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "NotInitializing",
+    "name": "ReentrancyGuardReentrantCall",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "PlatformFeeTransferFailed",
+    "name": "UnauthorizedListingManager",
     "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "PoolFundingFailed",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "RefundFailed",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "UUPSUnauthorizedCallContext",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "UUPSUnsupportedProxiableUUID",
-    "inputs": [
-      {
-        "name": "slot",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ]
   }
 ]

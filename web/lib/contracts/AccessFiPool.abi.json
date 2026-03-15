@@ -49,6 +49,19 @@
   },
   {
     "type": "function",
+    "name": "assetRegistry",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IAssetRegistry"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "buyerAccessibleCIDs",
     "inputs": [
       {
@@ -73,13 +86,13 @@
   },
   {
     "type": "function",
-    "name": "dataToken",
+    "name": "factory",
     "inputs": [],
     "outputs": [
       {
         "name": "",
         "type": "address",
-        "internalType": "contract AccessFiDataToken"
+        "internalType": "address"
       }
     ],
     "stateMutability": "view"
@@ -209,25 +222,6 @@
   },
   {
     "type": "function",
-    "name": "hasClaimedToken",
-    "inputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "hasProof",
     "inputs": [
       {
@@ -341,7 +335,7 @@
         ]
       },
       {
-        "name": "_dataToken",
+        "name": "_assetRegistry",
         "type": "address",
         "internalType": "address"
       },
@@ -672,7 +666,7 @@
   },
   {
     "type": "function",
-    "name": "sellerToTokenId",
+    "name": "sellerToAssetId",
     "inputs": [
       {
         "name": "",
@@ -683,8 +677,8 @@
     "outputs": [
       {
         "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "stateMutability": "view"
@@ -756,6 +750,11 @@
             "internalType": "uint256"
           }
         ]
+      },
+      {
+        "name": "resalePolicy",
+        "type": "uint8",
+        "internalType": "enum IAccessfiPool.ResalePolicy"
       }
     ],
     "outputs": [],
@@ -846,6 +845,16 @@
         "name": "timestamp",
         "type": "uint256",
         "internalType": "uint256"
+      },
+      {
+        "name": "assetId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "resalePolicy",
+        "type": "uint8",
+        "internalType": "enum IAccessfiPool.ResalePolicy"
       }
     ],
     "stateMutability": "view"
@@ -909,6 +918,37 @@
   },
   {
     "type": "event",
+    "name": "AssetRegistered",
+    "inputs": [
+      {
+        "name": "seller",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "assetId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "resalePolicy",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "enum IAccessfiPool.ResalePolicy"
+      },
+      {
+        "name": "listed",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "DataEncrypted",
     "inputs": [
       {
@@ -947,44 +987,6 @@
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "DataTokenMinted",
-    "inputs": [
-      {
-        "name": "seller",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "tokenId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "DataTokenTransferred",
-    "inputs": [
-      {
-        "name": "tokenId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "buyer",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
       }
     ],
     "anonymous": false
@@ -1327,11 +1329,6 @@
   },
   {
     "type": "error",
-    "name": "InvalidCID",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "InvalidInitialization",
     "inputs": []
   },
@@ -1393,11 +1390,6 @@
   {
     "type": "error",
     "name": "ReentrancyGuardReentrantCall",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "TokenAlreadyClaimed",
     "inputs": []
   },
   {

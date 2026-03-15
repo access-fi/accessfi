@@ -13,7 +13,7 @@
         "internalType": "address"
       },
       {
-        "name": "_dataToken",
+        "name": "_assetRegistry",
         "type": "address",
         "internalType": "address"
       }
@@ -22,6 +22,32 @@
   },
   {
     "type": "receive",
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "assetRegistry",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "buyAsset",
+    "inputs": [
+      {
+        "name": "assetId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
     "stateMutability": "payable"
   },
   {
@@ -96,19 +122,6 @@
   },
   {
     "type": "function",
-    "name": "dataToken",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "factory",
     "inputs": [],
     "outputs": [
@@ -132,19 +145,6 @@
     ],
     "outputs": [],
     "stateMutability": "payable"
-  },
-  {
-    "type": "function",
-    "name": "getCreatedDataTokens",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -200,13 +200,52 @@
   },
   {
     "type": "function",
-    "name": "getOwnedDataTokens",
+    "name": "getProvidedAssets",
     "inputs": [],
     "outputs": [
       {
         "name": "",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getProvidedAssetsCount",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getPurchasedAssets",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getPurchasedAssetsCount",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -252,12 +291,38 @@
   },
   {
     "type": "function",
+    "name": "notifyAssetPurchased",
+    "inputs": [
+      {
+        "name": "assetId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "notifyEarning",
     "inputs": [
       {
         "name": "amount",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "notifyProvidedAsset",
+    "inputs": [
+      {
+        "name": "assetId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [],
@@ -367,22 +432,13 @@
             "internalType": "uint256"
           }
         ]
+      },
+      {
+        "name": "resalePolicy",
+        "type": "uint8",
+        "internalType": "enum IAccessfiPool.ResalePolicy"
       }
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "syncCreatedTokens",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "syncOwnedTokens",
-    "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
@@ -421,26 +477,26 @@
   },
   {
     "type": "event",
-    "name": "DataTokenCreated",
+    "name": "AssetProvided",
     "inputs": [
       {
-        "name": "tokenId",
-        "type": "uint256",
+        "name": "assetId",
+        "type": "bytes32",
         "indexed": true,
-        "internalType": "uint256"
+        "internalType": "bytes32"
       }
     ],
     "anonymous": false
   },
   {
     "type": "event",
-    "name": "DataTokenOwned",
+    "name": "AssetPurchased",
     "inputs": [
       {
-        "name": "tokenId",
-        "type": "uint256",
+        "name": "assetId",
+        "type": "bytes32",
         "indexed": true,
-        "internalType": "uint256"
+        "internalType": "bytes32"
       }
     ],
     "anonymous": false
@@ -489,6 +545,16 @@
   {
     "type": "error",
     "name": "NoFunds",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OnlyAssetRegistry",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OnlyAssetRegistryOrPool",
     "inputs": []
   },
   {

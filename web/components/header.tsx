@@ -52,6 +52,12 @@ export function Header() {
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8 font-mono text-sm uppercase">
               <Link
+                href="/inventory"
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                INVENTORY
+              </Link>
+              <Link
                 href="/dashboard"
                 className="text-muted-foreground transition-colors hover:text-foreground"
               >

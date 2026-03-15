@@ -11,6 +11,18 @@ export enum ProofType {
   HACKERHOUSE_INVITATION = 3,
 }
 
+export enum ResalePolicy {
+  EXCLUSIVE = 0,
+  LIMITED_RESALE = 1,
+  OPEN_RESALE = 2,
+}
+
+export const ResalePolicyLabels: Record<ResalePolicy, string> = {
+  [ResalePolicy.EXCLUSIVE]: 'Exclusive',
+  [ResalePolicy.LIMITED_RESALE]: 'Limited Resale',
+  [ResalePolicy.OPEN_RESALE]: 'Open Resale',
+};
+
 export const ProofTypeLabels: Record<ProofType, string> = {
   [ProofType.AGE_VERIFICATION]: 'Age Verification (>18)',
   [ProofType.NATIONALITY]: 'Nationality',
@@ -40,6 +52,8 @@ export interface VerifiedData {
   isEncrypted: boolean;
   isAccessTransferred: boolean;
   timestamp: bigint;
+  assetId: `0x${string}`;
+  resalePolicy: ResalePolicy;
 }
 
 // ZK Verification Parameters
@@ -68,8 +82,8 @@ export interface UserStats {
   totalEarned: bigint;
   createdPoolsCount: number;
   joinedPoolsCount: number;
-  ownedTokensCount: number;
-  createdTokensCount: number;
+  purchasedAssetsCount: number;
+  providedAssetsCount: number;
 }
 
 // Pool Status
@@ -94,6 +108,6 @@ export interface UserData {
   stats: UserStats;
   createdPools: `0x${string}`[];
   joinedPools: `0x${string}`[];
-  ownedTokens: bigint[];
-  createdTokens: bigint[];
+  purchasedAssets: `0x${string}`[];
+  providedAssets: `0x${string}`[];
 }

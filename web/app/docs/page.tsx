@@ -339,9 +339,9 @@ function OverviewSection() {
   return (
     <DocSection title="Overview">
       <p className="mb-6 text-lg text-muted-foreground">
-        AccessFi is a privacy-first marketplace where buyers collect verified data and sellers get paid
-        instantly. Sellers prove ownership of data (like an email) using zero-knowledge proofs, while
-        the raw content stays private and only minimal data is revealed.
+        AccessFi is a privacy-first verified data network where buyers purchase asset access and sellers
+        get paid instantly. Sellers prove ownership of data (like an email) using zero-knowledge proofs,
+        while the raw content stays private and only minimal data is revealed.
       </p>
 
       <DocSubsection title="What is AccessFi?">
@@ -355,11 +355,11 @@ function OverviewSection() {
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary">◆</span>
-            <span>Buyers receive cryptographically verified data tokens</span>
+            <span>Buyers receive cryptographically verified asset access</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary">◆</span>
-            <span>Payments and ownership are enforced on-chain</span>
+            <span>Payments and access rights are enforced on-chain</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary">◆</span>
@@ -373,7 +373,7 @@ function OverviewSection() {
           <div className="border-2 border-border bg-card p-6">
             <h3 className="mb-2 font-mono text-sm font-bold uppercase text-primary">FOR BUYERS</h3>
             <p className="mb-4 text-sm text-muted-foreground">
-              Create data pools to collect verified data from sellers.
+              Browse verified inventory first, then create pools when data is missing.
             </p>
             <Link
               href="/pools"
@@ -537,9 +537,9 @@ function KeyFeaturesSection() {
           <div className="mb-4 flex h-12 w-12 items-center justify-center border-2 border-primary text-2xl">
             🎫
           </div>
-          <h3 className="mb-2 font-mono text-sm font-bold uppercase">Data Tokens</h3>
+          <h3 className="mb-2 font-mono text-sm font-bold uppercase">Asset Access</h3>
           <p className="text-sm text-muted-foreground">
-            Each verified data submission is minted as an ERC-721 token.
+            Each verified submission becomes a reusable asset with on-chain access rights.
           </p>
         </div>
 
@@ -566,7 +566,7 @@ function ArchitectureSection() {
     <DocSection title="Architecture">
       <p className="mb-6 text-muted-foreground">
         AccessFi combines ZK proofs, on-chain verification, and confidential compute to create a
-        trustless, privacy-preserving data marketplace.
+        trustless, privacy-preserving verified data network.
       </p>
 
       <DocSubsection title="System Components">
@@ -579,7 +579,7 @@ function ArchitectureSection() {
               <div>
                 <h4 className="font-mono text-sm font-bold">Smart Contracts (Horizen Testnet)</h4>
                 <p className="text-sm text-muted-foreground">
-                  Core contracts handle pool creation, proof verification, payments, and token minting.
+                  Core contracts handle pool creation, proof verification, asset registration, and access settlement.
                 </p>
               </div>
             </div>
@@ -637,7 +637,7 @@ sequenceDiagram
   B->>T: Encrypt recipient (returns encryptedCID)
   B->>Z: Submit proof
   Z->>C: Verification result
-  C->>C: Mint token + transfer to Buyer
+  C->>C: Register asset + grant buyer access
   C->>S: Pay seller
   U->>T: Sign + decrypt
         `}</MermaidBlock>
@@ -693,7 +693,7 @@ struct Pool {
             <div className="flex h-8 w-8 items-center justify-center border-2 border-primary font-mono text-xs font-bold">
               4
             </div>
-            <span className="text-muted-foreground">Buyer receives data tokens</span>
+            <span className="text-muted-foreground">Buyer receives asset access</span>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex h-8 w-8 items-center justify-center border-2 border-primary font-mono text-xs font-bold">
@@ -781,7 +781,7 @@ function PaymentFlowSection() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-primary">3.</span>
-              <span>Data token minted to your address</span>
+              <span>Verified asset is registered on-chain</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="text-primary">4.</span>
@@ -808,7 +808,7 @@ function PaymentFlowSection() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-foreground">4.</span>
-              <span>Receive data tokens automatically</span>
+              <span>Receive asset access automatically</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="text-foreground">5.</span>
@@ -888,7 +888,7 @@ function CreatingPoolsSection() {
               3
             </div>
             <div>
-              <h4 className="font-mono text-sm font-bold">Click "Create Pool"</h4>
+              <h4 className="font-mono text-sm font-bold">Click &quot;Create Pool&quot;</h4>
               <p className="text-sm text-muted-foreground">
                 Found on the home page or pools page
               </p>
@@ -938,13 +938,13 @@ function PoolSettingsSection() {
           <div className="border-2 border-border bg-card p-4">
             <h4 className="font-mono text-sm font-bold">Pool Name</h4>
             <p className="mt-2 text-sm text-muted-foreground">
-              A descriptive name for your pool (e.g., "Netflix Subscribers Q1 2025")
+              A descriptive name for your pool (e.g., &quot;Netflix Subscribers Q1 2025&quot;)
             </p>
           </div>
           <div className="border-2 border-border bg-card p-4">
             <h4 className="font-mono text-sm font-bold">Data Type</h4>
             <p className="mt-2 text-sm text-muted-foreground">
-              The category of data you're collecting (e.g., "Email", "Identity", "Social")
+              The category of data you&apos;re collecting (e.g., &quot;Email&quot;, &quot;Identity&quot;, &quot;Social&quot;)
             </p>
           </div>
           <div className="border-2 border-border bg-card p-4">
@@ -983,15 +983,15 @@ function ManagingDataSection() {
         <ol className="space-y-3 text-sm text-muted-foreground">
           <li>1. Go to Dashboard → Purchases tab</li>
           <li>2. Your pools are displayed as cards showing data count</li>
-          <li>3. Click "View All Data" to see individual submissions</li>
+          <li>3. Click &quot;View All Data&quot; to see individual submissions</li>
           <li>4. Click on any submission to view the full data</li>
         </ol>
       </DocSubsection>
 
-      <DocSubsection title="Data Tokens">
+      <DocSubsection title="Asset Access">
         <InfoBox>
-          Each verified submission mints an ERC-721 token that represents ownership of that data.
-          These tokens are transferred to your wallet automatically.
+          Each verified submission becomes a registered asset. Buyers receive on-chain access rights,
+          and sellers can allow future resale through the inventory flow.
         </InfoBox>
       </DocSubsection>
 
@@ -1000,7 +1000,7 @@ function ManagingDataSection() {
           Recipient data is encrypted and stored in a TEE (Phala CVM). To view the data:
         </p>
         <ol className="space-y-2 text-sm text-muted-foreground">
-          <li>1. Click “View” on a token</li>
+          <li>1. Click “View” on an asset</li>
           <li>2. Click “Decrypt”</li>
           <li>3. Sign the wallet message to prove ownership</li>
           <li>4. The data is decrypted inside the TEE and returned securely</li>
@@ -1013,8 +1013,8 @@ function ManagingDataSection() {
             <span className="font-mono text-xs text-yellow-500">COMING SOON</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            We're building API access so you can programmatically retrieve data from your pools.
-            Each pool will have its own API endpoint for easy integration with your applications.
+            We&apos;re building API access so you can programmatically retrieve purchased assets and pool results.
+            This will support direct integrations with your applications.
           </p>
         </div>
       </DocSubsection>
@@ -1089,7 +1089,7 @@ function SubmittingProofsSection() {
             <div>
               <h4 className="font-mono text-sm font-bold">Upload File</h4>
               <p className="text-sm text-muted-foreground">
-                Click "Join Pool" and drag/drop your .eml file
+                Click &quot;Join Pool&quot; and drag/drop your .eml file
               </p>
             </div>
           </li>
@@ -1183,7 +1183,7 @@ function GettingPaidSection() {
 // ============================================================
 
 function SmartContractsSection() {
-  const dataToken = process.env.NEXT_PUBLIC_DATA_TOKEN_ADDRESS || '0x...';
+  const assetRegistry = process.env.NEXT_PUBLIC_ASSET_REGISTRY_ADDRESS || '0x...';
   const factoryPool = process.env.NEXT_PUBLIC_FACTORY_POOL_ADDRESS || '0x...';
   const factoryUser = process.env.NEXT_PUBLIC_FACTORY_USER_ADDRESS || '0x...';
   const zkVerifier = process.env.NEXT_PUBLIC_ZK_VERIFIER_ADDRESS || '0x...';
@@ -1221,9 +1221,9 @@ function SmartContractsSection() {
             </p>
           </div>
           <div className="border-2 border-border bg-card p-4">
-            <h4 className="font-mono text-sm font-bold text-primary">AccessFiDataToken</h4>
+            <h4 className="font-mono text-sm font-bold text-primary">AssetRegistry</h4>
             <p className="mt-2 text-sm text-muted-foreground">
-              ERC-721 token contract for verified data ownership.
+              Source of truth for registered assets, purchases, and buyer access rights.
             </p>
           </div>
           <div className="border-2 border-border bg-card p-4">
@@ -1241,7 +1241,7 @@ Network: Horizen Testnet (Chain ID 2651420)
 
 FactoryPool: ${factoryPool}
 FactoryUser: ${factoryUser}
-DataToken:   ${dataToken}
+AssetRegistry:${assetRegistry}
 ZkVerifier:  ${zkVerifier}
         `}</CodeBlock>
       </DocSubsection>
@@ -1264,7 +1264,7 @@ function ZkEmailSection() {
         <ol className="space-y-2 text-sm text-muted-foreground">
           <li>1. Email provider signs outgoing emails with their private key</li>
           <li>2. DKIM signature is included in email headers</li>
-          <li>3. Anyone can verify using the provider's public key (DNS)</li>
+          <li>3. Anyone can verify using the provider&apos;s public key (DNS)</li>
           <li>4. zkEmail creates a ZK proof of this verification</li>
         </ol>
       </DocSubsection>
@@ -1278,7 +1278,7 @@ function ZkEmailSection() {
 
       <DocSubsection title="Blueprint System">
         <p className="mb-4 text-sm text-muted-foreground">
-          zkEmail uses "blueprints" - predefined circuits that specify what data to extract and verify
+          zkEmail uses &quot;blueprints&quot; - predefined circuits that specify what data to extract and verify
           from emails. AccessFi uses custom blueprints for different verification types.
         </p>
       </DocSubsection>
@@ -1344,7 +1344,7 @@ function SecuritySection() {
             <div>
               <h4 className="font-mono text-sm font-bold">Client-Side Proof Generation</h4>
               <p className="text-sm text-muted-foreground">
-                Proofs are generated in the user's browser. Raw email content stays local.
+                Proofs are generated in the user&apos;s browser. Raw email content stays local.
               </p>
             </div>
           </div>
@@ -1406,7 +1406,7 @@ function ApiOverviewSection() {
       </div>
 
       <p className="mb-6 text-muted-foreground">
-        We're building a REST API to allow programmatic access to your pool data.
+        We&apos;re building a REST API to allow programmatic access to your pool data.
       </p>
 
       <DocSubsection title="Planned Features">
@@ -1468,7 +1468,7 @@ Authorization: Bearer <your-api-key>
               <span className="font-mono text-xs bg-primary px-2 py-1 text-primary-foreground">GET</span>
               <code className="font-mono text-sm">/api/v1/pools</code>
             </div>
-            <p className="text-sm text-muted-foreground">List all pools you've created</p>
+            <p className="text-sm text-muted-foreground">List all pools you&apos;ve created</p>
           </div>
 
           <div className="border-2 border-border bg-card p-4">
@@ -1482,9 +1482,9 @@ Authorization: Bearer <your-api-key>
           <div className="border-2 border-border bg-card p-4">
             <div className="flex items-center gap-3 mb-2">
               <span className="font-mono text-xs bg-primary px-2 py-1 text-primary-foreground">GET</span>
-              <code className="font-mono text-sm">/api/v1/tokens/:id</code>
+              <code className="font-mono text-sm">/api/v1/assets/:id</code>
             </div>
-            <p className="text-sm text-muted-foreground">Get specific token metadata and data</p>
+            <p className="text-sm text-muted-foreground">Get specific asset metadata and access details</p>
           </div>
 
           <div className="border-2 border-border bg-card p-4">
@@ -1509,15 +1509,15 @@ function BuyersFaqSection() {
     <DocSection title="Buyers FAQ">
       <DocSubsection title="What do I actually receive?">
         <p className="text-sm text-muted-foreground">
-          You receive an ERC-721 data token for each verified submission, plus access to the
-          encrypted recipient email stored in the TEE. Decryption requires wallet ownership.
+          You receive on-chain access rights for each verified asset you buy, plus access to the
+          encrypted recipient email stored in the TEE. Decryption requires wallet-based access checks.
         </p>
       </DocSubsection>
 
       <DocSubsection title="How is the data protected?">
         <p className="text-sm text-muted-foreground">
-          Recipient data is encrypted in a Phala CVM (TEE). Only the token owner can decrypt it by
-          signing a wallet message, and ownership is verified on-chain.
+          Recipient data is encrypted in a Phala CVM (TEE). Only a buyer with active access can decrypt it by
+          signing a wallet message, and access is verified on-chain.
         </p>
       </DocSubsection>
 
@@ -1558,16 +1558,16 @@ function SellersFaqSection() {
 function SecurityFaqSection() {
   return (
     <DocSection title="Security FAQ">
-      <DocSubsection title="What if someone steals a token?">
+      <DocSubsection title="What if someone steals a wallet?">
         <p className="text-sm text-muted-foreground">
-          Decryption requires token ownership on-chain and a wallet signature. If ownership changes,
-          access changes with it.
+          Decryption requires an on-chain access check and a wallet signature. If access is revoked or
+          the wallet no longer controls the asset access, decryption stops working.
         </p>
       </DocSubsection>
 
       <DocSubsection title="Can the platform decrypt data?">
         <p className="text-sm text-muted-foreground">
-          No. Decryption is performed inside the TEE and gated by wallet ownership. The platform
+          No. Decryption is performed inside the TEE and gated by wallet access. The platform
           never sees raw data.
         </p>
       </DocSubsection>
