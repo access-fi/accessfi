@@ -7,7 +7,7 @@ import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 
 import { useAccount } from 'wagmi';
 import { getContractAddresses } from './addresses';
 import { FactoryUserABI, UserABI, FactoryAccessFiPoolABI, AccessFiPoolABI, AccessFiDataTokenABI } from './abis';
-import type { PoolInfo, VerificationParams, ProofType } from './types';
+import type { PoolInfo, VerificationParams, ProofTypeId } from './types';
 
 // ============================================================
 //                    FACTORY USER HOOKS
@@ -307,7 +307,7 @@ export function useSubmitProof(userContractAddress?: `0x${string}`) {
 
   const submitProof = async (
     poolAddress: `0x${string}`,
-    proofType: ProofType,
+    proofType: ProofTypeId,
     proofHash: `0x${string}`,
     encryptedCID: string,
     dataHash: `0x${string}`,
@@ -355,6 +355,15 @@ export function usePoolInfo(poolAddress?: `0x${string}`) {
     address: poolAddress,
     abi: AccessFiPoolABI,
     functionName: 'poolInfo',
+    query: { enabled: !!poolAddress },
+  });
+}
+
+export function usePoolProofRequirements(poolAddress?: `0x${string}`) {
+  return useReadContract({
+    address: poolAddress,
+    abi: AccessFiPoolABI,
+    functionName: 'getProofRequirements',
     query: { enabled: !!poolAddress },
   });
 }

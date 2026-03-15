@@ -37,12 +37,12 @@ export interface ProofResult {
  */
 export async function generateAndVerifyProof(
   emlContent: string,
+  blueprintId: string,
   onProgress?: (progress: number, step: string) => void
 ): Promise<ProofResult> {
   try {
-    const blueprintId = process.env.NEXT_PUBLIC_ZKEMAIL_BLUEPRINT_ID;
     if (!blueprintId) {
-      throw new Error('NEXT_PUBLIC_ZKEMAIL_BLUEPRINT_ID not configured');
+      throw new Error('zkEmail blueprintId not provided');
     }
 
     // ==== STEP 1: Initialize SDK and get blueprint ====
@@ -131,15 +131,4 @@ export async function generateAndVerifyProof(
     console.error('[zkEmail/zkVerify] Error:', error);
     throw new Error(`Proof generation/verification failed: ${error.message}`);
   }
-}
-
-/**
- * Get blueprint ID from environment
- */
-export function getBlueprintId(): string {
-  const blueprintId = process.env.NEXT_PUBLIC_ZKEMAIL_BLUEPRINT_ID;
-  if (!blueprintId) {
-    throw new Error('NEXT_PUBLIC_ZKEMAIL_BLUEPRINT_ID not configured');
-  }
-  return blueprintId;
 }

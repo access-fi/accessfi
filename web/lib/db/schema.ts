@@ -40,7 +40,7 @@ export const proofSubmissions = pgTable('proof_submissions', {
   id: varchar('id', { length: 36 }).primaryKey(), // UUID
   sellerAddress: varchar('seller_address', { length: 42 }).notNull(),
   poolAddress: varchar('pool_address', { length: 42 }).notNull(),
-  proofType: varchar('proof_type', { length: 10 }).notNull(), // ProofType enum (0-3)
+  proofType: text('proof_type').notNull(), // Proof type string id (off-chain)
   proofHash: varchar('proof_hash', { length: 66 }).notNull(),
   status: varchar('status', { length: 20 }).notNull(), // 'pending', 'verified', 'failed'
   txHash: varchar('tx_hash', { length: 66 }),
@@ -48,6 +48,19 @@ export const proofSubmissions = pgTable('proof_submissions', {
   dataHash: varchar('data_hash', { length: 66 }),
   attestation: text('attestation'), // TEE attestation
   errorMessage: text('error_message'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Proof types registry
+export const proofTypes = pgTable('proof_types', {
+  id: text('id').primaryKey(), // e.g., "zkemail:accessfi_email_v1"
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  kind: varchar('kind', { length: 20 }).notNull(), // zkemail, reclaim, custom
+  blueprintId: text('blueprint_id'), // zkEmail blueprint id
+  isPublic: boolean('is_public').default(true).notNull(),
+  createdBy: varchar('created_by', { length: 42 }).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -71,3 +84,5 @@ export type ProofSubmission = typeof proofSubmissions.$inferSelect;
 export type NewProofSubmission = typeof proofSubmissions.$inferInsert;
 export type DataToken = typeof dataTokens.$inferSelect;
 export type NewDataToken = typeof dataTokens.$inferInsert;
+export type ProofType = typeof proofTypes.$inferSelect;
+export type NewProofType = typeof proofTypes.$inferInsert;

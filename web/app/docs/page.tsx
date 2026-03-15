@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { Header } from '@/components/header';
@@ -79,23 +79,6 @@ export default function DocsPage() {
   const [activeSection, setActiveSection] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<string[]>(['introduction']);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const mermaid = (await import('mermaid')).default;
-      if (cancelled) return;
-      mermaid.initialize({
-        startOnLoad: false,
-        theme: 'dark',
-        securityLevel: 'strict',
-      });
-      await mermaid.run({ querySelector: '.mermaid' });
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [activeSection]);
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) =>
@@ -302,9 +285,35 @@ function CodeBlock({ children }: { children: string }) {
 }
 
 function MermaidBlock({ children }: { children: string }) {
+  const [svg, setSvg] = useState<string>('');
+  const mermaidId = useId();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const mermaid = (await import('mermaid')).default;
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'dark',
+        securityLevel: 'strict',
+      });
+      const { svg } = await mermaid.render(`mermaid-${mermaidId}`, children.trim());
+      if (!cancelled) {
+        setSvg(svg);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [children, mermaidId]);
+
   return (
     <div className="mb-6 overflow-x-auto border-2 border-border bg-card p-4">
-      <div className="mermaid font-mono text-xs">{children}</div>
+      {svg ? (
+        <div className="mermaid" dangerouslySetInnerHTML={{ __html: svg }} />
+      ) : (
+        <div className="font-mono text-xs text-muted-foreground">Rendering diagram…</div>
+      )}
     </div>
   );
 }
@@ -339,7 +348,7 @@ function OverviewSection() {
   return (
     <DocSection title="Overview">
       <p className="mb-6 text-lg text-muted-foreground">
-        AccessFi is a privacy-first marketplace where buyers collect verified data and sellers get paid
+        AccessFi is an internet-verifiable market where buyers collect verified data and sellers get paid
         instantly. Sellers prove ownership of data (like an email) using zero-knowledge proofs, while
         the raw content stays private and only minimal data is revealed.
       </p>
@@ -418,7 +427,7 @@ function WhyAccessFiSection() {
   return (
     <DocSection title="Why AccessFi?">
       <p className="mb-6 text-lg text-muted-foreground">
-        Traditional data marketplaces require trust in centralized intermediaries and expose
+        Traditional data exchanges require trust in centralized intermediaries and expose
         sensitive information. AccessFi solves this with zero-knowledge technology.
       </p>
 
@@ -429,7 +438,7 @@ function WhyAccessFiSection() {
             <div>
               <h4 className="font-mono text-sm font-bold">Privacy Risks</h4>
               <p className="text-sm text-muted-foreground">
-                Traditional marketplaces require sharing raw data, exposing sensitive information
+                Traditional markets require sharing raw data, exposing sensitive information
               </p>
             </div>
           </div>
@@ -566,7 +575,7 @@ function ArchitectureSection() {
     <DocSection title="Architecture">
       <p className="mb-6 text-muted-foreground">
         AccessFi combines ZK proofs, on-chain verification, and confidential compute to create a
-        trustless, privacy-preserving data marketplace.
+        trustless, privacy-preserving internet-verifiable market.
       </p>
 
       <DocSubsection title="System Components">
@@ -626,19 +635,21 @@ function ArchitectureSection() {
       <DocSubsection title="Data Flow">
         <MermaidBlock>{`
 sequenceDiagram
+  participant U as Buyer
+  participant C as AccessFi Pool
   participant S as Seller
   participant B as Browser
   participant T as Phala TEE
   participant Z as zkVerify
-  participant C as AccessFi Pool
-  participant U as Buyer
+  U->>C: Create & fund pool (proof requirements)
   S->>B: Upload .eml
   B->>B: Extract recipient + generate zkEmail proof
   B->>T: Encrypt recipient (returns encryptedCID)
   B->>Z: Submit proof
   Z->>C: Verification result
-  C->>C: Mint token + transfer to Buyer
+  C->>C: Mint data token to Seller (metadata = encryptedCID)
   C->>S: Pay seller
+  C->>U: Transfer token to Buyer (final owner)
   U->>T: Sign + decrypt
         `}</MermaidBlock>
       </DocSubsection>
@@ -663,7 +674,7 @@ struct Pool {
     uint256 totalBudget;   // Maximum pool budget
     uint256 deadline;      // Pool expiration timestamp
     address creator;       // Pool creator (buyer)
-    ProofType[] proofs;    // Required proof types
+    bytes32[] proofs;      // Required proof type IDs
     bool isActive;         // Pool status
 }
         `}</CodeBlock>

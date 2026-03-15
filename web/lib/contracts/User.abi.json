@@ -50,8 +50,8 @@
           },
           {
             "name": "proofRequirements",
-            "type": "uint8[]",
-            "internalType": "enum IAccessfiPool.ProofType[]"
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
           },
           {
             "name": "pricePerData",
@@ -313,8 +313,8 @@
       },
       {
         "name": "_proofType",
-        "type": "uint8",
-        "internalType": "enum IAccessfiPool.ProofType"
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "_proofHash",

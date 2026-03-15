@@ -9,11 +9,12 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X, Loader2, CheckCircle2, AlertCircle, Lock } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { useJoinPool, useSubmitProof } from '@/lib/contracts/hooks';
-import { ProofType } from '@/lib/contracts/types';
+import { useJoinPool, useSubmitProof, usePoolProofRequirements } from '@/lib/contracts/hooks';
+import type { ProofTypeId } from '@/lib/contracts/types';
 import { EmailFileUpload } from './email-file-upload';
 import { generateAndVerifyProof } from '@/lib/zkemail';
 import { toast } from 'sonner';
+import { toProofTypeId, type ProofTypeRecord } from '@/lib/proof-types';
 
 // Known contract error selectors and their user-friendly messages
 const CONTRACT_ERRORS: Record<string, string> = {
@@ -125,6 +126,8 @@ export function JoinPoolModal({
   const [errorMessage, setErrorMessage] = useState('');
   const [proofProgress, setProofProgress] = useState(0);
   const [emailFile, setEmailFile] = useState<File | null>(null);
+  const [proofTypes, setProofTypes] = useState<ProofTypeRecord[]>([]);
+  const [loadingProofTypes, setLoadingProofTypes] = useState(false);
 
   // Contract hooks
   const { joinPool, isPending: isJoining, isConfirmed: joinConfirmed } =
@@ -141,6 +144,9 @@ export function JoinPoolModal({
   } =
     useSubmitProof(profile?.userContractAddress as `0x${string}` | undefined);
 
+  const { data: poolProofsData } = usePoolProofRequirements(poolAddress as `0x${string}`);
+  const poolProofs = (poolProofsData as ProofTypeId[]) || [];
+
   // Reset on open
   React.useEffect(() => {
     if (open) {
@@ -150,6 +156,25 @@ export function JoinPoolModal({
       setEmailFile(null);
     }
   }, [open]);
+
+  React.useEffect(() => {
+    const loadProofTypes = async () => {
+      if (!open) return;
+      setLoadingProofTypes(true);
+      try {
+        const res = await fetch(`/api/proof-types?address=${address || ''}`);
+        if (!res.ok) throw new Error('Failed to load proof types');
+        const data = await res.json();
+        setProofTypes(data.items || []);
+      } catch (error: any) {
+        console.error('[JoinPool] Failed to load proof types:', error);
+      } finally {
+        setLoadingProofTypes(false);
+      }
+    };
+
+    loadProofTypes();
+  }, [open, address]);
 
   // Monitor transaction confirmation
   React.useEffect(() => {
@@ -202,8 +227,22 @@ export function JoinPoolModal({
       console.log('[JoinPool] Starting proof generation...');
       setStep('generating-proof');
 
+      if (!poolProofs.length) {
+        throw new Error('Pool has no proof requirements.');
+      }
+      if (poolProofs.length > 1) {
+        throw new Error('Multiple proofs per pool are not supported yet.');
+      }
+
+      const proofTypeId = poolProofs[0];
+      const proofType = proofTypes.find((p) => toProofTypeId(p.id) === proofTypeId);
+      if (!proofType || proofType.kind !== 'zkemail' || !proofType.blueprintId) {
+        throw new Error('Pool proof type is not configured for zkEmail.');
+      }
+
       const proofResult = await generateAndVerifyProof(
         emlContent,
+        proofType.blueprintId,
         (progress: number, step: string) => {
           setProofProgress(Math.floor(progress));
           console.log(`[JoinPool] ${step} - ${Math.floor(progress)}%`);
@@ -273,7 +312,7 @@ export function JoinPoolModal({
 
       await submitProof(
         poolAddress,
-        ProofType.EMAIL_VERIFICATION,
+        proofTypeId,
         proofResult.proofHash,
         encryptedCID,
         dataHash as `0x${string}`,

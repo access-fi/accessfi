@@ -3,27 +3,15 @@
  * Based on Solidity structs and enums
  */
 
-// Pool proof requirements
-export enum ProofType {
-  AGE_VERIFICATION = 0,
-  NATIONALITY = 1,
-  EMAIL_VERIFICATION = 2,
-  HACKERHOUSE_INVITATION = 3,
-}
-
-export const ProofTypeLabels: Record<ProofType, string> = {
-  [ProofType.AGE_VERIFICATION]: 'Age Verification (>18)',
-  [ProofType.NATIONALITY]: 'Nationality',
-  [ProofType.EMAIL_VERIFICATION]: 'Email Verification',
-  [ProofType.HACKERHOUSE_INVITATION]: 'HackerHouse Invitation',
-};
+// Pool proof requirements (bytes32 id on-chain, string id off-chain)
+export type ProofTypeId = `0x${string}`;
 
 // Pool Info struct
 export interface PoolInfo {
   name: string;
   description: string;
   dataType: string;
-  proofRequirements: ProofType[];
+  proofRequirements: ProofTypeId[];
   pricePerData: bigint;
   totalBudget: bigint;
   remainingBudget: bigint;

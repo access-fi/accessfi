@@ -1068,7 +1068,7 @@ function PoolDataCard({
   const { data: poolInfo, isLoading } = usePoolInfo(poolAddress);
 
   // Pool info tuple: [name, dataType, pricePerData, totalBudget, deadline, creator, proofRequirements, isActive]
-  const poolData = poolInfo as [string, string, bigint, bigint, bigint, string, number[], boolean] | undefined;
+  const poolData = poolInfo as [string, string, bigint, bigint, bigint, string, `0x${string}`[], boolean] | undefined;
   const poolName = poolData?.[0] || 'Unknown Pool';
   const dataType = poolData?.[1] || 'Data';
 

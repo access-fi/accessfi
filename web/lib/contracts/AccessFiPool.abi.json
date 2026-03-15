@@ -237,8 +237,8 @@
       },
       {
         "name": "proofType",
-        "type": "uint8",
-        "internalType": "enum IAccessfiPool.ProofType"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
@@ -300,8 +300,8 @@
           },
           {
             "name": "proofRequirements",
-            "type": "uint8[]",
-            "internalType": "enum IAccessfiPool.ProofType[]"
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
           },
           {
             "name": "pricePerData",
@@ -591,8 +591,8 @@
     "inputs": [
       {
         "name": "",
-        "type": "uint8",
-        "internalType": "enum IAccessfiPool.ProofType"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
@@ -633,8 +633,8 @@
       },
       {
         "name": "",
-        "type": "uint8",
-        "internalType": "enum IAccessfiPool.ProofType"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
@@ -657,8 +657,8 @@
       },
       {
         "name": "",
-        "type": "uint8",
-        "internalType": "enum IAccessfiPool.ProofType"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
@@ -702,8 +702,8 @@
     "inputs": [
       {
         "name": "_proofType",
-        "type": "uint8",
-        "internalType": "enum IAccessfiPool.ProofType"
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "_proofHash",
@@ -1101,9 +1101,9 @@
       },
       {
         "name": "proofType",
-        "type": "uint8",
+        "type": "bytes32",
         "indexed": false,
-        "internalType": "enum IAccessfiPool.ProofType"
+        "internalType": "bytes32"
       },
       {
         "name": "verified",
@@ -1425,5 +1425,18 @@
     "type": "error",
     "name": "WithdrawalFailed",
     "inputs": []
+  },
+  {
+    "type": "function",
+    "name": "getProofRequirements",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view"
   }
 ]
