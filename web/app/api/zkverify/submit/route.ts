@@ -76,11 +76,11 @@ export async function POST(req: NextRequest) {
 
     // Step 2: Use pre-registered domain for Horizen Testnet
     // Domain IDs are pre-registered by zkVerify for each target chain
-    const domainId = configuredDomainId || ZKVERIFY_DOMAINS.horizenTestnet;
+    const domainId = configuredDomainId !== null ? configuredDomainId : ZKVERIFY_DOMAINS[network as keyof typeof ZKVERIFY_DOMAINS];
     console.log('[zkVerify API] Using domain ID:', domainId);
 
     // Step 3: Submit proof to zkVerify WITH domainId for aggregation
-    const { events } = await session.verify()
+    const { events, transactionResult } = await session.verify()
       .groth16({ library: Library.snarkjs, curve: CurveType.bn128 })
       .execute({
         proofData: {
@@ -93,31 +93,33 @@ export async function POST(req: NextRequest) {
 
     console.log('[zkVerify API] Proof submitted to domain:', domainId);
 
+    const verificationResult = await transactionResult;
+
     // Step 4: Wait for Finalized event
-    const verificationResult = await new Promise<any>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('Timeout waiting for proof finalization'));
-      }, 180000); // 3 minute timeout
+    // const verificationResultt = await new Promise<any>((resolve, reject) => {
+    //   const timeout = setTimeout(() => {
+    //     reject(new Error('Timeout waiting for proof finalization'));
+    //   }, 180000); // 3 minute timeout
 
-      events.on(ZkVerifyEvents.IncludedInBlock, (data: any) => {
-        console.log('[zkVerify API] Proof included in block:', data.blockHash);
-        console.log('[zkVerify API] Statement:', data.statement);
-        console.log('[zkVerify API] DomainId:', data.domainId);
-        console.log('[zkVerify API] AggregationId:', data.aggregationId);
-      });
+    //   events.on(ZkVerifyEvents.IncludedInBlock, (data: any) => {
+    //     console.log('[zkVerify API] Proof included in block:', data.blockHash);
+    //     console.log('[zkVerify API] Statement:', data.statement);
+    //     console.log('[zkVerify API] DomainId:', data.domainId);
+    //     console.log('[zkVerify API] AggregationId:', data.aggregationId);
+    //   });
 
-      events.on(ZkVerifyEvents.Finalized, (data: any) => {
-        console.log('[zkVerify API] Proof finalized:', data);
-        clearTimeout(timeout);
-        resolve(data);
-      });
+    //   events.on(ZkVerifyEvents.Finalized, (data: any) => {
+    //     console.log('[zkVerify API] Proof finalized:', data);
+    //     clearTimeout(timeout);
+    //     resolve(data);
+    //   });
 
-      events.on(ZkVerifyEvents.ErrorEvent, (error: any) => {
-        console.error('[zkVerify API] Error event:', error);
-        clearTimeout(timeout);
-        reject(new Error(`zkVerify error: ${error.message || 'Unknown error'}`));
-      });
-    });
+    //   events.on(ZkVerifyEvents.ErrorEvent, (error: any) => {
+    //     console.error('[zkVerify API] Error event:', error);
+    //     clearTimeout(timeout);
+    //     reject(new Error(`zkVerify error: ${error.message || 'Unknown error'}`));
+    //   });
+    // });
 
     const statement = verificationResult.statement;
     if (!statement) {
