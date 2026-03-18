@@ -32,6 +32,7 @@ interface IAssetRegistry {
     function authorizePool(address pool) external;
     function assetExists(bytes32 assetId) external view returns (bool);
     function getAsset(bytes32 assetId) external view returns (Asset memory);
+    function hasAccess(bytes32 assetId, address buyer) external view returns (bool);
     function registerOrUpdateVerifiedAsset(
         bytes32 assetId,
         address seller,

@@ -58,6 +58,9 @@ contract AccessFiPool is Initializable, IAccessfiPool, UUPSUpgradeable, AccessCo
     error InvalidUserContract();
     error TooManyProofRequirements();
     error InvalidAssetId();
+    error InvalidEncryptedCID();
+    error InvalidDataHash();
+    error BuyerAlreadyHasAccess();
 
     constructor() {
         _disableInitializers();
@@ -149,6 +152,8 @@ contract AccessFiPool is Initializable, IAccessfiPool, UUPSUpgradeable, AccessCo
         if (sellerProofs[seller][_proofTypeId]) revert ProofAlreadySubmitted();
         if (!_isValidProofType(_proofTypeId)) revert InvalidProofType();
         if (assetId == bytes32(0)) revert InvalidAssetId();
+        if (bytes(encryptedCID).length == 0) revert InvalidEncryptedCID();
+        if (dataHash == bytes32(0)) revert InvalidDataHash();
 
         zkVerifier.verify(
             zkParams.aggregationId,
@@ -337,6 +342,7 @@ contract AccessFiPool is Initializable, IAccessfiPool, UUPSUpgradeable, AccessCo
             0,
             listed
         );
+        if (assetRegistry.hasAccess(assetId, poolInfo.creator)) revert BuyerAlreadyHasAccess();
         assetRegistry.grantAccess(assetId, poolInfo.creator);
 
         emit AssetRegistered(seller, assetId, resalePolicy, listed);

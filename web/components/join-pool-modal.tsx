@@ -146,7 +146,7 @@ export function JoinPoolModal({
   poolName,
   pricePerData
 }: JoinPoolModalProps) {
-  const { address } = useAccount();
+  const { address, chainId } = useAccount();
   const { profile } = useUserProfile();
   const [step, setStep] = useState<ModalStep>('upload-email');
   const [errorMessage, setErrorMessage] = useState('');
@@ -181,6 +181,66 @@ export function JoinPoolModal({
 
   const { data: poolProofsData } = usePoolProofRequirements(poolAddress as `0x${string}`);
   const poolProofs = (poolProofsData as ProofTypeId[]) || [];
+
+  const waitForDestinationChainReadiness = async (
+    params: {
+      chainId: number;
+      verificationParams: {
+        aggregationId: bigint;
+        domainId: bigint;
+        merklePath: readonly `0x${string}`[];
+        leaf: `0x${string}`;
+        leafCount: bigint;
+        index: bigint;
+      };
+    }
+  ) => {
+    const maxAttempts = 18;
+    const delayMs = 5000;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      setProofProgress(Math.max(72, Math.min(88, 72 + attempt)));
+      console.log(
+        `[JoinPool] zkVerify preflight attempt ${attempt}/${maxAttempts} for chain ${params.chainId}`
+      );
+
+      const response = await fetch('/api/zkverify/preflight', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chainId: params.chainId,
+          verificationParams: {
+            aggregationId: params.verificationParams.aggregationId.toString(),
+            domainId: params.verificationParams.domainId.toString(),
+            merklePath: [...params.verificationParams.merklePath],
+            leaf: params.verificationParams.leaf,
+            leafCount: params.verificationParams.leafCount.toString(),
+            index: params.verificationParams.index.toString(),
+          },
+        }),
+      });
+
+      const result = await response.json().catch(() => ({ ready: false, error: 'Preflight check failed' }));
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to check proof readiness on destination chain.');
+      }
+
+      if (result.ready) {
+        console.log('[JoinPool] zkVerify preflight confirmed on destination chain');
+        return;
+      }
+
+      console.log('[JoinPool] zkVerify preflight not ready yet:', result.error || 'Awaiting destination chain publication');
+
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+
+    throw new Error(
+      'Proof is aggregated but not yet ready on the destination chain. Please wait a minute and try again.'
+    );
+  };
 
   // Reset on open
   React.useEffect(() => {
@@ -267,7 +327,7 @@ export function JoinPoolModal({
   };
 
   const handleSubmit = async () => {
-    if (!emailFile || !address || !profile?.userContractAddress) {
+    if (!emailFile || !address || !profile?.userContractAddress || !chainId) {
       setErrorMessage('Missing required data. Please connect wallet and complete profile.');
       setStep('error');
       return;
@@ -309,6 +369,12 @@ export function JoinPoolModal({
         txHash: proofResult.txHash,
       });
       setProofProgress(70);
+
+      console.log('[JoinPool] Waiting for destination-chain verifier readiness...');
+      await waitForDestinationChainReadiness({
+        chainId,
+        verificationParams: proofResult.verificationParams,
+      });
 
       // Step 2: Encrypt recipient email via TEE service
       console.log('[JoinPool] Preparing data (TEE encryption)...');

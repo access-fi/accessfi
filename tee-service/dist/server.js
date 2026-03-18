@@ -46,22 +46,23 @@ function makeStoragePath(cid) {
 }
 app.post('/encrypt', async (req, res) => {
     try {
-        const { recipientEmail, poolAddress, sellerAddress } = req.body;
-        if (!recipientEmail || !poolAddress || !sellerAddress) {
+        const { recipientEmail, poolAddress, sellerAddress, assetId } = req.body;
+        if (!recipientEmail || !sellerAddress || (!poolAddress && !assetId)) {
             return res.status(400).json({
-                error: 'Missing required fields: recipientEmail, poolAddress, sellerAddress',
+                error: 'Missing required fields: recipientEmail, sellerAddress, and either poolAddress or assetId',
             });
         }
-        if (!isAddress(poolAddress) || !isAddress(sellerAddress)) {
+        if ((poolAddress && !isAddress(poolAddress)) || !isAddress(sellerAddress)) {
             return res.status(400).json({
                 error: 'Invalid poolAddress or sellerAddress',
             });
         }
         await ensureStorageDir();
-        const dataHash = await sha256Hex(`${recipientEmail}::${poolAddress}`);
+        const canonicalId = assetId || `${sellerAddress.toLowerCase()}::${poolAddress?.toLowerCase()}`;
+        const dataHash = await sha256Hex(`${recipientEmail}::${canonicalId}`);
         const encrypted = await encryptPayload(recipientEmail);
-        const encryptedCID = `cvm_${randomUUID()}`;
-        await fs.writeFile(makeStoragePath(encryptedCID), JSON.stringify({ encryptedCID, dataHash, ...encrypted }, null, 2), 'utf8');
+        const encryptedCID = assetId || `cvm_${randomUUID()}`;
+        await fs.writeFile(makeStoragePath(encryptedCID), JSON.stringify({ encryptedCID, assetId: canonicalId, dataHash, ...encrypted }, null, 2), 'utf8');
         return res.json({
             encryptedCID,
             dataHash,
@@ -89,6 +90,27 @@ app.post('/decrypt', async (req, res) => {
     catch (error) {
         console.error('[TEE Service] decrypt error', error);
         return res.status(500).json({ error: error?.message || 'Decrypt failed' });
+    }
+});
+app.post('/decrypt-batch', async (req, res) => {
+    try {
+        const { encryptedCIDs } = req.body;
+        if (!encryptedCIDs || !Array.isArray(encryptedCIDs) || encryptedCIDs.length === 0) {
+            return res.status(400).json({
+                error: 'Missing required field: encryptedCIDs',
+            });
+        }
+        const results = await Promise.all(encryptedCIDs.map(async (encryptedCID) => {
+            const raw = await fs.readFile(makeStoragePath(encryptedCID), 'utf8');
+            const payload = JSON.parse(raw);
+            const recipientEmail = await decryptPayload(payload.iv, payload.cipher);
+            return { encryptedCID, recipientEmail };
+        }));
+        return res.json({ results });
+    }
+    catch (error) {
+        console.error('[TEE Service] decrypt-batch error', error);
+        return res.status(500).json({ error: error?.message || 'Batch decrypt failed' });
     }
 });
 app.get('/health', (_req, res) => {

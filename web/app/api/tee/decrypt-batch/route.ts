@@ -75,6 +75,15 @@ export async function POST(request: NextRequest) {
       .from(globalAssets)
       .where(inArray(globalAssets.assetId, assetIds));
 
+    if (assets.length !== assetIds.length) {
+      const found = new Set(assets.map((asset) => asset.assetId));
+      const missing = assetIds.filter((assetId) => !found.has(assetId));
+      return NextResponse.json(
+        { error: `Encrypted records missing for assets: ${missing.join(', ')}` },
+        { status: 404 }
+      );
+    }
+
     const encryptedCIDs = assets.map((asset) => asset.encryptedCID);
     const response = await fetch(`${TEE_SERVICE_URL}/decrypt-batch`, {
       method: 'POST',
@@ -83,8 +92,36 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Batch decrypt failed' }));
-      throw new Error(errorData.error || 'Batch decrypt failed');
+      const errorData = await response.json().catch(() => null);
+      console.warn('[TEE Batch Decrypt API] Batch endpoint failed, falling back to single decrypt', {
+        status: response.status,
+        error: errorData?.error || 'Unknown batch decrypt error',
+      });
+
+      const singleResults = await Promise.all(
+        encryptedCIDs.map(async (encryptedCID) => {
+          const singleResponse = await fetch(`${TEE_SERVICE_URL}/decrypt`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ encryptedCID }),
+          });
+
+          if (!singleResponse.ok) {
+            const singleError = await singleResponse.json().catch(() => null);
+            throw new Error(
+              singleError?.error || `TEE decrypt failed for ${encryptedCID}`
+            );
+          }
+
+          const singleJson = await singleResponse.json();
+          return {
+            encryptedCID,
+            recipientEmail: singleJson.recipientEmail as string,
+          };
+        })
+      );
+
+      return NextResponse.json({ assets, results: singleResults, fallbackUsed: true });
     }
 
     const result = await response.json();
