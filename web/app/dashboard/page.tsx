@@ -434,10 +434,10 @@ function OverviewTab({ address, profile, onCreatePool }: { address: string | und
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="mb-2 font-mono text-3xl font-black uppercase">
-          HELLO, {profile?.fullName || "USER"}
+        <h1 className="mb-2 text-3xl font-semibold tracking-[-0.05em] text-[#16213b]">
+          Hello, {profile?.fullName || "User"}
         </h1>
-        <p className="font-mono text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {address?.slice(0, 6)}...{address?.slice(-4)}
         </p>
       </motion.div>
@@ -462,8 +462,8 @@ function OverviewTab({ address, profile, onCreatePool }: { address: string | und
         transition={{ delay: 0.2 }}
         className="mb-8"
       >
-        <h2 className="mb-4 font-mono text-lg font-bold uppercase">
-          QUICK ACTIONS
+        <h2 className="mb-4 text-lg font-semibold tracking-[-0.03em] text-[#16213b]">
+          Quick actions
         </h2>
         <div className="grid gap-4 md:grid-cols-3">
           <ActionCard
@@ -493,13 +493,13 @@ function OverviewTab({ address, profile, onCreatePool }: { address: string | und
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <h2 className="mb-4 font-mono text-lg font-bold uppercase">
-          RECENT ACTIVITY
+        <h2 className="mb-4 text-lg font-semibold tracking-[-0.03em] text-[#16213b]">
+          Recent activity
         </h2>
-        <div className="flex min-h-[200px] items-center justify-center border-2 border-dashed border-border p-8 text-center">
+        <div className="flex min-h-[200px] items-center justify-center rounded-[24px] border border-dashed border-[#dce5f7] bg-white/70 p-8 text-center">
           <div>
             <div className="mb-3 text-4xl opacity-20">📊</div>
-            <p className="font-mono text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               No recent activity yet
             </p>
           </div>
@@ -532,10 +532,10 @@ function AccountDetailsTab({ address, profile }: { address: string | undefined; 
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="mb-2 font-mono text-3xl font-black uppercase">
-          ACCOUNT DETAILS
+        <h1 className="mb-2 text-3xl font-semibold tracking-[-0.05em] text-[#16213b]">
+          Account details
         </h1>
-        <p className="font-mono text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Your profile and contract information
         </p>
       </motion.div>
@@ -546,10 +546,10 @@ function AccountDetailsTab({ address, profile }: { address: string | undefined; 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
-          className="border-2 border-border bg-card p-6"
+          className="rounded-[24px] border border-[#dce5f7] bg-white/88 p-6 shadow-[0_14px_35px_rgba(61,86,150,0.06)]"
         >
-          <h3 className="mb-6 font-mono text-sm font-bold uppercase text-primary">
-            PROFILE INFORMATION
+          <h3 className="mb-6 text-sm font-semibold uppercase tracking-[0.2em] text-[#64748b]">
+            Profile information
           </h3>
 
           <div className="space-y-4">
@@ -576,20 +576,20 @@ function AccountDetailsTab({ address, profile }: { address: string | undefined; 
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className="border-2 border-border bg-card p-6"
+          className="rounded-[24px] border border-[#dce5f7] bg-white/88 p-6 shadow-[0_14px_35px_rgba(61,86,150,0.06)]"
         >
-          <h3 className="mb-6 font-mono text-sm font-bold uppercase text-primary">
-            CONTRACT ADDRESSES
+          <h3 className="mb-6 text-sm font-semibold uppercase tracking-[0.2em] text-[#64748b]">
+            Contract addresses
           </h3>
 
           <div className="space-y-4">
             {/* EOA Address */}
             <div>
-              <div className="mb-2 font-mono text-xs text-muted-foreground">
-                EOA (WALLET ADDRESS)
+              <div className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                EOA (wallet address)
               </div>
               <div className="flex items-center gap-2">
-                <code className="flex-1 break-all font-mono text-xs text-foreground">
+                <code className="flex-1 break-all rounded-xl bg-[#f8fbff] px-3 py-3 font-mono text-xs text-foreground">
                   {address}
                 </code>
                 <button
@@ -604,7 +604,7 @@ function AccountDetailsTab({ address, profile }: { address: string | undefined; 
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-1 font-mono text-xs text-primary"
+                  className="mt-1 text-xs text-primary"
                 >
                   ✓ Copied
                 </motion.div>
@@ -613,11 +613,11 @@ function AccountDetailsTab({ address, profile }: { address: string | undefined; 
 
             {/* User Contract Address */}
             <div>
-              <div className="mb-2 font-mono text-xs text-muted-foreground">
-                USER CONTRACT ADDRESS
+              <div className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                User contract address
               </div>
               <div className="flex items-center gap-2">
-                <code className="flex-1 break-all font-mono text-xs text-foreground">
+                <code className="flex-1 break-all rounded-xl bg-[#f8fbff] px-3 py-3 font-mono text-xs text-foreground">
                   {profile?.userContractAddress || "Not deployed"}
                 </code>
                 {profile?.userContractAddress && (
@@ -645,7 +645,7 @@ function AccountDetailsTab({ address, profile }: { address: string | undefined; 
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-1 font-mono text-xs text-primary"
+                  className="mt-1 text-xs text-primary"
                 >
                   ✓ Copied
                 </motion.div>
@@ -660,16 +660,16 @@ function AccountDetailsTab({ address, profile }: { address: string | undefined; 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="border-2 border-border bg-card p-6"
+            className="rounded-[24px] border border-[#dce5f7] bg-white/88 p-6 shadow-[0_14px_35px_rgba(61,86,150,0.06)]"
           >
-            <h3 className="mb-6 font-mono text-sm font-bold uppercase text-primary">
-              DATA INTERESTS
+            <h3 className="mb-6 text-sm font-semibold uppercase tracking-[0.2em] text-[#64748b]">
+              Data interests
             </h3>
             <div className="flex flex-wrap gap-2">
               {profile.dataToBuy.split(",").map((item: string, idx: number) => (
                 <span
                   key={idx}
-                  className="border border-primary/50 bg-primary/10 px-3 py-1 font-mono text-xs uppercase text-primary"
+                  className="rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-3 py-1 text-xs font-medium text-[#2563eb]"
                 >
                   {item.trim()}
                 </span>
@@ -684,16 +684,16 @@ function AccountDetailsTab({ address, profile }: { address: string | undefined; 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="border-2 border-border bg-card p-6"
+            className="rounded-[24px] border border-[#dce5f7] bg-white/88 p-6 shadow-[0_14px_35px_rgba(61,86,150,0.06)]"
           >
-            <h3 className="mb-6 font-mono text-sm font-bold uppercase text-primary">
-              DATA OFFERINGS
+            <h3 className="mb-6 text-sm font-semibold uppercase tracking-[0.2em] text-[#64748b]">
+              Data offerings
             </h3>
             <div className="flex flex-wrap gap-2">
               {profile.dataToSell.split(",").map((item: string, idx: number) => (
                 <span
                   key={idx}
-                  className="border border-accent/50 bg-accent/10 px-3 py-1 font-mono text-xs uppercase text-accent"
+                  className="rounded-full border border-[#cfe7ff] bg-[#f5f9ff] px-3 py-1 text-xs font-medium text-[#3b82f6]"
                 >
                   {item.trim()}
                 </span>
@@ -709,8 +709,8 @@ function AccountDetailsTab({ address, profile }: { address: string | undefined; 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="mb-1 font-mono text-xs text-muted-foreground">{label}</div>
-      <div className="font-mono text-sm font-bold text-foreground">{value}</div>
+      <div className="mb-1 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
+      <div className="text-sm font-medium text-foreground">{value}</div>
     </div>
   );
 }
@@ -734,7 +734,7 @@ function CreatedPoolsTab({ onCreatePool }: { onCreatePool: () => void }) {
       >
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-mono text-3xl font-black uppercase">MY POOLS</h1>
+            <h1 className="text-3xl font-semibold tracking-[-0.05em] text-[#16213b]">My requests</h1>
             <p className="mt-2 text-muted-foreground">
               Pools you&apos;ve created ({poolAddresses.length})
             </p>
@@ -742,9 +742,9 @@ function CreatedPoolsTab({ onCreatePool }: { onCreatePool: () => void }) {
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <button
               onClick={onCreatePool}
-              className="brutal-shadow border-2 border-primary bg-primary px-6 py-3 font-mono text-xs font-bold uppercase text-primary-foreground transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+              className="rounded-xl bg-[#2563eb] px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-[#1d4ed8]"
             >
-              + CREATE
+              Create request
             </button>
           </motion.div>
         </div>
@@ -772,17 +772,17 @@ function CreatedPoolsTab({ onCreatePool }: { onCreatePool: () => void }) {
             ))}
           </div>
         ) : (
-          <div className="flex min-h-[300px] flex-col items-center justify-center border-2 border-dashed border-border p-12 text-center">
+          <div className="flex min-h-[300px] flex-col items-center justify-center rounded-[24px] border border-dashed border-[#dce5f7] bg-white/72 p-12 text-center">
             <div className="mb-4 text-6xl opacity-20">💼</div>
-            <h3 className="mb-2 font-mono text-xl font-bold uppercase">No Pools Created</h3>
+            <h3 className="mb-2 text-xl font-semibold text-[#16213b]">No requests created yet</h3>
             <p className="mb-6 text-sm text-muted-foreground">
               Create your first data pool to start collecting verified data
             </p>
             <button
               onClick={onCreatePool}
-              className="brutal-shadow border-2 border-primary bg-primary px-6 py-3 font-mono text-sm font-bold uppercase text-primary-foreground transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+              className="rounded-xl bg-[#2563eb] px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-[#1d4ed8]"
             >
-              + CREATE FIRST POOL
+              Create first request
             </button>
           </div>
         )}
@@ -810,9 +810,7 @@ function JoinedPoolsTab({ profile }: { profile: { userContractAddress?: string }
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="font-mono text-3xl font-black uppercase">
-          JOINED POOLS
-        </h1>
+        <h1 className="text-3xl font-semibold tracking-[-0.05em] text-[#16213b]">Joined requests</h1>
         <p className="mt-2 text-muted-foreground">
           Pools where you&apos;re contributing data ({poolAddresses.length})
         </p>
@@ -840,17 +838,17 @@ function JoinedPoolsTab({ profile }: { profile: { userContractAddress?: string }
             ))}
           </div>
         ) : (
-          <div className="flex min-h-[300px] flex-col items-center justify-center border-2 border-dashed border-border p-12 text-center">
+          <div className="flex min-h-[300px] flex-col items-center justify-center rounded-[24px] border border-dashed border-[#dce5f7] bg-white/72 p-12 text-center">
             <div className="mb-4 text-6xl opacity-20">🤝</div>
-            <h3 className="mb-2 font-mono text-xl font-bold uppercase">No Pools Joined</h3>
+            <h3 className="mb-2 text-xl font-semibold text-[#16213b]">No requests joined yet</h3>
             <p className="mb-6 text-sm text-muted-foreground">
               Browse available pools and join to start selling your data
             </p>
             <Link
               href="/pools"
-              className="brutal-shadow border-2 border-primary bg-primary px-6 py-3 font-mono text-sm font-bold uppercase text-primary-foreground transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+              className="rounded-xl bg-[#2563eb] px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-[#1d4ed8]"
             >
-              BROWSE POOLS
+              Browse requests
             </Link>
           </div>
         )}
@@ -874,8 +872,8 @@ function ActivityTab() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="mb-2 font-mono text-3xl font-black uppercase">ACTIVITY</h1>
-        <p className="font-mono text-sm text-muted-foreground">Your recent transactions</p>
+        <h1 className="mb-2 text-3xl font-semibold tracking-[-0.05em] text-[#16213b]">Activity</h1>
+        <p className="text-sm text-muted-foreground">Your recent transactions</p>
       </motion.div>
 
       {/* TODO: Load activity from blockchain */}
@@ -884,9 +882,9 @@ function ActivityTab() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <div className="flex min-h-[300px] flex-col items-center justify-center border-2 border-dashed border-border p-12 text-center">
+        <div className="flex min-h-[300px] flex-col items-center justify-center rounded-[24px] border border-dashed border-[#dce5f7] bg-white/72 p-12 text-center">
           <div className="mb-4 text-6xl opacity-20">⚡</div>
-          <h3 className="mb-2 font-mono text-xl font-bold uppercase">No Activity Yet</h3>
+          <h3 className="mb-2 text-xl font-semibold text-[#16213b]">No activity yet</h3>
           <p className="text-sm text-muted-foreground">
             Your transaction history will appear here
           </p>
@@ -960,8 +958,8 @@ function PurchasesTab({ address, chainId }: { address: string | undefined; chain
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="font-mono text-3xl font-black uppercase">
-          ASSET ACCESS
+        <h1 className="text-3xl font-semibold tracking-[-0.05em] text-[#16213b]">
+          Asset access
         </h1>
         <p className="mt-2 text-muted-foreground">
           Purchased verified assets and data you have contributed to the network
@@ -971,7 +969,7 @@ function PurchasesTab({ address, chainId }: { address: string | undefined; chain
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2].map((i) => (
-            <div key={i} className="border-2 border-border bg-card p-6 animate-pulse">
+            <div key={i} className="rounded-[24px] border border-[#dce5f7] bg-white/88 p-6 animate-pulse">
               <div className="h-6 bg-muted mb-4 w-1/3" />
               <div className="h-4 bg-muted mb-2 w-1/2" />
             </div>
@@ -1032,41 +1030,41 @@ function AssetSection({
   return (
     <div className="space-y-6">
       <div>
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-primary">{title}</p>
-        <h2 className="mt-2 font-mono text-2xl font-black uppercase text-foreground">{subtitle}</h2>
+        <p className="text-xs font-medium uppercase tracking-[0.22em] text-[#64748b]">{title}</p>
+        <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[#16213b]">{subtitle}</h2>
       </div>
 
       {items.length === 0 ? (
-        <div className="flex min-h-[240px] flex-col items-center justify-center border-2 border-dashed border-border p-8 text-center">
+        <div className="flex min-h-[240px] flex-col items-center justify-center rounded-[24px] border border-dashed border-[#dce5f7] bg-white/72 p-8 text-center">
           <div className="mb-4 text-5xl opacity-20">◆</div>
-          <h3 className="mb-2 font-mono text-lg font-bold uppercase">{emptyTitle}</h3>
+          <h3 className="mb-2 text-lg font-semibold text-[#16213b]">{emptyTitle}</h3>
           <p className="max-w-md text-sm text-muted-foreground">{emptyDescription}</p>
         </div>
       ) : (
         <div className="space-y-4">
           {items.map((asset) => (
-            <div key={asset.assetId} className="border-2 border-border bg-card p-5 transition-all hover:border-primary">
+            <div key={asset.assetId} className="rounded-[24px] border border-[#dce5f7] bg-white/90 p-5 shadow-[0_14px_35px_rgba(61,86,150,0.05)] transition-all hover:border-[#bfd3ff]">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="font-mono text-xs uppercase text-primary">{asset.proofTypeId}</p>
-                  <h3 className="mt-1 font-mono text-lg font-bold uppercase">{asset.category}</h3>
+                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#64748b]">{asset.proofTypeId}</p>
+                  <h3 className="mt-1 text-lg font-semibold text-[#16213b]">{asset.category}</h3>
                   {asset.subtype && <p className="mt-1 text-sm text-muted-foreground">{asset.subtype}</p>}
                 </div>
                 <button
                   onClick={() => onSelect(asset)}
-                  className="border-2 border-primary bg-primary/10 px-4 py-2 font-mono text-xs font-bold uppercase text-primary transition-all hover:bg-primary hover:text-primary-foreground"
+                  className="rounded-xl border border-[#bfd3ff] bg-[#eff6ff] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#2563eb] transition-all hover:border-[#93c5fd] hover:bg-[#dbeafe]"
                 >
                   {actionLabel}
                 </button>
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
                 {Object.entries(asset.searchableAttributes || {}).slice(0, 4).map(([key, value]) => (
-                  <span key={key} className="border border-primary/30 bg-primary/5 px-2 py-1 font-mono text-xs">
+                  <span key={key} className="rounded-full border border-[#dbe5f4] bg-[#f8fbff] px-2.5 py-1 text-xs text-[#52627f]">
                     {key}: {String(value)}
                   </span>
                 ))}
               </div>
-              <div className="mt-4 flex flex-wrap gap-4 font-mono text-xs text-muted-foreground">
+              <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
                 <span>Asset: {asset.assetId.slice(0, 10)}...{asset.assetId.slice(-8)}</span>
                 {asset.basePrice && <span>Price: {asset.basePrice} ETH</span>}
                 {asset.resalePolicy && <span>Resale: {asset.resalePolicy.replace('_', ' ')}</span>}
@@ -1132,56 +1130,56 @@ function AssetDetailModal({ asset, chainId, canDecrypt, onClose }: { asset: Dash
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-          className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden border-2 border-border bg-background"
+          className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-[28px] border border-[#dce5f7] bg-white shadow-[0_28px_80px_rgba(28,49,86,0.16)]"
         >
         {/* Header */}
-        <div className="flex items-center justify-between border-b-2 border-border bg-primary p-6">
-          <div className="text-primary-foreground">
-            <h2 className="font-mono text-xl font-black uppercase">
-              ASSET DATA
+        <div className="flex items-center justify-between border-b border-[#dce5f7] bg-[linear-gradient(180deg,#f8fbff_0%,#eff5ff_100%)] p-6">
+          <div className="text-[#16213b]">
+            <h2 className="text-xl font-semibold tracking-[-0.04em]">
+              Asset data
             </h2>
-            <p className="mt-1 text-xs opacity-80">
+            <p className="mt-1 text-xs text-[#6b7280]">
               {asset.assetId.slice(0, 10)}...{asset.assetId.slice(-8)}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="border-2 border-primary-foreground/30 bg-primary-foreground/10 p-2 transition-all hover:bg-primary-foreground/20"
+            className="rounded-xl border border-[#dce5f7] bg-white p-2 text-[#16213b] transition-all hover:border-[#bfd3ff] hover:bg-[#f8fbff]"
           >
-            <X className="h-5 w-5 text-primary-foreground" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Content */}
         <div className="max-h-[65vh] overflow-y-auto">
-            <div className="divide-y-2 divide-border">
+            <div className="divide-y divide-[#eef2f7]">
               {/* Metadata Section */}
-              <div className="p-6 bg-card">
-                <h3 className="font-mono text-xs font-bold uppercase text-muted-foreground mb-4">
-                  RECORD INFO
+              <div className="bg-white p-6">
+                <h3 className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                  Record info
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <span className="font-mono text-xs text-muted-foreground block mb-1">CATEGORY</span>
-                    <span className="font-mono text-sm text-foreground">
+                    <span className="mb-1 block text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Category</span>
+                    <span className="text-sm text-foreground">
                       {asset.category}
                     </span>
                   </div>
                   <div>
-                    <span className="font-mono text-xs text-muted-foreground block mb-1">VERIFIED</span>
-                    <span className="font-mono text-sm text-foreground">
+                    <span className="mb-1 block text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Verified</span>
+                    <span className="text-sm text-foreground">
                       {asset.verifiedAt ? new Date(asset.verifiedAt).toLocaleString() : 'Unknown'}
                     </span>
                   </div>
                   <div>
-                    <span className="font-mono text-xs text-muted-foreground block mb-1">PROOF TYPE</span>
-                    <span className="font-mono text-sm text-foreground">
+                    <span className="mb-1 block text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Proof type</span>
+                    <span className="text-sm text-foreground">
                       {asset.proofTypeId}
                     </span>
                   </div>
                   <div>
-                    <span className="font-mono text-xs text-muted-foreground block mb-1">DATA REF</span>
-                    <span className="font-mono text-sm text-foreground">
+                    <span className="mb-1 block text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Data ref</span>
+                    <span className="text-sm text-foreground">
                       {encryptedCID.slice(0, 10)}...{encryptedCID.slice(-8)}
                     </span>
                   </div>
@@ -1189,10 +1187,10 @@ function AssetDetailModal({ asset, chainId, canDecrypt, onClose }: { asset: Dash
               </div>
 
               <div className="p-6">
-                <h3 className="font-mono text-xs font-bold uppercase text-muted-foreground mb-4">
+                <h3 className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
                   {displayEmail ? 'DECRYPTED DATA' : 'ASSET PREVIEW'}
                 </h3>
-                <div className="border-2 border-border bg-card">
+                <div className="rounded-[20px] border border-[#dce5f7] bg-[#fbfdff]">
                   <pre className="p-4 font-mono text-xs whitespace-pre-wrap break-words max-h-[300px] overflow-auto">
                     {displayEmail || JSON.stringify(asset.searchableAttributes || {}, null, 2) || 'No content available'}
                   </pre>
@@ -1205,7 +1203,7 @@ function AssetDetailModal({ asset, chainId, canDecrypt, onClose }: { asset: Dash
                     <button
                       onClick={handleDecrypt}
                       disabled={isDecrypting}
-                      className="border-2 border-primary bg-primary px-4 py-2 font-mono text-xs font-bold uppercase text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-60"
+                      className="rounded-xl bg-[#2563eb] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-all hover:bg-[#1d4ed8] disabled:opacity-60"
                     >
                       {isDecrypting ? 'DECRYPTING...' : 'DECRYPT'}
                     </button>
@@ -1226,14 +1224,14 @@ function AssetDetailModal({ asset, chainId, canDecrypt, onClose }: { asset: Dash
         </div>
 
         {/* Footer */}
-        <div className="border-t-2 border-border bg-card p-4">
+        <div className="border-t border-[#eef2f7] bg-[#fbfdff] p-4">
           <div className="flex justify-between items-center">
-            <span className="font-mono text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               Verified on-chain • AssetRegistry access
             </span>
             <button
               onClick={onClose}
-              className="border-2 border-primary bg-primary px-6 py-2 font-mono text-xs font-bold uppercase text-primary-foreground transition-all hover:bg-primary/90"
+              className="rounded-xl bg-[#2563eb] px-6 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-all hover:bg-[#1d4ed8]"
             >
               CLOSE
             </button>
@@ -1258,14 +1256,14 @@ function StatCard({
 }) {
   return (
     <motion.div
-      whileHover={{ scale: 1.02, borderColor: "var(--color-primary)" }}
+      whileHover={{ scale: 1.02, borderColor: "#bfd3ff" }}
       transition={{ type: "spring", stiffness: 300 }}
-      className="border-2 border-border bg-card p-6 transition-colors"
+      className="rounded-[24px] border border-[#dce5f7] bg-white/90 p-6 shadow-[0_14px_35px_rgba(61,86,150,0.05)] transition-colors"
     >
-      <div className="mb-2 font-mono text-xs text-muted-foreground">{label}</div>
-      <div className="mb-2 font-mono text-3xl font-black">{value}</div>
+      <div className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
+      <div className="mb-2 text-3xl font-semibold tracking-[-0.04em] text-[#16213b]">{value}</div>
       <div
-        className={`font-mono text-xs ${positive ? "text-primary" : "text-destructive"}`}
+        className={`text-xs font-medium ${positive ? "text-primary" : "text-destructive"}`}
       >
         {change}
       </div>
@@ -1291,17 +1289,17 @@ function ActionCard({
     <motion.div
       whileHover={{ scale: 1.02, borderColor: "var(--color-primary)" }}
       whileTap={{ scale: 0.98 }}
-      className="group border-2 border-border bg-card p-6 transition-all hover:bg-primary/5"
+      className="group rounded-[24px] border border-[#dce5f7] bg-white/90 p-6 shadow-[0_14px_35px_rgba(61,86,150,0.05)] transition-all hover:border-[#bfd3ff] hover:bg-[#fbfdff]"
     >
       <motion.div
         whileHover={{ rotate: [0, -10, 10, -10, 0] }}
         transition={{ duration: 0.5 }}
-        className="mb-4 flex h-12 w-12 items-center justify-center border-2 border-foreground bg-foreground font-mono text-2xl text-background transition-all group-hover:border-primary group-hover:bg-primary"
+        className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#dce5f7] bg-[#f8fbff] text-base font-semibold text-[#16213b] transition-all group-hover:border-[#bfd3ff] group-hover:bg-[#eff6ff] group-hover:text-[#2563eb]"
       >
         {icon}
       </motion.div>
-      <h3 className="mb-2 font-mono text-sm font-bold uppercase">{title}</h3>
-      <p className="text-xs text-muted-foreground">{description}</p>
+      <h3 className="mb-2 text-base font-semibold text-[#16213b]">{title}</h3>
+      <p className="text-sm text-muted-foreground">{description}</p>
     </motion.div>
   );
 

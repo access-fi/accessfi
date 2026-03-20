@@ -89,16 +89,16 @@ function FilterGroup({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="rounded-[18px] border border-[#dce5f7] bg-white">
+    <div className="overflow-hidden rounded-2xl border border-[#dfe5f1] bg-white shadow-[0_1px_0_rgba(15,23,42,0.03)]">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center justify-between px-4 py-4 text-left"
+        className="flex w-full items-center justify-between px-4 py-3.5 text-left"
       >
-        <span className="text-sm font-medium text-[#1d2942]">{title}</span>
-        <ChevronDown className={`h-4 w-4 text-[#8091b3] transition-transform ${open ? "rotate-180" : ""}`} />
+        <span className="text-[15px] font-medium text-[#1f2937]">{title}</span>
+        <ChevronDown className={`h-4 w-4 text-[#94a3b8] transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
-      {open ? <div className="border-t border-[#edf2fb] px-4 py-4">{children}</div> : null}
+      {open ? <div className="border-t border-[#eef2f7] px-4 py-4">{children}</div> : null}
     </div>
   );
 }
@@ -207,38 +207,37 @@ export default function InventoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#edf3ff] text-[#101828]">
-      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(133,160,215,0.10)_1px,transparent_1px),linear-gradient(90deg,rgba(133,160,215,0.10)_1px,transparent_1px)] bg-[size:38px_38px]" />
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(120,159,255,0.14),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(111,145,255,0.1),transparent_24%)]" />
+    <div className="min-h-screen bg-[#f4f7fb] text-[#101828]">
+      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:42px_42px]" />
 
       <div className="relative z-10">
         <Header />
 
         <main className="mx-auto flex w-full max-w-[98rem] flex-col px-4 pb-10 pt-5 md:px-6 lg:px-8">
-          <section className="rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,#e7f0ff_0%,#edf4ff_55%,#f6f9ff_100%)] shadow-[0_24px_80px_rgba(76,104,173,0.14)]">
-            <div className="border-b border-white/70 px-5 py-4 md:px-7">
+          <section className="overflow-hidden rounded-[30px] border border-[#dce3ee] bg-white shadow-[0_24px_80px_rgba(52,72,111,0.08)]">
+            <div className="border-b border-[#edf1f5] px-5 py-4 md:px-7">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <p className="text-sm font-medium text-[#6d82a8]">Verified Inventory</p>
-                  <h1 className="mt-1 text-[2rem] font-semibold tracking-[-0.06em] text-[#13203b] md:text-[2.5rem]">
-                    Browse what the network already verifies.
+                  <p className="text-sm font-medium text-[#64748b]">Verified inventory</p>
+                  <h1 className="mt-1 text-[2rem] font-semibold tracking-[-0.05em] text-[#111827] md:text-[2.35rem]">
+                    Preview verified supply before you commit.
                   </h1>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <div className="flex items-center gap-2 rounded-2xl border border-[#d8e2f8] bg-white px-3 py-3 text-sm text-[#5f6f92] shadow-[0_12px_28px_rgba(61,86,150,0.08)] sm:min-w-[320px]">
-                    <Search className="h-4 w-4 text-[#7f90b3]" />
+                  <div className="flex items-center gap-2 rounded-xl border border-[#d9e2ef] bg-[#fafcff] px-3 py-3 text-sm text-[#4b5563] sm:min-w-[320px]">
+                    <Search className="h-4 w-4 text-[#94a3b8]" />
                     <input
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
                       placeholder="Search category, subtype, or proof"
-                      className="w-full bg-transparent outline-none placeholder:text-[#9aa9c5]"
+                      className="w-full bg-transparent outline-none placeholder:text-[#94a3b8]"
                     />
                   </div>
                   <div className="flex gap-2">
-                    <button className="rounded-2xl border border-[#d8e2f8] bg-white px-4 py-3 text-sm font-medium text-[#21314d]">
+                    <button className="rounded-xl border border-[#d9e2ef] bg-white px-4 py-3 text-sm font-medium text-[#21314d]">
                       Past searches
                     </button>
-                    <button className="rounded-2xl border border-[#d8e2f8] bg-white px-4 py-3 text-sm font-medium text-[#21314d]">
+                    <button className="rounded-xl border border-[#d9e2ef] bg-white px-4 py-3 text-sm font-medium text-[#21314d]">
                       Save search
                     </button>
                   </div>
@@ -247,9 +246,9 @@ export default function InventoryPage() {
             </div>
 
             <div className="grid min-h-[72vh] gap-0 xl:grid-cols-[320px_minmax(0,1fr)]">
-              <aside className="border-r border-[#dfe7f8] bg-white/72 px-4 py-4">
+              <aside className="border-r border-[#edf1f5] bg-[#fbfcfe] px-4 py-4">
                 <div className="mb-4 flex items-center gap-2 px-2 text-sm font-semibold text-[#1d2942]">
-                  <SlidersHorizontal className="h-4 w-4 text-[#4b74ff]" />
+                  <SlidersHorizontal className="h-4 w-4 text-[#64748b]" />
                   Refine with filters
                 </div>
 
@@ -262,8 +261,8 @@ export default function InventoryPage() {
                           onClick={() => setCategoryFilter(option)}
                           className={`rounded-full px-3 py-2 text-sm transition-all ${
                             categoryFilter === option
-                              ? "bg-[#4472ff] text-white shadow-[0_10px_24px_rgba(68,114,255,0.22)]"
-                              : "border border-[#dce5f7] bg-[#f8fbff] text-[#617395]"
+                              ? "bg-[#2563eb] text-white shadow-[0_10px_24px_rgba(37,99,235,0.18)]"
+                              : "border border-[#dde5f0] bg-white text-[#4b5563]"
                           }`}
                         >
                           {option}
@@ -280,12 +279,12 @@ export default function InventoryPage() {
                           onClick={() => setFreshnessFilter(option)}
                           className={`flex w-full items-center justify-between rounded-2xl px-3 py-3 text-sm transition-all ${
                             freshnessFilter === option
-                              ? "bg-[#eef4ff] text-[#173059] ring-1 ring-[#bdd0ff]"
-                              : "bg-[#f8fbff] text-[#617395] hover:bg-white"
+                              ? "bg-[#eef4ff] text-[#173059] ring-1 ring-[#bfd3ff]"
+                              : "bg-white text-[#4b5563] hover:bg-[#f8fafc]"
                           }`}
                         >
                           {option}
-                          {freshnessFilter === option ? <span className="h-2.5 w-2.5 rounded-full bg-[#4472ff]" /> : null}
+                          {freshnessFilter === option ? <span className="h-2.5 w-2.5 rounded-full bg-[#2563eb]" /> : null}
                         </button>
                       ))}
                     </div>
@@ -299,12 +298,12 @@ export default function InventoryPage() {
                           onClick={() => setPrivacyFilter(option)}
                           className={`flex w-full items-center justify-between rounded-2xl px-3 py-3 text-sm transition-all ${
                             privacyFilter === option
-                              ? "bg-[#eef4ff] text-[#173059] ring-1 ring-[#bdd0ff]"
-                              : "bg-[#f8fbff] text-[#617395] hover:bg-white"
+                              ? "bg-[#eef4ff] text-[#173059] ring-1 ring-[#bfd3ff]"
+                              : "bg-white text-[#4b5563] hover:bg-[#f8fafc]"
                           }`}
                         >
                           {option}
-                          {privacyFilter === option ? <span className="h-2.5 w-2.5 rounded-full bg-[#4472ff]" /> : null}
+                          {privacyFilter === option ? <span className="h-2.5 w-2.5 rounded-full bg-[#2563eb]" /> : null}
                         </button>
                       ))}
                     </div>
@@ -317,13 +316,13 @@ export default function InventoryPage() {
               </aside>
 
               <section className="flex min-h-0 flex-col bg-white">
-                <div className="flex items-center justify-between border-b border-[#e5ebf8] px-5 py-4">
+                <div className="flex items-center justify-between border-b border-[#edf1f5] px-5 py-4">
                   <div>
-                    <p className="text-sm font-semibold text-[#13203b]">Preview</p>
-                    <p className="mt-1 text-xs text-[#7e8ead]">Showing {filteredAssets.length} verified results</p>
+                    <p className="text-sm font-semibold text-[#111827]">Preview</p>
+                    <p className="mt-1 text-xs text-[#6b7280]">Showing {filteredAssets.length} verified results</p>
                   </div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-[#f4f8ff] px-3 py-2 text-xs font-medium text-[#5f74a0]">
-                    <Sparkles className="h-3.5 w-3.5 text-[#4472ff]" />
+                  <div className="inline-flex items-center gap-2 rounded-full bg-[#f8fafc] px-3 py-2 text-xs font-medium text-[#667085]">
+                    <Sparkles className="h-3.5 w-3.5 text-[#64748b]" />
                     Inventory first, request gaps only
                   </div>
                 </div>
@@ -331,7 +330,7 @@ export default function InventoryPage() {
                 <div className="min-h-0 flex-1 overflow-auto">
                   <table className="min-w-full border-separate border-spacing-0 text-left">
                     <thead className="sticky top-0 z-10 bg-white">
-                      <tr className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8091b3]">
+                      <tr className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#94a3b8]">
                         <th className="border-b border-[#e5ebf8] px-5 py-4">#</th>
                         <th className="border-b border-[#e5ebf8] px-5 py-4">Signal</th>
                         <th className="border-b border-[#e5ebf8] px-5 py-4">Proof</th>
@@ -360,28 +359,28 @@ export default function InventoryPage() {
                             <tr
                               key={asset.assetId}
                               onClick={() => setSelectedAssetId(asset.assetId)}
-                              className={`cursor-pointer transition-colors ${selected ? "bg-[#f4f8ff]" : "hover:bg-[#f9fbff]"}`}
+                              className={`cursor-pointer transition-colors ${selected ? "bg-[#f8fbff]" : "hover:bg-[#fafcff]"}`}
                             >
-                              <td className="border-b border-[#edf2fb] px-5 py-4 text-sm text-[#7082a5]">{index + 1}</td>
-                              <td className="border-b border-[#edf2fb] px-5 py-4 align-top">
-                                <div className="font-medium text-[#13203b]">{asset.category}</div>
-                                <div className="mt-1 text-xs text-[#7f90b3]">{asset.subtype || "Verified signal"}</div>
+                              <td className="border-b border-[#eef2f7] px-5 py-3 text-sm text-[#94a3b8]">{index + 1}</td>
+                              <td className="border-b border-[#eef2f7] px-5 py-3 align-top">
+                                <div className="font-medium text-[#111827]">{asset.category}</div>
+                                <div className="mt-0.5 text-xs text-[#6b7280]">{asset.subtype || "Verified signal"}</div>
                               </td>
-                              <td className="border-b border-[#edf2fb] px-5 py-4 text-sm text-[#20314d]">{normalizeProofLabel(asset.proofTypeId)}</td>
-                              <td className="border-b border-[#edf2fb] px-5 py-4">
-                                <span className="inline-flex rounded-full bg-[#edf4ff] px-2.5 py-1 text-xs font-medium text-[#4472ff]">
+                              <td className="border-b border-[#eef2f7] px-5 py-3 text-sm text-[#1f2937]">{normalizeProofLabel(asset.proofTypeId)}</td>
+                              <td className="border-b border-[#eef2f7] px-5 py-3">
+                                <span className="inline-flex rounded-full bg-[#eff6ff] px-2.5 py-1 text-xs font-medium text-[#2563eb]">
                                   {privacyLabel}
                                 </span>
                               </td>
-                              <td className="border-b border-[#edf2fb] px-5 py-4 text-sm text-[#617395]">
+                              <td className="border-b border-[#eef2f7] px-5 py-3 text-sm text-[#6b7280]">
                                 {asset.resalePolicy === "exclusive" ? "Single workflow" : "Reusable inventory"}
                               </td>
-                              <td className="border-b border-[#edf2fb] px-5 py-4 text-sm text-[#617395]">{formatRelative(asset.verifiedAt)}</td>
-                              <td className="border-b border-[#edf2fb] px-5 py-4 text-right">
-                                <div className="font-medium text-[#13203b]">{asset.basePrice} ETH</div>
-                                {purchased ? <div className="mt-1 text-xs text-[#4472ff]">Accessible</div> : null}
+                              <td className="border-b border-[#eef2f7] px-5 py-3 text-sm text-[#6b7280]">{formatRelative(asset.verifiedAt)}</td>
+                              <td className="border-b border-[#eef2f7] px-5 py-3 text-right">
+                                <div className="font-medium text-[#111827]">{asset.basePrice} ETH</div>
+                                {purchased ? <div className="mt-1 text-xs text-[#2563eb]">Accessible</div> : null}
                               </td>
-                              <td className="border-b border-[#edf2fb] px-5 py-4 text-right">
+                              <td className="border-b border-[#eef2f7] px-5 py-3 text-right">
                                 <button
                                   type="button"
                                   onClick={(event) => {
@@ -394,8 +393,8 @@ export default function InventoryPage() {
                                   disabled={!isConnected || purchased || isBuying || busyAssetId === asset.assetId}
                                   className={`rounded-full px-3 py-2 text-xs font-semibold transition-all ${
                                     purchased
-                                      ? "bg-[#eef4ff] text-[#4472ff]"
-                                      : "bg-[#4472ff] text-white hover:bg-[#3766f2] disabled:cursor-not-allowed disabled:bg-[#c8d7ff]"
+                                      ? "bg-[#eef4ff] text-[#2563eb]"
+                                      : "bg-[#2563eb] text-white hover:bg-[#1d4ed8] disabled:cursor-not-allowed disabled:bg-[#cbd5e1]"
                                   }`}
                                 >
                                   {purchased ? "Selected" : busyAssetId === asset.assetId ? "Unlocking…" : "Unlock"}
@@ -409,23 +408,23 @@ export default function InventoryPage() {
                   </table>
                 </div>
 
-                <div className="border-t border-[#e5ebf8] bg-[#fbfcff] px-5 py-4">
+                <div className="border-t border-[#edf1f5] bg-[#fbfcfe] px-5 py-4">
                   {selectedAsset ? (
                     <div className="grid gap-4 xl:grid-cols-[1.2fr_1fr_auto] xl:items-center">
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-semibold text-[#13203b]">{selectedAsset.category}</span>
-                          <span className="rounded-full bg-[#edf4ff] px-2.5 py-1 text-xs font-medium text-[#4472ff]">
+                          <span className="text-sm font-semibold text-[#111827]">{selectedAsset.category}</span>
+                          <span className="rounded-full bg-[#eff6ff] px-2.5 py-1 text-xs font-medium text-[#2563eb]">
                             {normalizeProofLabel(selectedAsset.proofTypeId)}
                           </span>
                           {purchasedIds.has(selectedAsset.assetId) ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-[#edf4ff] px-2.5 py-1 text-xs font-medium text-[#4472ff]">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-[#eff6ff] px-2.5 py-1 text-xs font-medium text-[#2563eb]">
                               <CheckCircle2 className="h-3.5 w-3.5" />
                               Accessible
                             </span>
                           ) : null}
                         </div>
-                        <p className="mt-2 text-sm leading-7 text-[#617395]">
+                        <p className="mt-2 text-sm leading-7 text-[#6b7280]">
                           Visible before unlock: {Object.entries(selectedAsset.searchableAttributes || {})
                             .slice(0, 3)
                             .map(([key, value]) => `${key}: ${String(value)}`)
@@ -433,17 +432,17 @@ export default function InventoryPage() {
                         </p>
                       </div>
 
-                      <div className="rounded-[20px] border border-[#dfe7f8] bg-white px-4 py-4">
-                        <div className="flex items-center justify-between text-sm"><span className="text-[#7f90b3]">Delivery</span><span className="font-medium text-[#13203b]">TEE encrypted</span></div>
-                        <div className="mt-2 flex items-center justify-between text-sm"><span className="text-[#7f90b3]">Freshness</span><span className="font-medium text-[#13203b]">{formatRelative(selectedAsset.verifiedAt)}</span></div>
-                        <div className="mt-2 flex items-center justify-between text-sm"><span className="text-[#7f90b3]">Price</span><span className="font-medium text-[#13203b]">{selectedAsset.basePrice} ETH</span></div>
+                      <div className="rounded-[20px] border border-[#e2e8f0] bg-white px-4 py-4">
+                        <div className="flex items-center justify-between text-sm"><span className="text-[#94a3b8]">Delivery</span><span className="font-medium text-[#111827]">TEE encrypted</span></div>
+                        <div className="mt-2 flex items-center justify-between text-sm"><span className="text-[#94a3b8]">Freshness</span><span className="font-medium text-[#111827]">{formatRelative(selectedAsset.verifiedAt)}</span></div>
+                        <div className="mt-2 flex items-center justify-between text-sm"><span className="text-[#94a3b8]">Price</span><span className="font-medium text-[#111827]">{selectedAsset.basePrice} ETH</span></div>
                       </div>
 
                       <div className="flex flex-col gap-2 xl:min-w-[220px]">
                         <Button
                           onClick={() => purchaseAsset(selectedAsset.assetId)}
                           disabled={!isConnected || isBuying || busyAssetId === selectedAsset.assetId || purchasedIds.has(selectedAsset.assetId)}
-                          className="h-12 rounded-2xl bg-[#4472ff] text-sm font-semibold text-white hover:bg-[#3766f2]"
+                          className="h-12 rounded-xl bg-[#2563eb] text-sm font-semibold text-white hover:bg-[#1d4ed8]"
                         >
                           {purchasedIds.has(selectedAsset.assetId)
                             ? "Already accessible"
