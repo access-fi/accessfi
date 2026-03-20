@@ -321,7 +321,11 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl border-2 border-border bg-background p-0 font-mono">
+      <DialogContent
+        onInteractOutside={(event) => event.preventDefault()}
+        onEscapeKeyDown={(event) => event.preventDefault()}
+        className="max-h-[92vh] max-w-5xl overflow-hidden rounded-[30px] border border-white/80 bg-[linear-gradient(180deg,#f9fbff_0%,#f2f6ff_100%)] p-0 shadow-[0_30px_90px_rgba(79,124,255,0.16)]"
+      >
         <AnimatePresence mode="wait">
           {step === 'form' && (
             <motion.div
@@ -332,38 +336,42 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
               className="max-h-[90vh] overflow-y-auto"
             >
               {/* Header */}
-              <div className="sticky top-0 z-10 flex items-center justify-between border-b-2 border-border bg-background p-6">
+              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#dce6f8] bg-[rgba(247,250,255,0.92)] p-6 backdrop-blur-xl">
                 <div>
-                  <h2 className="text-2xl font-black uppercase">Create Data Pool</h2>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Set up a new pool to collect verified data
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8aaa]">
+                    Request coverage
+                  </p>
+                  <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em] text-[#18233f]">Create a verified request</h2>
+                  <p className="mt-2 text-sm text-[#64748b]">
+                    Define the signal you need, the proof requirements, and the budget that should unlock new verified supply.
                   </p>
                 </div>
                 <button
                   onClick={handleClose}
-                  className="transition-colors hover:text-primary"
+                  className="rounded-full border border-[#dce6f8] bg-white p-2 text-[#64748b] transition-colors hover:border-[#a5c2ff] hover:text-[#18233f]"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit(onSubmit)} className="p-6">
+              <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6 p-6 lg:grid-cols-[1fr_320px]">
+                <div>
                 {/* Pool Details Section */}
-                <div className="mb-8">
-                  <h3 className="mb-4 text-sm font-bold uppercase text-primary">
-                    Pool Details
+                <div className="mb-6 rounded-[26px] border border-[#dce6f8] bg-white/90 p-6 shadow-[0_18px_50px_rgba(32,44,63,0.05)]">
+                  <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8aaa]">
+                    Request details
                   </h3>
                   <div className="space-y-4">
                     {/* Pool Name */}
                     <div>
-                      <Label htmlFor="name" className="text-xs font-bold uppercase">
-                        Pool Name *
+                      <Label htmlFor="name" className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8aaa]">
+                        Request name
                       </Label>
                       <Input
                         id="name"
                         {...register('name')}
-                        placeholder="e.g., Health Data Pool #001"
-                        className="mt-2"
+                        placeholder="e.g., Verified waitlist demand in India"
+                        className="mt-2 h-12 rounded-2xl border-[#dce6f8] bg-[#f8fbff]"
                       />
                       {errors.name && (
                         <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>
@@ -372,14 +380,14 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
 
                     {/* Description */}
                     <div>
-                      <Label htmlFor="description" className="text-xs font-bold uppercase">
-                        Description *
+                      <Label htmlFor="description" className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8aaa]">
+                        What should be verified?
                       </Label>
                       <Textarea
                         id="description"
                         {...register('description')}
-                        placeholder="Describe what kind of data you're looking for..."
-                        className="mt-2 min-h-[80px]"
+                        placeholder="Describe the signal you need and what makes it useful once verified."
+                        className="mt-2 min-h-[96px] rounded-2xl border-[#dce6f8] bg-[#f8fbff]"
                       />
                       {errors.description && (
                         <p className="mt-1 text-xs text-destructive">
@@ -390,7 +398,7 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
 
                     {/* Data Type */}
                     <div>
-                      <Label className="text-xs font-bold uppercase">Data Type *</Label>
+                      <Label className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8aaa]">Signal category</Label>
                       <RadioGroup
                         value={watch('dataType')}
                         onValueChange={(value) => setValue('dataType', value)}
@@ -399,7 +407,7 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
                         {DATA_TYPES.map((type) => (
                           <label
                             key={type.value}
-                            className="flex cursor-pointer items-center gap-3 border-2 border-border bg-card p-3 transition-all hover:border-primary"
+                            className="flex cursor-pointer items-center gap-3 rounded-2xl border border-[#dce6f8] bg-[#f8fbff] p-4 transition-all hover:border-[#a5c2ff] hover:bg-white"
                           >
                             <RadioGroupItem value={type.value} />
                             <span className="text-sm font-semibold">{type.label}</span>
@@ -414,15 +422,15 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
                 </div>
 
                 {/* Economics Section */}
-                <div className="mb-8">
-                  <h3 className="mb-4 text-sm font-bold uppercase text-primary">
-                    Economics & Budget
+                <div className="mb-6 rounded-[26px] border border-[#dce6f8] bg-white/90 p-6 shadow-[0_18px_50px_rgba(32,44,63,0.05)]">
+                  <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8aaa]">
+                    Incentives and timing
                   </h3>
                   <div className="grid gap-4 md:grid-cols-2">
                     {/* Price Per Data */}
                     <div>
-                      <Label htmlFor="pricePerData" className="text-xs font-bold uppercase">
-                        Price Per Data (ETH) *
+                      <Label htmlFor="pricePerData" className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8aaa]">
+                        Price per verified record
                       </Label>
                       <Input
                         id="pricePerData"
@@ -430,7 +438,7 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
                         step="0.000001"
                         {...register('pricePerData')}
                         placeholder="0.01"
-                        className="mt-2"
+                        className="mt-2 h-12 rounded-2xl border-[#dce6f8] bg-[#f8fbff]"
                       />
                       {errors.pricePerData && (
                         <p className="mt-1 text-xs text-destructive">
@@ -441,8 +449,8 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
 
                     {/* Total Budget */}
                     <div>
-                      <Label htmlFor="totalBudget" className="text-xs font-bold uppercase">
-                        Total Budget (ETH) *
+                      <Label htmlFor="totalBudget" className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8aaa]">
+                        Total budget
                       </Label>
                       <Input
                         id="totalBudget"
@@ -450,7 +458,7 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
                         step="0.000001"
                         {...register('totalBudget')}
                         placeholder="1.0"
-                        className="mt-2"
+                        className="mt-2 h-12 rounded-2xl border-[#dce6f8] bg-[#f8fbff]"
                       />
                       {errors.totalBudget && (
                         <p className="mt-1 text-xs text-destructive">
@@ -461,15 +469,15 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
 
                     {/* Max Sellers */}
                     <div>
-                      <Label htmlFor="maxSellers" className="text-xs font-bold uppercase">
-                        Max Sellers *
+                      <Label htmlFor="maxSellers" className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8aaa]">
+                        Max contributors
                       </Label>
                       <Input
                         id="maxSellers"
                         type="number"
                         {...register('maxSellers')}
                         placeholder="20"
-                        className="mt-2"
+                        className="mt-2 h-12 rounded-2xl border-[#dce6f8] bg-[#f8fbff]"
                       />
                       {errors.maxSellers && (
                         <p className="mt-1 text-xs text-destructive">
@@ -480,15 +488,15 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
 
                     {/* Deadline */}
                     <div>
-                      <Label htmlFor="deadline" className="text-xs font-bold uppercase">
-                        Deadline *
+                      <Label htmlFor="deadline" className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8aaa]">
+                        Deadline
                       </Label>
                       <Input
                         id="deadline"
                         type="datetime-local"
                         {...register('deadline')}
                         min={new Date(Date.now() + 3600000).toISOString().slice(0, 16)}
-                        className="mt-2"
+                        className="mt-2 h-12 rounded-2xl border-[#dce6f8] bg-[#f8fbff]"
                       />
                       <p className="mt-1 text-xs text-muted-foreground">
                         Must be at least 1 hour in the future
@@ -504,11 +512,11 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="mt-4 border-2 border-primary/30 bg-primary/5 p-4"
+                      className="mt-4 rounded-[22px] border border-[#d9e6ff] bg-[linear-gradient(160deg,#4f7cff_0%,#7aa2ff_100%)] p-4 text-white shadow-[0_18px_42px_rgba(79,124,255,0.18)]"
                     >
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Estimated Data Points:</span>
-                        <span className="font-bold text-primary">
+                        <span className="text-white/75">Estimated verified contributors</span>
+                        <span className="font-semibold text-white">
                           ~{calculateEstimatedSellers()} sellers
                         </span>
                       </div>
@@ -517,12 +525,12 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
                 </div>
 
                 {/* Proof Requirements Section */}
-                <div className="mb-8">
-                  <h3 className="mb-4 text-sm font-bold uppercase text-primary">
-                    Proof Requirements *
+                <div className="mb-6 rounded-[26px] border border-[#dce6f8] bg-white/90 p-6 shadow-[0_18px_50px_rgba(32,44,63,0.05)]">
+                  <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8aaa]">
+                    Proof requirements
                   </h3>
-                  <p className="mb-4 text-xs text-muted-foreground">
-                    Select the proof types sellers must provide
+                  <p className="mb-4 text-sm text-[#64748b]">
+                    Choose the proofs contributors must satisfy before their data becomes part of the network.
                   </p>
                   {loadingProofTypes ? (
                     <div className="text-xs text-muted-foreground">Loading proof types...</div>
@@ -535,7 +543,7 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
                       {proofTypes.map((proof) => (
                         <label
                           key={proof.id}
-                          className="flex cursor-pointer items-start gap-3 border-2 border-border bg-card p-4 transition-all hover:border-primary"
+                          className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#dce6f8] bg-[#f8fbff] p-4 transition-all hover:border-[#a5c2ff] hover:bg-white"
                         >
                           <Checkbox
                             checked={proofRequirements.includes(proof.id)}
@@ -551,11 +559,11 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
                     </div>
                   )}
 
-                  <div className="mt-4 border-2 border-border bg-card p-4">
+                    <div className="mt-4 rounded-[22px] border border-[#dce6f8] bg-[#f8fbff] p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-xs font-bold uppercase text-primary">Custom zkEmail Proof</div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8aaa]">Custom zkEmail proof</div>
+                        <div className="text-xs text-[#64748b]">
                           Create a custom blueprint-based proof type
                         </div>
                       </div>
@@ -572,7 +580,7 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
                             id="customTitle"
                             value={customTitle}
                             onChange={(e) => setCustomTitle(e.target.value)}
-                            className="mt-2"
+                            className="mt-2 h-11 rounded-2xl border-[#dce6f8] bg-white"
                           />
                         </div>
                         <div>
@@ -581,7 +589,7 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
                             id="customDescription"
                             value={customDescription}
                             onChange={(e) => setCustomDescription(e.target.value)}
-                            className="mt-2"
+                            className="mt-2 min-h-[88px] rounded-2xl border-[#dce6f8] bg-white"
                           />
                         </div>
                         <div>
@@ -590,7 +598,7 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
                             id="customBlueprintId"
                             value={customBlueprintId}
                             onChange={(e) => setCustomBlueprintId(e.target.value)}
-                            className="mt-2"
+                            className="mt-2 h-11 rounded-2xl border-[#dce6f8] bg-white"
                             placeholder="e.g. access-fi/accessfi_email@v1"
                           />
                         </div>
@@ -625,26 +633,55 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
                     type="button"
                     onClick={handleClose}
                     variant="outline"
-                    className="flex-1"
+                    className="h-12 flex-1 rounded-2xl border-[#dce6f8] bg-white"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1"
-                    style={{ boxShadow: '6px 6px 0px rgba(0, 255, 133, 0.4)' }}
+                    className="h-12 flex-1 rounded-2xl bg-[#4f7cff] text-white shadow-[0_16px_32px_rgba(79,124,255,0.22)] hover:bg-[#416eed]"
                   >
                     {isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating...
+                        Creating request...
                       </>
                     ) : (
-                      'Create Pool'
+                      'Create request'
                     )}
                   </Button>
                 </div>
+                </div>
+
+                <aside className="h-fit rounded-[26px] border border-[#dce6f8] bg-white/92 p-5 shadow-[0_18px_50px_rgba(32,44,63,0.05)]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8aaa]">Request summary</p>
+                  <h3 className="mt-3 text-xl font-semibold tracking-[-0.04em] text-[#18233f]">
+                    This request becomes a verified intake for the network.
+                  </h3>
+                  <div className="mt-5 space-y-4 text-sm">
+                    <div className="rounded-[20px] border border-[#edf2fb] bg-[linear-gradient(180deg,#f7faff_0%,#eff5ff_100%)] p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7b8aaa]">Current setup</p>
+                      <div className="mt-3 space-y-2 text-[#64748b]">
+                        <div className="flex items-center justify-between"><span>Signal type</span><span className="font-semibold text-[#18233f]">{watch("dataType") || "Not selected"}</span></div>
+                        <div className="flex items-center justify-between"><span>Proofs selected</span><span className="font-semibold text-[#18233f]">{proofRequirements.length}</span></div>
+                        <div className="flex items-center justify-between"><span>Budget</span><span className="font-semibold text-[#18233f]">{watch("totalBudget") || "—"} ETH</span></div>
+                      </div>
+                    </div>
+                    <div className="rounded-[20px] border border-[#edf2fb] bg-[#f8fbff] p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7b8aaa]">What contributors must do</p>
+                      <p className="mt-2 text-[#64748b]">Submit data that matches your proof requirements and pricing terms.</p>
+                    </div>
+                    <div className="rounded-[20px] border border-[#edf2fb] bg-[#f8fbff] p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7b8aaa]">What the network gains</p>
+                      <p className="mt-2 text-[#64748b]">Successful verification can feed reusable supply back into inventory for future workflows.</p>
+                    </div>
+                    <div className="rounded-[20px] border border-[#edf2fb] bg-[#f8fbff] p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7b8aaa]">Why this is cleaner</p>
+                      <p className="mt-2 text-[#64748b]">You define the signal, proof, and budget once instead of coordinating validation manually.</p>
+                    </div>
+                  </div>
+                </aside>
               </form>
             </motion.div>
           )}
@@ -658,7 +695,7 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
               className="flex flex-col items-center justify-center p-12"
             >
               <Loader2 className="mb-6 h-16 w-16 animate-spin text-primary" />
-              <h3 className="mb-2 text-xl font-bold uppercase">Creating Pool...</h3>
+              <h3 className="mb-2 text-xl font-bold uppercase">Creating request...</h3>
               <p className="text-center text-sm text-muted-foreground">
                 Please confirm the transaction in your wallet
               </p>
@@ -674,9 +711,9 @@ export function CreatePoolModal({ open, onClose, onSuccess }: CreatePoolModalPro
               className="flex flex-col items-center justify-center p-12"
             >
               <CheckCircle2 className="mb-6 h-16 w-16 text-primary" />
-              <h3 className="mb-2 text-xl font-bold uppercase text-primary">Pool Created!</h3>
+              <h3 className="mb-2 text-xl font-bold uppercase text-primary">Request created!</h3>
               <p className="text-center text-sm text-muted-foreground">
-                Your data pool is now live and accepting sellers
+                Your verified request is now live and ready for contributors
               </p>
             </motion.div>
           )}

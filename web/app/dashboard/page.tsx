@@ -37,19 +37,26 @@ export default function DashboardPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-background">
-        <div className="grid-pattern fixed inset-0 opacity-30" />
+      <div className="relative min-h-screen overflow-hidden bg-[#eef4ff]">
+        <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.1),transparent_22%)]" />
+        <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:44px_44px]" />
         <Header />
         <div className="relative z-10 flex min-h-[80vh] items-center justify-center px-6">
-          <div className="text-center">
+          <div className="rounded-[28px] border border-white/80 bg-white/92 px-10 py-12 text-center shadow-[0_24px_80px_rgba(61,86,150,0.12)]">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="mb-4"
             >
-              <div className="mx-auto h-12 w-12 animate-spin border-4 border-border border-t-primary"></div>
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[radial-gradient(circle_at_35%_35%,#f7fbff,#dbe8ff)] shadow-[0_18px_45px_rgba(73,109,199,0.18)]">
+                <div className="flex gap-1">
+                  <span className="h-2.5 w-2.5 animate-bounce rounded-full bg-[#4b74ff] [animation-delay:-0.3s]" />
+                  <span className="h-2.5 w-2.5 animate-bounce rounded-full bg-[#7c96ff] [animation-delay:-0.15s]" />
+                  <span className="h-2.5 w-2.5 animate-bounce rounded-full bg-[#a8baff]" />
+                </div>
+              </div>
             </motion.div>
-            <p className="font-mono text-sm text-muted-foreground">LOADING...</p>
+            <p className="text-sm font-medium text-[#64748b]">Loading your workspace…</p>
           </div>
         </div>
       </div>
@@ -59,21 +66,20 @@ export default function DashboardPage() {
   // Not connected state
   if (!isConnected) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-background">
-        <div className="grid-pattern fixed inset-0 opacity-30" />
+      <div className="relative min-h-screen overflow-hidden bg-[#eef4ff]">
+        <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.1),transparent_22%)]" />
+        <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:44px_44px]" />
 
         <Header />
 
         <div className="relative z-10 flex min-h-[80vh] items-center justify-center px-6">
-          <div className="text-center">
+          <div className="rounded-[28px] border border-white/80 bg-white/92 px-10 py-12 text-center shadow-[0_24px_80px_rgba(61,86,150,0.12)]">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-8"
             >
-              <h1 className="mb-4 font-mono text-4xl font-black uppercase">
-                CONNECT WALLET
-              </h1>
+              <h1 className="mb-4 text-4xl font-semibold tracking-[-0.05em] text-[#16213b]">Connect your wallet</h1>
               <p className="text-muted-foreground">
                 Connect your wallet to access your dashboard
               </p>
@@ -88,9 +94,9 @@ export default function DashboardPage() {
                 {({ openConnectModal }) => (
                   <button
                     onClick={openConnectModal}
-                    className="border-2 border-primary bg-primary px-8 py-4 font-mono text-sm font-bold uppercase text-primary-foreground transition-all hover:bg-primary/90"
+                    className="rounded-2xl bg-[#4472ff] px-8 py-4 text-sm font-semibold text-white transition-all hover:bg-[#3766f2]"
                   >
-                    CONNECT WALLET
+                    Connect wallet
                   </button>
                 )}
               </ConnectButton.Custom>
@@ -104,13 +110,14 @@ export default function DashboardPage() {
   // Profile not created state - CRITICAL: Block dashboard access
   if (needsOnboarding || !profile) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-background">
-        <div className="grid-pattern fixed inset-0 opacity-30" />
+      <div className="relative min-h-screen overflow-hidden bg-[#eef4ff]">
+        <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.1),transparent_22%)]" />
+        <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:44px_44px]" />
 
         <Header />
 
         <div className="relative z-10 flex min-h-[80vh] items-center justify-center px-6">
-          <div className="max-w-2xl text-center">
+          <div className="max-w-2xl rounded-[28px] border border-white/80 bg-white/92 px-10 py-12 text-center shadow-[0_24px_80px_rgba(61,86,150,0.12)]">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -118,24 +125,22 @@ export default function DashboardPage() {
             >
               {/* Warning Icon */}
               <div className="mb-6 flex justify-center">
-                <div className="flex h-20 w-20 items-center justify-center border-4 border-primary bg-primary/10">
-                  <span className="font-mono text-4xl text-primary">!</span>
+                <div className="flex h-20 w-20 items-center justify-center rounded-[24px] border border-[#cfe0ff] bg-[#eef4ff]">
+                  <span className="text-4xl font-semibold text-[#4472ff]">!</span>
                 </div>
               </div>
 
-              <h1 className="mb-4 font-mono text-4xl font-black uppercase">
-                ACCOUNT SETUP REQUIRED
-              </h1>
+              <h1 className="mb-4 text-4xl font-semibold tracking-[-0.05em] text-[#16213b]">Finish account setup</h1>
               <p className="mb-6 text-lg text-muted-foreground">
                 Please complete your account creation to access the dashboard.
               </p>
 
               {/* Instructions */}
-              <div className="mb-8 border-2 border-border bg-card p-6 text-left">
-                <h3 className="mb-4 font-mono text-sm font-bold uppercase text-primary">
-                  WHAT YOU NEED TO DO:
+              <div className="mb-8 rounded-[24px] border border-[#dbe6fb] bg-[#f8fbff] p-6 text-left">
+                <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-[#5d73a1]">
+                  What you need to do
                 </h3>
-                <ul className="space-y-3 font-mono text-sm text-muted-foreground">
+                <ul className="space-y-3 text-sm text-muted-foreground">
                   <li className="flex items-start gap-3">
                     <span className="text-primary">1.</span>
                     <span>The onboarding modal should appear automatically</span>
@@ -164,9 +169,9 @@ export default function DashboardPage() {
             >
               <Link
                 href="/"
-                className="border-2 border-border bg-background px-8 py-4 font-mono text-sm font-bold uppercase transition-all hover:border-foreground hover:bg-card"
+                className="rounded-2xl border border-[#dbe6fb] bg-white px-8 py-4 text-sm font-semibold text-[#16213b] transition-all hover:border-[#b8ccf6] hover:bg-[#f8fbff]"
               >
-                ← BACK TO HOME
+                ← Back to home
               </Link>
             </motion.div>
 
@@ -175,9 +180,9 @@ export default function DashboardPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
-              className="mt-8 font-mono text-xs text-muted-foreground"
+              className="mt-8 text-xs text-muted-foreground"
             >
-              WALLET CONNECTED: {address?.slice(0, 6)}...{address?.slice(-4)}
+              Wallet connected: {address?.slice(0, 6)}...{address?.slice(-4)}
             </motion.div>
           </div>
         </div>
@@ -186,9 +191,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative min-h-screen bg-[#eef4ff]">
       {/* Background effects */}
-      <div className="grid-pattern fixed inset-0 opacity-30" />
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.1),transparent_22%)]" />
+      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:44px_44px]" />
 
       {/* Top nav */}
       <Header />
@@ -197,14 +203,14 @@ export default function DashboardPage() {
         {/* Sidebar Overlay for Mobile */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/50 z-30 md:hidden top-16"
+            className="fixed inset-0 top-20 z-30 bg-black/50 md:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
         {/* Sidebar */}
         <aside
-          className={`fixed left-0 top-16 h-[calc(100vh-4rem)] border-r-2 border-border bg-background transition-all duration-300 z-40 md:relative md:top-0 md:h-[calc(100vh-4rem)] overflow-y-auto ${
+          className={`fixed left-0 top-28 h-[calc(100vh-7rem)] rounded-r-[28px] border border-white/80 bg-white/92 shadow-[0_18px_50px_rgba(61,86,150,0.12)] transition-all duration-300 z-40 md:relative md:top-0 md:h-[calc(100vh-7rem)] overflow-y-auto ${
             sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 md:w-20'
           }`}
         >
@@ -300,7 +306,7 @@ export default function DashboardPage() {
 
         {/* Main content */}
         <main
-          className={`min-h-[calc(100vh-4rem)] flex-1 transition-all duration-300 ${
+          className={`min-h-[calc(100vh-4rem)] flex-1 pt-6 transition-all duration-300 ${
             sidebarOpen ? "" : "md:ml-0"
           }`}
         >
@@ -308,9 +314,9 @@ export default function DashboardPage() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden fixed bottom-6 right-6 z-20 border-2 border-primary bg-primary p-4 shadow-lg transition-all hover:bg-primary/90"
+              className="fixed bottom-6 right-6 z-20 rounded-full bg-[#4472ff] p-4 text-white shadow-[0_18px_36px_rgba(68,114,255,0.22)] transition-all hover:bg-[#3766f2] md:hidden"
             >
-              <Menu className="h-6 w-6 text-primary-foreground" />
+              <Menu className="h-6 w-6" />
             </button>
 
             <AnimatePresence mode="wait">
@@ -357,20 +363,20 @@ function SidebarItem({
   const content = (
     <>
       <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className={`flex h-10 w-10 flex-shrink-0 items-center justify-center border-2 font-mono text-lg transition-all ${
+        whileHover={{ scale: 1.04 }}
+        whileTap={{ scale: 0.96 }}
+        className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border text-sm font-semibold transition-all ${
           active
-            ? "border-primary bg-primary text-primary-foreground"
-            : "border-border bg-background text-foreground group-hover:border-primary"
+            ? "border-[#4472ff] bg-[#4472ff] text-white shadow-[0_12px_24px_rgba(68,114,255,0.18)]"
+            : "border-[#dce5f7] bg-[#f8fbff] text-[#1d2942] group-hover:border-[#b6cbf7] group-hover:bg-white"
         }`}
       >
         {icon}
       </motion.div>
       {!collapsed && (
         <span
-          className={`font-mono text-xs font-bold uppercase transition-colors ${
-            active ? "text-primary" : "text-foreground"
+          className={`text-sm font-medium transition-colors ${
+            active ? "text-[#16305d]" : "text-[#32435f]"
           }`}
         >
           {label}
@@ -383,7 +389,7 @@ function SidebarItem({
     return (
       <Link
         href={href}
-        className="group mb-2 flex items-center gap-4 p-2 transition-all hover:bg-primary/5"
+        className={`group mb-2 flex items-center gap-4 rounded-2xl px-3 py-2 transition-all ${active ? "bg-white/80" : "hover:bg-white/60"}`}
       >
         {content}
       </Link>
@@ -393,7 +399,7 @@ function SidebarItem({
   return (
     <button
       onClick={onClick}
-      className="group mb-2 flex w-full items-center gap-4 p-2 transition-all hover:bg-primary/5"
+      className={`group mb-2 flex w-full items-center gap-4 rounded-2xl px-3 py-2 transition-all ${active ? "bg-white/80" : "hover:bg-white/60"}`}
     >
       {content}
     </button>

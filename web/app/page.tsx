@@ -33,38 +33,59 @@ const inventoryRows = [
 
 const principles = [
   {
-    title: "Verify once",
-    body: "Proof-backed records replace screenshots and unverifiable seller claims.",
+    title: "Verify the signal",
+    body: "Proof-backed records replace screenshots, PDFs, and unverifiable claims with something teams can actually trust.",
     icon: ShieldCheck,
   },
   {
-    title: "Protect the payload",
-    body: "Sensitive data stays sealed in a TEE until the right buyer is allowed to unlock it.",
+    title: "Keep the payload sealed",
+    body: "Sensitive data stays encrypted in a TEE until the right workflow or counterparty is approved to access it.",
     icon: LockKeyhole,
   },
   {
-    title: "Grant precise access",
-    body: "Buyers inspect the signal first, then unlock only the assets they have paid for.",
+    title: "Grant only the right access",
+    body: "Teams can inspect freshness, proof type, and privacy rules first, then unlock only what should actually be used.",
     icon: Database,
   },
 ];
 
 const proofAdvantages = [
   {
-    title: "Clear before purchase",
-    body: "Proof type, freshness, privacy, and price are visible before money moves.",
+    title: "Trust is visible",
+    body: "Proof type, freshness, and privacy rules are visible before anyone relies on the data in a workflow.",
   },
   {
     title: "Private by default",
-    body: "The payload stays sealed until access is granted to the right buyer.",
+    body: "The payload stays sealed until access is explicitly granted to the right team or counterparty.",
   },
   {
-    title: "Reusable supply",
-    body: "Verified assets can stay useful for future buyers instead of becoming one-off deals.",
+    title: "Reusable verification",
+    body: "The same verified asset can stay useful across future requests instead of forcing teams to repeat the same proof work.",
   },
   {
-    title: "Better seller economics",
-    body: "Sellers can verify once and keep earning as the same asset is reused.",
+    title: "Operationally cleaner",
+    body: "Verified inventory, controlled delivery, and access control live in one system instead of scattered manual handoffs.",
+  },
+];
+
+const workflowMetrics = [
+  { label: "Verification confidence", value: "98%", note: "Proof-backed instead of screenshot-backed" },
+  { label: "Private payload exposure", value: "0", note: "Nothing leaks before access is granted" },
+  { label: "Reuse across requests", value: "1 → many", note: "A verified asset can stay useful over time" },
+];
+
+const legacyVsAccessFi = [
+  {
+    legacy: "Trust the seller, inspect docs manually, hope the data is still current.",
+    accessfi: "See proof type, freshness, and access conditions before the payload is ever revealed.",
+  },
+  {
+    legacy: "Sensitive files move first, permissioning gets sorted out later.",
+    accessfi: "The payload stays sealed in a TEE until the right wallet or workflow is approved.",
+  },
+  {
+    legacy: "Each request restarts the same verification loop from scratch.",
+    accessfi: "Verified supply stays reusable, so the network compounds instead of resetting.",
   },
 ];
 
@@ -88,12 +109,12 @@ export default function Home() {
                 transition={{ duration: 0.45 }}
                 className="mx-auto max-w-4xl text-center"
               >
-                <p className="text-[0.95rem] font-medium text-[#6f85b5]">Proof-backed inventory for sensitive data exchange</p>
+                <p className="text-[0.95rem] font-medium text-[#6f85b5]">Proof-backed infrastructure for trusted data workflows</p>
                 <h1 className="mx-auto mt-5 max-w-[12ch] text-balance text-[3rem] font-semibold tracking-[-0.08em] leading-[0.94] text-[#18233f] sm:text-[4.1rem] lg:text-[5rem]">
-                  Know what is real before you unlock it.
+                  Use verified data with confidence.
                 </h1>
                 <p className="mx-auto mt-5 max-w-2xl text-[1rem] leading-7 text-[#5f6f93] md:text-[1.08rem] md:leading-8">
-                  AccessFi gives teams verified supply, private delivery, and controlled access in one clear workflow.
+                  AccessFi turns proof, private delivery, and access control into a workflow teams can trust end to end.
                 </p>
 
                 <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -108,7 +129,7 @@ export default function Home() {
                     onClick={() => setCreatePoolOpen(true)}
                     className="inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-semibold text-[#24324f] transition-all hover:-translate-y-0.5 hover:text-[#111827]"
                   >
-                    Request Missing Data
+                    Request Coverage
                   </button>
                 </div>
               </motion.div>
@@ -128,7 +149,7 @@ export default function Home() {
                     </div>
                     AccessFi Inventory
                   </div>
-                  <div className="text-xs font-medium text-[#7b8aaa]">Verified supply • private delivery • access control</div>
+                  <div className="text-xs font-medium text-[#7b8aaa]">Verified signals • private delivery • controlled access</div>
                 </div>
 
                 <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
@@ -149,7 +170,7 @@ export default function Home() {
                           >
                             <div>
                               <p className="font-medium text-[#15213b]">{row.category}</p>
-                              <p className="mt-1 text-xs text-[#8391ad]">Reusable verified asset</p>
+                          <p className="mt-1 text-xs text-[#8391ad]">Verified signal</p>
                             </div>
                             <p className="text-sm text-[#24324f]">{row.proof}</p>
                             <span className="inline-flex w-fit rounded-full bg-[#eaf4ff] px-2.5 py-1 text-xs font-medium text-[#4978ec]">
@@ -166,19 +187,19 @@ export default function Home() {
                     <div className="rounded-[22px] border border-[#e6edfb] bg-white p-5">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7d8dab]">Access summary</p>
                       <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[#16233d]">
-                        Verified before purchase, protected after purchase.
+                        Verifiable before use, protected during use.
                       </h2>
                       <div className="mt-6 grid gap-3">
                         <MiniMetric label="Verification" value="zkVerify on Horizen" />
                         <MiniMetric label="Storage" value="TEE encrypted delivery" />
-                        <MiniMetric label="Access" value="Wallet-gated unlock" />
+                        <MiniMetric label="Access" value="Controlled unlock" />
                       </div>
                     </div>
 
                     <div className="mt-4 rounded-[22px] border border-[#d9e6ff] bg-[linear-gradient(160deg,#4f7cff_0%,#7aa2ff_100%)] p-5 text-white shadow-[0_20px_50px_rgba(79,124,255,0.24)]">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/75">Why this matters</p>
                       <p className="mt-3 text-lg font-semibold leading-8">
-                        Teams can inspect proof, freshness, and privacy rules before they ever touch the payload.
+                        Teams can inspect proof, freshness, and privacy rules before the underlying payload is ever exposed.
                       </p>
                     </div>
                   </div>
@@ -189,7 +210,7 @@ export default function Home() {
 
           <section className="mt-16 bg-white/90">
             <div className="grid gap-6 border-t border-[#dce6f7] px-6 py-10 text-[#8894ab] sm:grid-cols-3 lg:grid-cols-6">
-              {["zkEmail", "zkVerify", "Horizen", "Phala TEE", "Reusable assets", "Wallet access"].map((item) => (
+              {["zkEmail", "zkVerify", "Horizen", "Phala TEE", "Reusable verification", "Access control"].map((item) => (
                 <div key={item} className="text-center text-sm font-medium">
                   {item}
                 </div>
@@ -198,35 +219,102 @@ export default function Home() {
           </section>
 
           <section className="rounded-b-[34px] bg-white px-6 pb-20 pt-14 md:px-10">
-            <div className="mx-auto max-w-3xl text-center">
-              <p className="inline-flex rounded-full border border-[#dde6f6] px-3 py-1 text-xs font-medium text-[#7b8aaa]">
-                Features
-              </p>
-              <h2 className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-[#18233f] md:text-5xl">
-                Verified data that stays usable.
-              </h2>
+            <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+              <div>
+                <p className="inline-flex rounded-full border border-[#dde6f6] px-3 py-1 text-xs font-medium text-[#7b8aaa]">
+                  Why it matters
+                </p>
+                <h2 className="mt-5 max-w-xl text-4xl font-semibold tracking-[-0.05em] text-[#18233f] md:text-5xl">
+                  The point is not more data. It is better certainty.
+                </h2>
+                <p className="mt-5 max-w-xl text-base leading-8 text-[#64748b]">
+                  Teams do not need more opaque files flying around. They need a workflow where trust, freshness, and privacy are visible before the data becomes operational.
+                </p>
+
+                <div className="mt-8 space-y-4">
+                  {principles.map((step) => {
+                    const Icon = step.icon;
+                    return (
+                      <div key={step.title} className="flex gap-4 rounded-[22px] border border-[#e6edfb] bg-[#f8fbff] p-4">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[#4f7cff] shadow-[0_10px_24px_rgba(79,124,255,0.16)]">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold tracking-[-0.03em] text-[#18233f]">{step.title}</h3>
+                          <p className="mt-1 text-sm leading-7 text-[#64748b]">{step.body}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="rounded-[28px] border border-[#dce6f8] bg-[linear-gradient(180deg,#f7faff_0%,#f1f6ff_100%)] p-6 shadow-[0_18px_50px_rgba(32,44,63,0.06)]">
+                <div className="grid gap-4 md:grid-cols-3">
+                  {workflowMetrics.map((item) => (
+                    <div key={item.label} className="rounded-[22px] border border-white/90 bg-white px-4 py-5">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8aaa]">{item.label}</p>
+                      <p className="mt-4 text-3xl font-semibold tracking-[-0.05em] text-[#18233f]">{item.value}</p>
+                      <p className="mt-2 text-sm leading-6 text-[#64748b]">{item.note}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 rounded-[24px] border border-white/90 bg-white p-5">
+                  <div className="flex items-end justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8aaa]">Trust curve</p>
+                      <h3 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-[#18233f]">Confidence should rise before access does.</h3>
+                    </div>
+                    <div className="rounded-full bg-[#eef4ff] px-3 py-1 text-xs font-medium text-[#4f7cff]">AccessFi model</div>
+                  </div>
+
+                  <div className="mt-6 flex h-52 items-end gap-3">
+                    {[20, 34, 46, 62, 76, 92].map((height, index) => (
+                      <div key={height} className="flex flex-1 flex-col items-center gap-2">
+                        <div
+                          className={`w-full rounded-t-[18px] ${index < 2 ? "bg-[#dce6ff]" : index < 4 ? "bg-[#9ebdff]" : "bg-[#4f7cff]"}`}
+                          style={{ height: `${height}%` }}
+                        />
+                        <span className="text-[11px] font-medium text-[#7b8aaa]">
+                          {["Raw", "Claim", "Proof", "Freshness", "Policy", "Unlock"][index]}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="mx-auto mt-12 grid max-w-6xl gap-5 md:grid-cols-3">
-              {principles.map((step) => {
-                const Icon = step.icon;
-                return (
-                  <motion.div
-                    key={step.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-40px" }}
-                    transition={{ duration: 0.35 }}
-                    className="rounded-[26px] border border-[#e6edfb] bg-[#f8fbff] p-6 shadow-[0_18px_50px_rgba(32,44,63,0.05)]"
-                  >
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[#4f7cff] shadow-[0_10px_24px_rgba(79,124,255,0.16)]">
-                      <Icon className="h-5 w-5" />
+            <div className="mx-auto mt-20 max-w-6xl">
+              <div className="max-w-3xl">
+                <p className="inline-flex rounded-full border border-[#dde6f6] px-3 py-1 text-xs font-medium text-[#7b8aaa]">
+                  Different by design
+                </p>
+                <h2 className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-[#18233f] md:text-5xl">
+                  AccessFi is built around verification, not blind exchange.
+                </h2>
+              </div>
+
+              <div className="mt-10 overflow-hidden rounded-[28px] border border-[#dce6f8] bg-[#f8fbff] shadow-[0_18px_50px_rgba(32,44,63,0.05)]">
+                <div className="grid grid-cols-[1fr_1fr] border-b border-[#e6edfb] bg-white/70 px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#7b8aaa]">
+                  <span>Typical data workflow</span>
+                  <span>AccessFi workflow</span>
+                </div>
+
+                <div className="divide-y divide-[#e6edfb]">
+                  {legacyVsAccessFi.map((row, index) => (
+                    <div key={index} className="grid gap-0 md:grid-cols-2">
+                      <div className="border-r border-[#e6edfb] bg-white px-6 py-6">
+                        <p className="text-sm leading-7 text-[#6b7280]">{row.legacy}</p>
+                      </div>
+                      <div className="bg-[linear-gradient(180deg,#f4f8ff_0%,#eff5ff_100%)] px-6 py-6">
+                        <p className="text-sm leading-7 text-[#18233f]">{row.accessfi}</p>
+                      </div>
                     </div>
-                    <h3 className="mt-5 text-2xl font-semibold tracking-[-0.04em] text-[#18233f]">{step.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-[#64748b]">{step.body}</p>
-                  </motion.div>
-                );
-              })}
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className="mx-auto mt-16 grid max-w-6xl gap-5 md:grid-cols-2">
