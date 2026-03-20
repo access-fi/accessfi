@@ -5,8 +5,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -36,216 +36,127 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
+  --radius-sm: calc(var(--radius) - 6px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --radius-xl: calc(var(--radius) + 6px);
+  --radius-2xl: calc(var(--radius) + 12px);
+  --radius-3xl: calc(var(--radius) + 18px);
 }
 
 :root {
-  /* Brutalist/Cyberpunk Design System - AccessFi */
-  --radius: 0rem; /* Sharp corners for brutalist aesthetic */
+  --radius: 1rem;
 
-  /* Light mode (minimal use - default to dark) */
-  --background: oklch(0.97 0 0);
-  --foreground: oklch(0.15 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0 0);
-  --primary: oklch(0.2 0 0);
-  --primary-foreground: oklch(0.95 0 0);
-  --secondary: oklch(0.9 0 0);
-  --secondary-foreground: oklch(0.2 0 0);
-  --muted: oklch(0.9 0 0);
-  --muted-foreground: oklch(0.5 0 0);
-  --accent: oklch(0.88 0.15 145); /* Neon green accent */
-  --accent-foreground: oklch(0.1 0 0);
-  --destructive: oklch(0.6 0.22 20);
-  --border: oklch(0.85 0 0);
-  --input: oklch(0.85 0 0);
-  --ring: oklch(0.88 0.15 145);
-  --chart-1: oklch(0.88 0.15 145);
-  --chart-2: oklch(0.75 0.25 180);
-  --chart-3: oklch(0.65 0.22 300);
-  --chart-4: oklch(0.8 0.2 60);
-  --chart-5: oklch(0.7 0.25 330);
-  --sidebar: oklch(0.98 0 0);
-  --sidebar-foreground: oklch(0.15 0 0);
-  --sidebar-primary: oklch(0.2 0 0);
-  --sidebar-primary-foreground: oklch(0.95 0 0);
-  --sidebar-accent: oklch(0.9 0 0);
-  --sidebar-accent-foreground: oklch(0.2 0 0);
-  --sidebar-border: oklch(0.85 0 0);
-  --sidebar-ring: oklch(0.88 0.15 145);
+  --background: oklch(0.972 0.01 90);
+  --foreground: oklch(0.205 0.015 95);
+  --card: oklch(0.992 0.004 90);
+  --card-foreground: oklch(0.205 0.015 95);
+  --popover: oklch(0.995 0.003 90);
+  --popover-foreground: oklch(0.205 0.015 95);
+  --primary: oklch(0.72 0.11 145);
+  --primary-foreground: oklch(0.16 0.012 95);
+  --secondary: oklch(0.942 0.01 92);
+  --secondary-foreground: oklch(0.26 0.01 92);
+  --muted: oklch(0.954 0.006 92);
+  --muted-foreground: oklch(0.5 0.015 92);
+  --accent: oklch(0.94 0.025 145);
+  --accent-foreground: oklch(0.22 0.02 145);
+  --destructive: oklch(0.63 0.22 24);
+  --border: oklch(0.89 0.012 95);
+  --input: oklch(0.89 0.012 95);
+  --ring: oklch(0.72 0.11 145);
+  --chart-1: oklch(0.72 0.11 145);
+  --chart-2: oklch(0.61 0.08 205);
+  --chart-3: oklch(0.56 0.12 40);
+  --chart-4: oklch(0.8 0.05 115);
+  --chart-5: oklch(0.64 0.06 285);
 
-  /* Custom Cyberpunk colors */
-  --neon-cyan: oklch(0.85 0.18 200); /* #00FFFF territory */
-  --neon-magenta: oklch(0.7 0.28 330); /* #FF00FF territory */
-  --neon-green: oklch(0.88 0.15 145); /* Matrix green */
-  --neon-lime: oklch(0.9 0.2 130);
-  --terminal-bg: oklch(0.1 0 0);
-  --terminal-fg: oklch(0.88 0.15 145);
-  --grid-line: oklch(1 0 0 / 5%);
+  --sidebar: oklch(0.985 0.003 90);
+  --sidebar-foreground: oklch(0.205 0.015 95);
+  --sidebar-primary: oklch(0.72 0.11 145);
+  --sidebar-primary-foreground: oklch(0.16 0.012 95);
+  --sidebar-accent: oklch(0.948 0.006 92);
+  --sidebar-accent-foreground: oklch(0.24 0.014 95);
+  --sidebar-border: oklch(0.89 0.012 95);
+  --sidebar-ring: oklch(0.72 0.11 145);
+
+  --grid-line: oklch(0.28 0.01 92 / 0.06);
+  --shadow-soft: 0 16px 40px rgba(34, 40, 35, 0.08);
 }
 
 .dark {
-  /* Dark mode - Primary theme for AccessFi */
-  --background: oklch(0.1 0 0); /* Near black but not pure #000 */
-  --foreground: oklch(0.88 0 0); /* Soft white, not pure #FFF */
-  --card: oklch(0.12 0 0);
-  --card-foreground: oklch(0.88 0 0);
-  --popover: oklch(0.12 0 0);
-  --popover-foreground: oklch(0.88 0 0);
-  --primary: oklch(0.88 0.15 145); /* Neon green - primary CTA */
-  --primary-foreground: oklch(0.1 0 0);
-  --secondary: oklch(0.2 0 0);
-  --secondary-foreground: oklch(0.88 0 0);
-  --muted: oklch(0.18 0 0);
-  --muted-foreground: oklch(0.6 0 0);
-  --accent: oklch(0.85 0.18 200); /* Neon cyan - secondary accent */
-  --accent-foreground: oklch(0.1 0 0);
-  --destructive: oklch(0.65 0.25 15);
-  --border: oklch(1 0 0 / 10%); /* Subtle borders */
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.88 0.15 145);
-  --chart-1: oklch(0.88 0.15 145); /* Neon green */
-  --chart-2: oklch(0.85 0.18 200); /* Neon cyan */
-  --chart-3: oklch(0.7 0.28 330); /* Neon magenta */
-  --chart-4: oklch(0.9 0.2 130); /* Neon lime */
-  --chart-5: oklch(0.75 0.22 50); /* Yellow */
-  --sidebar: oklch(0.12 0 0);
-  --sidebar-foreground: oklch(0.88 0 0);
-  --sidebar-primary: oklch(0.88 0.15 145);
-  --sidebar-primary-foreground: oklch(0.1 0 0);
-  --sidebar-accent: oklch(0.18 0 0);
-  --sidebar-accent-foreground: oklch(0.88 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.88 0.15 145);
-
-  /* Custom Cyberpunk colors */
-  --neon-cyan: oklch(0.85 0.18 200);
-  --neon-magenta: oklch(0.7 0.28 330);
-  --neon-green: oklch(0.88 0.15 145);
-  --neon-lime: oklch(0.9 0.2 130);
-  --terminal-bg: oklch(0.08 0 0);
-  --terminal-fg: oklch(0.88 0.15 145);
-  --grid-line: oklch(1 0 0 / 3%);
+  --background: oklch(0.14 0.01 96);
+  --foreground: oklch(0.93 0.01 95);
+  --card: oklch(0.18 0.01 96);
+  --card-foreground: oklch(0.93 0.01 95);
+  --popover: oklch(0.18 0.01 96);
+  --popover-foreground: oklch(0.93 0.01 95);
+  --primary: oklch(0.76 0.11 145);
+  --primary-foreground: oklch(0.15 0.01 95);
+  --secondary: oklch(0.22 0.01 96);
+  --secondary-foreground: oklch(0.93 0.01 95);
+  --muted: oklch(0.22 0.01 96);
+  --muted-foreground: oklch(0.7 0.01 96);
+  --accent: oklch(0.26 0.03 145);
+  --accent-foreground: oklch(0.92 0.01 95);
+  --destructive: oklch(0.68 0.2 24);
+  --border: oklch(0.31 0.01 96);
+  --input: oklch(0.31 0.01 96);
+  --ring: oklch(0.76 0.11 145);
+  --sidebar: oklch(0.17 0.01 96);
+  --sidebar-foreground: oklch(0.93 0.01 95);
+  --sidebar-primary: oklch(0.76 0.11 145);
+  --sidebar-primary-foreground: oklch(0.15 0.01 95);
+  --sidebar-accent: oklch(0.22 0.01 96);
+  --sidebar-accent-foreground: oklch(0.93 0.01 95);
+  --sidebar-border: oklch(0.31 0.01 96);
+  --sidebar-ring: oklch(0.76 0.11 145);
+  --grid-line: oklch(0.93 0.01 95 / 0.05);
+  --shadow-soft: 0 18px 50px rgba(5, 8, 6, 0.24);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
+
+  html {
+    scroll-behavior: smooth;
   }
 
-  /* Monospace for terminal aesthetic */
-  .font-mono {
-    font-family: var(--font-mono);
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    letter-spacing: -0.03em;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 30%, white);
   }
 }
 
 @layer utilities {
-  /* Neon glow effects */
-  .neon-glow-green {
-    text-shadow: 0 0 10px oklch(0.88 0.15 145 / 0.8),
-                 0 0 20px oklch(0.88 0.15 145 / 0.6),
-                 0 0 30px oklch(0.88 0.15 145 / 0.4);
-  }
-
-  .neon-glow-cyan {
-    text-shadow: 0 0 10px oklch(0.85 0.18 200 / 0.8),
-                 0 0 20px oklch(0.85 0.18 200 / 0.6),
-                 0 0 30px oklch(0.85 0.18 200 / 0.4);
-  }
-
-  .neon-border-green {
-    border-color: oklch(0.88 0.15 145);
-    box-shadow: 0 0 10px oklch(0.88 0.15 145 / 0.5),
-                inset 0 0 10px oklch(0.88 0.15 145 / 0.2);
-  }
-
-  .neon-border-cyan {
-    border-color: oklch(0.85 0.18 200);
-    box-shadow: 0 0 10px oklch(0.85 0.18 200 / 0.5),
-                inset 0 0 10px oklch(0.85 0.18 200 / 0.2);
-  }
-
-  /* Terminal-style background */
-  .terminal-bg {
-    background: var(--terminal-bg);
-    color: var(--terminal-fg);
-  }
-
-  /* Grid pattern background */
   .grid-pattern {
     background-image:
       linear-gradient(var(--grid-line) 1px, transparent 1px),
       linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size: 20px 20px;
+    background-size: 36px 36px;
   }
 
-  /* Scanline effect */
-  .scanlines {
-    background: linear-gradient(
-      to bottom,
-      transparent 50%,
-      oklch(1 0 0 / 0.02) 50%
-    );
-    background-size: 100% 4px;
-    pointer-events: none;
-  }
-
-  /* Brutalist sharp shadows - use sparingly for emphasis only */
-  .brutal-shadow {
-    box-shadow: 3px 3px 0px oklch(0.88 0.15 145 / 0.3);
-  }
-
-  .brutal-shadow-cyan {
-    box-shadow: 3px 3px 0px oklch(0.85 0.18 200 / 0.3);
-  }
-
-  /* Subtle shadow for general use */
   .shadow-subtle {
-    box-shadow: 0 1px 3px oklch(0 0 0 / 0.1);
+    box-shadow: var(--shadow-soft);
   }
 
-  /* GPU-accelerated animations only */
-  .animate-pulse-glow {
-    animation: pulse-glow 2s ease-in-out infinite;
+  .text-balance {
+    text-wrap: balance;
   }
 
-  @keyframes pulse-glow {
-    0%, 100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.8;
-      transform: scale(1.02);
-    }
-  }
-
-  /* Terminal cursor blink */
-  .terminal-cursor {
-    animation: blink 1s step-end infinite;
-  }
-
-  @keyframes blink {
-    0%, 50% {
-      opacity: 1;
-    }
-    51%, 100% {
-      opacity: 0;
-    }
-  }
-
-  /* Smooth transform animations (GPU accelerated) */
   .smooth-transform {
     will-change: transform;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
